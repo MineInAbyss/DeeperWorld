@@ -2,33 +2,84 @@ package com.derongan.minecraft.deeperworld;
 
 import com.derongan.minecraft.deeperworld.event.AscendEvent;
 import com.derongan.minecraft.deeperworld.event.DescendEvent;
+import com.derongan.minecraft.deeperworld.player.PlayerManager;
 import com.derongan.minecraft.deeperworld.world.Section;
 import com.derongan.minecraft.deeperworld.world.SectionUtils;
 import com.derongan.minecraft.deeperworld.world.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.Vector;
 
 import static com.derongan.minecraft.deeperworld.MinecraftConstants.WORLD_HEIGHT;
 
 public class MovementListener implements Listener {
-    private WorldManager manager;
+    private WorldManager worldManager;
+    private PlayerManager playerManager;
 
-    public MovementListener() {
-        manager = Bukkit.getServicesManager().load(WorldManager.class);
+    public MovementListener(PlayerManager playerManager) {
+        worldManager = Bukkit.getServicesManager().load(WorldManager.class);
+        this.playerManager = playerManager;
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent playerMoveEvent) {
         Player player = playerMoveEvent.getPlayer();
 
-        if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION)) {
+        if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && playerManager.playerCanTeleport(player)) {
             onPlayerMoveInternal(player, playerMoveEvent.getFrom(), playerMoveEvent.getTo());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent){
+        Block block = blockBreakEvent.getBlock();
+        Location location = block.getLocation();
+
+        Section section = worldManager.getSectionFor(location);
+
+        Section above = section.getSectionAbove();
+        Section below = section.getSectionBelow();
+
+        if(above != null && SectionUtils.isSharedLocation(section, above, location)){
+            Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
+            sharedAbove.getBlock().setType(Material.AIR);
+        }
+
+        if(below != null && SectionUtils.isSharedLocation(section, below, location)) {
+            Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
+            sharedBelow.getBlock().setType(Material.AIR);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockPlaceEvent(BlockPlaceEvent blockPlaceEvent){
+        Block block = blockPlaceEvent.getBlock();
+
+        Location location = block.getLocation();
+
+        Section section = worldManager.getSectionFor(location);
+
+        Section above = section.getSectionAbove();
+        Section below = section.getSectionBelow();
+
+        if(above != null && SectionUtils.isSharedLocation(section, above, location)){
+            Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
+            sharedAbove.getBlock().setType(block.getType());
+        }
+
+        if(below != null && SectionUtils.isSharedLocation(section, below, location)) {
+            Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
+            sharedBelow.getBlock().setType(block.getType());
         }
     }
 
@@ -36,7 +87,7 @@ public class MovementListener implements Listener {
         double changeY = to.getY() - from.getY();
 
         if (changeY > 0) {
-            Section current = manager.getSectionFor(player.getLocation());
+            Section current = worldManager.getSectionFor(player.getLocation());
 
             if (current != null) {
                 Section above = current.getSectionAbove();
@@ -50,7 +101,7 @@ public class MovementListener implements Listener {
                 }
             }
         } else if (changeY < 0) {
-            Section current = manager.getSectionFor(player.getLocation());
+            Section current = worldManager.getSectionFor(player.getLocation());
             if (current != null) {
 
                 Section below = current.getSectionBelow();

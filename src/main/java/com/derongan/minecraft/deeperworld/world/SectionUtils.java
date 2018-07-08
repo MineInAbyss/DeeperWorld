@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld.world;
 
+import com.derongan.minecraft.deeperworld.MinecraftConstants;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
@@ -10,19 +11,20 @@ public class SectionUtils {
     /**
      * Get the location on another layer that is the same abyss space as the initial location.
      * The two sections must be next to eachother
-     * @param sectionA the section the initial location is on
-     * @param sectionB the section we are translating the point to
+     *
+     * @param sectionA        the section the initial location is on
+     * @param sectionB        the section we are translating the point to
      * @param initialLocation The initial location
      * @return A new location that corresponds to the original location
      */
-    public static Location getCorrespondingLocation(Section sectionA, Section sectionB, Location initialLocation){
+    public static Location getCorrespondingLocation(Section sectionA, Section sectionB, Location initialLocation) {
         validateSectionsAdjacent(sectionA, sectionB);
 
         Location fromSectionLoc;
         Location toSectionLoc;
 
         // We decide which two points we are translating between.
-        if(sectionA.equals(sectionB.getSectionAbove())){
+        if (sectionA.equals(sectionB.getSectionAbove())) {
             fromSectionLoc = sectionA.getReferenceLocationBottom();
             toSectionLoc = sectionB.getReferenceLocationTop();
         } else {
@@ -39,13 +41,25 @@ public class SectionUtils {
         return newLoc;
     }
 
-    public static int getSharedBlocks(Section sectionA, Section sectionB){
+    public static boolean isSharedLocation(Section inSection, Section otherSection, Location location) {
+        int shared = getSharedBlocks(inSection, otherSection);
+
+        if(otherSection.equals(inSection.getSectionBelow())){
+            return location.getBlockY() <= shared;
+        } else if(otherSection.equals(inSection.getSectionAbove())){
+            return location.getBlockY() >= MinecraftConstants.WORLD_HEIGHT - shared;
+        }
+
+        return  false;
+    }
+
+    public static int getSharedBlocks(Section sectionA, Section sectionB) {
         validateSectionsAdjacent(sectionA, sectionB);
         Location locA;
         Location locB;
 
         // We decide which two points we are translating between.
-        if(sectionA.equals(sectionB.getSectionAbove())){
+        if (sectionA.equals(sectionB.getSectionAbove())) {
             locA = sectionA.getReferenceLocationBottom();
             locB = sectionB.getReferenceLocationTop();
         } else {
