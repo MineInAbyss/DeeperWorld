@@ -1,4 +1,4 @@
-package com.derongan.minecraft.deeperworld.world;
+package com.derongan.minecraft.deeperworld.world.section;
 
 import com.derongan.minecraft.deeperworld.MinecraftConstants;
 import org.apache.commons.lang.Validate;
@@ -24,7 +24,7 @@ public class SectionUtils {
         Location toSectionLoc;
 
         // We decide which two points we are translating between.
-        if (sectionA.equals(sectionB.getSectionAbove())) {
+        if (isOnTopOf(sectionA, sectionB)) {
             fromSectionLoc = sectionA.getReferenceLocationBottom();
             toSectionLoc = sectionB.getReferenceLocationTop();
         } else {
@@ -44,13 +44,13 @@ public class SectionUtils {
     public static boolean isSharedLocation(Section inSection, Section otherSection, Location location) {
         int shared = getSharedBlocks(inSection, otherSection);
 
-        if(otherSection.equals(inSection.getSectionBelow())){
+        if (isOnTopOf(inSection, otherSection)) {
             return location.getBlockY() <= shared;
-        } else if(otherSection.equals(inSection.getSectionAbove())){
+        } else if (isOnTopOf(otherSection, inSection)) {
             return location.getBlockY() >= MinecraftConstants.WORLD_HEIGHT - shared;
         }
 
-        return  false;
+        return false;
     }
 
     public static int getSharedBlocks(Section sectionA, Section sectionB) {
@@ -59,7 +59,7 @@ public class SectionUtils {
         Location locB;
 
         // We decide which two points we are translating between.
-        if (sectionA.equals(sectionB.getSectionAbove())) {
+        if (isOnTopOf(sectionA, sectionB)) {
             locA = sectionA.getReferenceLocationBottom();
             locB = sectionB.getReferenceLocationTop();
         } else {
@@ -73,7 +73,11 @@ public class SectionUtils {
         return WORLD_HEIGHT - Math.max(yA, yB) + Math.min(yA, yB);
     }
 
+    public static boolean isOnTopOf(Section section, Section other) {
+        return section.getKey().equals(other.getKeyForSectionAbove());
+    }
+
     private static void validateSectionsAdjacent(Section sectionA, Section sectionB) {
-        Validate.isTrue(sectionA.equals(sectionB.getSectionAbove()) || sectionA.equals(sectionB.getSectionBelow()), "Sections must be adjacent");
+        Validate.isTrue(isOnTopOf(sectionA, sectionB) || isOnTopOf(sectionB, sectionA), "Sections must be adjacent");
     }
 }

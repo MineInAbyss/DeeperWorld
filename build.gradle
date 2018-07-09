@@ -30,3 +30,14 @@ processResources {
         filter ReplaceTokens, tokens: [version: version]
     }
 }
+
+jar {
+    from sourceSets.main.output
+}
+
+task copyJar(type: Copy) {
+    from jar // here it automatically reads jar file produced from jar task
+    into '/srv/craftbukkit/plugins/'
+}
+
+build.dependsOn copyJar
