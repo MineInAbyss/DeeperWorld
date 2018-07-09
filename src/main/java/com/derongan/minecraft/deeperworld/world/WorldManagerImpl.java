@@ -1,15 +1,16 @@
 package com.derongan.minecraft.deeperworld.world;
 
+import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey;
+import com.derongan.minecraft.deeperworld.world.section.Section;
+import com.derongan.minecraft.deeperworld.world.section.SectionKey;
 import com.google.common.collect.ImmutableList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class WorldManagerImpl implements WorldManager {
     public static final String SECTION_KEY = "sections";
@@ -17,16 +18,20 @@ public class WorldManagerImpl implements WorldManager {
     public static final String REF_BOTTOM_KEY = "refBottom";
     public static final String WORLD_KEY = "world";
     public static final String REGION_KEY = "region";
+    public static final String NAME_KEY = "name";
 
-    private List<Section> sectionList;
+    private Map<SectionKey, Section> sectionMap;
 
     public WorldManagerImpl(FileConfiguration config) {
-        this.sectionList = new ArrayList<>();
+        this.sectionMap = new HashMap<>();
 
-        List<Map<?, ?>> layerlist = config.getMapList(SECTION_KEY);
+        List<Map<?, ?>> sectionList = config.getMapList(SECTION_KEY);
 
-        SectionImpl last = null;
-        for (Map<?, ?> map : layerlist) {
+        List<SectionKey> keys = sectionList.stream().map(this::getKey).collect(Collectors.toList());
+
+        for (int i = 0; i < keys.size(); i++) {
+            Map<?, ?> map = sectionList.get(i);
+
             String worldName = (String) map.get(WORLD_KEY);
             World world = Bukkit.getWorld(worldName);
 
@@ -37,17 +42,28 @@ public class WorldManagerImpl implements WorldManager {
             Location refBottom = parseLocation((List<Integer>) map.get(REF_BOTTOM_KEY), world);
             Location refTop = parseLocation((List<Integer>) map.get(REF_TOP_KEY), world);
 
-            SectionImpl section = new SectionImpl(refTop, refBottom, region, world);
-            section.setSectionAbove(last);
+            Section.Builder builder = Section.builder()
+                    .setReferenceTop(refTop)
+                    .setReferenceBottom(refBottom)
+                    .setRegion(region)
+                    .setWorld(world)
+                    .setName(keys.get(i));
 
-            if (last != null) {
-                last.setSectionBelow(section);
-            }
+            if (i != 0)
+                builder.setSectionAbove(keys.get(i - 1));
+            if (i < keys.size() - 1)
+                builder.setSectionBelow(keys.get(i + 1));
 
-            last = section;
-
-            sectionList.add(section);
+            registerSection(keys.get(i), builder.build());
         }
+    }
+
+    private SectionKey getKey(Map<?, ?> sectionData) {
+        String name = (String) sectionData.get(NAME_KEY);
+        if (name == null)
+            return new AbstractSectionKey.InternalSectionKey();
+        else
+            return new AbstractSectionKey.CustomSectionKey(name);
     }
 
     private Location parseLocation(List<Integer> points, World world) {
@@ -63,9 +79,33 @@ public class WorldManagerImpl implements WorldManager {
     }
 
     @Override
+    public SectionKey registerSection(String name, Section section) {
+        return registerInternal(new AbstractSectionKey.CustomSectionKey(name), section);
+    }
+
+    @Override
+    public SectionKey registerSection(SectionKey sectionKey, Section section) {
+        return registerInternal(sectionKey, section);
+    }
+
+    private SectionKey registerInternal(SectionKey key, Section section) {
+        if (sectionMap.containsKey(key))
+            throw new RuntimeException("Bruh"); //TODO change to checked exception
+
+        sectionMap.put(key, section);
+
+        return key;
+    }
+
+    @Override
+    public void unregisterSection(SectionKey key) {
+        //TODO
+    }
+
+    @Override
     public Section getSectionFor(int x, int z, World world) {
         //TODO consider performance
-        for (Section section : sectionList) {
+        for (Section section : sectionMap.values()) {
             if (section.getWorld().equals(world) && section.getRegion().contains(x, z)) {
                 return section;
             }
@@ -75,7 +115,18 @@ public class WorldManagerImpl implements WorldManager {
     }
 
     @Override
-    public Collection<Section> getSections() {
-        return ImmutableList.copyOf(sectionList);
+    public Section getSectionFor(SectionKey key) {
+        return sectionMap.get(key);
     }
+
+    @Override
+    public Section getSectionFor(String key) {
+        return getSectionFor(new AbstractSectionKey.CustomSectionKey(key));
+    }
+
+    @Override
+    public Collection<Section> getSections() {
+        return ImmutableList.copyOf(sectionMap.values());
+    }
+
 }

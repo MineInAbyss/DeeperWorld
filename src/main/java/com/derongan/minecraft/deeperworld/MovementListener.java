@@ -1,10 +1,10 @@
 package com.derongan.minecraft.deeperworld;
 
-import com.derongan.minecraft.deeperworld.event.AscendEvent;
-import com.derongan.minecraft.deeperworld.event.DescendEvent;
+import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent;
+import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent;
 import com.derongan.minecraft.deeperworld.player.PlayerManager;
-import com.derongan.minecraft.deeperworld.world.Section;
-import com.derongan.minecraft.deeperworld.world.SectionUtils;
+import com.derongan.minecraft.deeperworld.world.section.Section;
+import com.derongan.minecraft.deeperworld.world.section.SectionUtils;
 import com.derongan.minecraft.deeperworld.world.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -15,7 +15,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.Vector;
@@ -47,8 +46,8 @@ public class MovementListener implements Listener {
 
         Section section = worldManager.getSectionFor(location);
 
-        Section above = section.getSectionAbove();
-        Section below = section.getSectionBelow();
+        Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
+        Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
 
         if(above != null && SectionUtils.isSharedLocation(section, above, location)){
             Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
@@ -69,8 +68,8 @@ public class MovementListener implements Listener {
 
         Section section = worldManager.getSectionFor(location);
 
-        Section above = section.getSectionAbove();
-        Section below = section.getSectionBelow();
+        Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
+        Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
 
         if(above != null && SectionUtils.isSharedLocation(section, above, location)){
             Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
@@ -90,7 +89,7 @@ public class MovementListener implements Listener {
             Section current = worldManager.getSectionFor(player.getLocation());
 
             if (current != null) {
-                Section above = current.getSectionAbove();
+                Section above = worldManager.getSectionFor(current.getKeyForSectionAbove());
 
                 if (above != null) {
                     int shared = SectionUtils.getSharedBlocks(current, above);
@@ -104,7 +103,7 @@ public class MovementListener implements Listener {
             Section current = worldManager.getSectionFor(player.getLocation());
             if (current != null) {
 
-                Section below = current.getSectionBelow();
+                Section below = worldManager.getSectionFor(current.getKeyForSectionBelow());
 
                 if (below != null) {
                     int shared = SectionUtils.getSharedBlocks(current, below);
@@ -119,7 +118,7 @@ public class MovementListener implements Listener {
 
 
     private void descend(Player player, Location to, Section oldSection, Section newSection) {
-        DescendEvent event = new DescendEvent();
+        PlayerDescendEvent event = new PlayerDescendEvent(player, oldSection, newSection);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
@@ -128,7 +127,7 @@ public class MovementListener implements Listener {
     }
 
     private void ascend(Player player, Location to, Section oldSection, Section newSection) {
-        AscendEvent event = new AscendEvent();
+        PlayerAscendEvent event = new PlayerAscendEvent(player, oldSection, newSection);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
