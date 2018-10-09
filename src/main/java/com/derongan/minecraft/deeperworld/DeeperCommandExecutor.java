@@ -1,6 +1,8 @@
 package com.derongan.minecraft.deeperworld;
 
 import com.derongan.minecraft.deeperworld.player.PlayerManager;
+import com.derongan.minecraft.deeperworld.world.WorldManager;
+import com.derongan.minecraft.deeperworld.world.section.Section;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,9 +18,11 @@ import static java.util.stream.Collectors.toList;
 
 public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
     private PlayerManager playerManager;
+    private WorldManager worldManager;
 
-    public DeeperCommandExecutor(PlayerManager playerManager) {
+    public DeeperCommandExecutor(PlayerManager playerManager, WorldManager worldManager) {
         this.playerManager = playerManager;
+        this.worldManager = worldManager;
     }
 
     @Override
@@ -41,6 +45,16 @@ public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
             } else if (command.getName().equals("sectionon")) {
                 playerManager.setPlayerCanTeleport(player, true);
                 player.sendMessage(String.format("Automatic TP enabled for %s", player.getName()));
+                return true;
+            } else if(command.getName().equals("linfo")){
+                Section section = worldManager.getSectionFor(player.getLocation());
+
+                if(section == null){
+                    player.sendMessage(String.format("%s is not in a managed section", (player.getName())));
+                } else {
+                    player.sendMessage(String.format("%s is in section %s", player.getName(), section.getKey()));
+                }
+
                 return true;
             }
         }

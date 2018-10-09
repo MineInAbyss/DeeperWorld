@@ -42,4 +42,9 @@ public abstract class AbstractSectionKey implements SectionKey {
             super(String.valueOf(internalKeyCount++));
         }
     }
+
+    @Override
+    public String toString() {
+        return key;
+    }
 }
