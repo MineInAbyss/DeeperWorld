@@ -2,6 +2,7 @@ name: DeeperWorld
 version: @version@
 main: com.derongan.minecraft.deeperworld.DeeperWorld
 authors: [Derongan]
+api-version: 1.13
 description: A plugin for letting you create a deeper world. Or at least fake it.
 
 softdepend: [Multiverse-Core]
