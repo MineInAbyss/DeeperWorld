@@ -88,6 +88,11 @@ public class Section {
         return region;
     }
 
+    @Override
+    public String toString() {
+        return key.toString();
+    }
+
     public static Builder builder() {
         return new Builder();
     }

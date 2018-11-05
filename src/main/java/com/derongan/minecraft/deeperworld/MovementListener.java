@@ -46,17 +46,20 @@ public class MovementListener implements Listener {
 
         Section section = worldManager.getSectionFor(location);
 
-        Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
-        Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
+        //TODO add helper, maybe use optionals
+        if(section != null) {
+            Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
+            Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
 
-        if(above != null && SectionUtils.isSharedLocation(section, above, location)){
-            Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
-            sharedAbove.getBlock().setType(Material.AIR);
-        }
+            if (above != null && SectionUtils.isSharedLocation(section, above, location)) {
+                Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
+                sharedAbove.getBlock().setType(Material.AIR);
+            }
 
-        if(below != null && SectionUtils.isSharedLocation(section, below, location)) {
-            Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
-            sharedBelow.getBlock().setType(Material.AIR);
+            if (below != null && SectionUtils.isSharedLocation(section, below, location)) {
+                Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
+                sharedBelow.getBlock().setType(Material.AIR);
+            }
         }
     }
 
@@ -68,17 +71,20 @@ public class MovementListener implements Listener {
 
         Section section = worldManager.getSectionFor(location);
 
-        Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
-        Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
+        //TODO add helper, maybe use optionals
+        if(section != null) {
+            Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
+            Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
 
-        if(above != null && SectionUtils.isSharedLocation(section, above, location)){
-            Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
-            sharedAbove.getBlock().setType(block.getType());
-        }
+            if (above != null && SectionUtils.isSharedLocation(section, above, location)) {
+                Location sharedAbove = SectionUtils.getCorrespondingLocation(section, above, location);
+                sharedAbove.getBlock().setType(block.getType());
+            }
 
-        if(below != null && SectionUtils.isSharedLocation(section, below, location)) {
-            Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
-            sharedBelow.getBlock().setType(block.getType());
+            if (below != null && SectionUtils.isSharedLocation(section, below, location)) {
+                Location sharedBelow = SectionUtils.getCorrespondingLocation(section, below, location);
+                sharedBelow.getBlock().setType(block.getType());
+            }
         }
     }
 

@@ -2,6 +2,7 @@ name: DeeperWorld
 version: @version@
 main: com.derongan.minecraft.deeperworld.DeeperWorld
 authors: [Derongan]
+api-version: 1.13
 description: A plugin for letting you create a deeper world. Or at least fake it.
 
 softdepend: [Multiverse-Core]
@@ -13,3 +14,6 @@ commands:
   sectionoff:
     description: Disables automatic teleports between sections for a player
     usage: /sectionoff [player]
+  linfo:
+    description: Gets information about a players section
+    usage: /linfo [player]

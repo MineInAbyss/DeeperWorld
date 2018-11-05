@@ -27,10 +27,11 @@ public final class DeeperWorld extends JavaPlugin {
         movementListener = new MovementListener(playerManager);
         this.getServer().getPluginManager().registerEvents(movementListener, this);
 
-        DeeperCommandExecutor commandExecutor = new DeeperCommandExecutor(playerManager);
+        DeeperCommandExecutor commandExecutor = new DeeperCommandExecutor(playerManager, worldManager);
 
         this.getCommand("sectionon").setExecutor(commandExecutor);
         this.getCommand("sectionoff").setExecutor(commandExecutor);
+        this.getCommand("linfo").setExecutor(commandExecutor);
     }
 
     @Override
