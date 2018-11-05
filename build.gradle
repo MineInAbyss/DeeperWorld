@@ -10,7 +10,7 @@ repositories {
     mavenCentral()
     maven {
         name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots'
+        url = 'https://hub.spigotmc.org/nexus/content/groups/public/'
     }
     maven {
         name = 'sonatype'
@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+    compile 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -37,7 +37,7 @@ jar {
 
 task copyJar(type: Copy) {
     from jar // here it automatically reads jar file produced from jar task
-    into 'C:\\Users\\Offz\\Documents\\Programming\\Spigot servers\\plugins'
+    into '/srv/craftbukkit/plugins/'
 }
 
 build.dependsOn copyJar
