@@ -11,3 +11,10 @@
 #    region: [196, -92, 380, 92]
 #    world: TestWorld
 #    name: section1
+sections:
+  -
+    name: city
+    refTop: [0, 0, 0]
+    refBottom: [-493, 16, 125]
+    region: [-1535, -1535, 1535, 1535]
+    world: world
