@@ -38,15 +38,15 @@ public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
         }
 
         if (player != null) {
-            if (command.getName().equals("sectionoff")) {
+            if (command.getName().equalsIgnoreCase("sectionoff")) {
                 playerManager.setPlayerCanTeleport(player, false);
                 player.sendMessage(String.format("Automatic TP disabled for %s", player.getName()));
                 return true;
-            } else if (command.getName().equals("sectionon")) {
+            } else if (command.getName().equalsIgnoreCase("sectionon")) {
                 playerManager.setPlayerCanTeleport(player, true);
                 player.sendMessage(String.format("Automatic TP enabled for %s", player.getName()));
                 return true;
-            } else if(command.getName().equals("linfo")){
+            } else if(command.getName().equalsIgnoreCase("linfo")){
                 Section section = worldManager.getSectionFor(player.getLocation());
 
                 if(section == null){
