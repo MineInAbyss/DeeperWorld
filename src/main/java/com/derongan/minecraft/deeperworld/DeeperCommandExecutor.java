@@ -68,7 +68,7 @@ public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
             return Collections.emptyList();
         return Bukkit.getOnlinePlayers()
                 .stream()
-                .map(a->((Player) a).getName())
+                .map(a -> a.getName())
                 .filter(a -> a.startsWith(args[0]))
                 .collect(toList());
     }
