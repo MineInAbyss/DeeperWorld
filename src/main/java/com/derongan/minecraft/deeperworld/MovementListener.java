@@ -3,15 +3,14 @@ package com.derongan.minecraft.deeperworld;
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent;
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent;
 import com.derongan.minecraft.deeperworld.player.PlayerManager;
+import com.derongan.minecraft.deeperworld.world.WorldManager;
 import com.derongan.minecraft.deeperworld.world.section.Section;
 import com.derongan.minecraft.deeperworld.world.section.SectionUtils;
-import com.derongan.minecraft.deeperworld.world.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -46,26 +45,26 @@ public class MovementListener implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent){
+    public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent) {
         Block block = blockBreakEvent.getBlock();
 
-        updateCorrespondingBlock(block.getLocation(), (orig, corr)->{
+        updateCorrespondingBlock(block.getLocation(), (orig, corr) -> {
             corr.setType(Material.AIR);
         });
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onSignChangeEvent(SignChangeEvent signChangeEvent){
+    public void onSignChangeEvent(SignChangeEvent signChangeEvent) {
         Block block = signChangeEvent.getBlock();
         Location location = block.getLocation();
 
-        updateCorrespondingBlock(location, (orig, corr)->{
+        updateCorrespondingBlock(location, (orig, corr) -> {
             UPDATE_BLOCK_DATA.accept(orig, corr);
 
-            if(corr.getState() instanceof Sign){
+            if (corr.getState() instanceof Sign) {
                 Sign sign = (Sign) corr.getState();
 
-                if(!Arrays.equals(sign.getLines(), signChangeEvent.getLines())) {
+                if (!Arrays.equals(sign.getLines(), signChangeEvent.getLines())) {
                     for (int i = 0; i < signChangeEvent.getLines().length; i++) {
                         sign.setLine(i, signChangeEvent.getLine(i));
                     }
@@ -77,17 +76,17 @@ public class MovementListener implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockPlaceEvent(BlockPlaceEvent blockPlaceEvent){
+    public void onBlockPlaceEvent(BlockPlaceEvent blockPlaceEvent) {
         Block block = blockPlaceEvent.getBlock();
         Location location = block.getLocation();
 
         updateCorrespondingBlock(location, UPDATE_BLOCK_DATA);
     }
 
-    private void updateCorrespondingBlock(Location original, BiConsumer<Block, Block> updater){
+    private void updateCorrespondingBlock(Location original, BiConsumer<Block, Block> updater) {
         Section section = worldManager.getSectionFor(original);
 
-        if(section != null) {
+        if (section != null) {
             Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
             Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
 
@@ -98,7 +97,7 @@ public class MovementListener implements Listener {
                 corresponding = SectionUtils.getCorrespondingLocation(section, below, original);
             }
 
-            if(corresponding != null) {
+            if (corresponding != null) {
                 updater.accept(original.getBlock(), corresponding.getBlock());
             }
         }
@@ -163,8 +162,10 @@ public class MovementListener implements Listener {
     private void teleportBetweenSections(Player player, Location to, Section oldSection, Section newSection) {
         Location newLoc = SectionUtils.getCorrespondingLocation(oldSection, newSection, to);
 
+        float fallDistance = player.getFallDistance();
         Vector oldVelocity = player.getVelocity();
         player.teleport(newLoc);
+        player.setFallDistance(fallDistance);
         player.setVelocity(oldVelocity);
 
     }
