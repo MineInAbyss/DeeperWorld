@@ -1,132 +1,100 @@
-package com.derongan.minecraft.deeperworld.world;
+package com.derongan.minecraft.deeperworld.world
 
-import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey;
-import com.derongan.minecraft.deeperworld.world.section.Section;
-import com.derongan.minecraft.deeperworld.world.section.SectionKey;
-import com.google.common.collect.ImmutableList;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
+import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
+import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.InternalSectionKey
+import com.derongan.minecraft.deeperworld.world.section.Section
+import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import com.google.common.collect.ImmutableList
+import org.bukkit.Bukkit
+import org.bukkit.Location
+import org.bukkit.World
+import org.bukkit.configuration.file.FileConfiguration
+import java.util.stream.Collectors
 
-import java.util.*;
-import java.util.stream.Collectors;
+class WorldManagerImpl(config: FileConfiguration) : WorldManager {
+    private val sectionMap: MutableMap<SectionKey, Section> = HashMap()
 
-public class WorldManagerImpl implements WorldManager {
-    public static final String SECTION_KEY = "sections";
-    public static final String REF_TOP_KEY = "refTop";
-    public static final String REF_BOTTOM_KEY = "refBottom";
-    public static final String WORLD_KEY = "world";
-    public static final String REGION_KEY = "region";
-    public static final String NAME_KEY = "name";
-
-    private Map<SectionKey, Section> sectionMap;
-
-    public WorldManagerImpl(FileConfiguration config) {
-        this.sectionMap = new HashMap<>();
-
-        List<Map<?, ?>> sectionList = config.getMapList(SECTION_KEY);
-
-        List<SectionKey> keys = sectionList.stream().map(this::getKey).collect(Collectors.toList());
-
-        for (int i = 0; i < keys.size(); i++) {
-            Map<?, ?> map = sectionList.get(i);
-
-            String worldName = (String) map.get(WORLD_KEY);
-            World world = Bukkit.getWorld(worldName);
-
-            List<Integer> regionPoints = (List<Integer>) map.get(REGION_KEY);
-
-            Region region = new Region(regionPoints.get(0), regionPoints.get(1), regionPoints.get(2), regionPoints.get(3));
-
-            Location refBottom = parseLocation((List<Integer>) map.get(REF_BOTTOM_KEY), world);
-            Location refTop = parseLocation((List<Integer>) map.get(REF_TOP_KEY), world);
-
-            Section.Builder builder = Section.builder()
-                    .setReferenceTop(refTop)
-                    .setReferenceBottom(refBottom)
-                    .setRegion(region)
-                    .setWorld(world)
-                    .setName(keys.get(i));
-
-            if (i != 0)
-                builder.setSectionAbove(keys.get(i - 1));
-            if (i < keys.size() - 1)
-                builder.setSectionBelow(keys.get(i + 1));
-
-            registerSection(keys.get(i), builder.build());
-        }
+    private fun getKey(sectionData: Map<*, *>): SectionKey {
+        val name = sectionData[NAME_KEY] as String?
+        return name?.let { CustomSectionKey(it) } ?: InternalSectionKey()
     }
 
-    private SectionKey getKey(Map<?, ?> sectionData) {
-        String name = (String) sectionData.get(NAME_KEY);
-        if (name == null)
-            return new AbstractSectionKey.InternalSectionKey();
-        else
-            return new AbstractSectionKey.CustomSectionKey(name);
+    private fun parseLocation(points: List<Int>?, world: World?): Location {
+        return Location(world, points!![0].toDouble(), points[1].toDouble(), points[2].toDouble())
     }
 
-    private Location parseLocation(List<Integer> points, World world) {
-        return new Location(world, points.get(0), points.get(1), points.get(2));
+    override fun getSectionFor(location: Location): Section? {
+        return getSectionFor(location.blockX, location.blockZ, location.world!!)
     }
 
-    @Override
-    public Section getSectionFor(Location location) {
-        int x = location.getBlockX();
-        int z = location.getBlockZ();
-
-        return getSectionFor(x, z, location.getWorld());
+    override fun registerSection(name: String, section: Section): SectionKey {
+        return registerInternal(CustomSectionKey(name), section)
     }
 
-    @Override
-    public SectionKey registerSection(String name, Section section) {
-        return registerInternal(new AbstractSectionKey.CustomSectionKey(name), section);
+    override fun registerSection(sectionKey: SectionKey, section: Section): SectionKey {
+        return registerInternal(sectionKey, section)
     }
 
-    @Override
-    public SectionKey registerSection(SectionKey sectionKey, Section section) {
-        return registerInternal(sectionKey, section);
+    private fun registerInternal(key: SectionKey, section: Section): SectionKey {
+        if (sectionMap.containsKey(key)) throw RuntimeException("Bruh") //TODO change to checked exception
+        sectionMap[key] = section
+        return key
     }
 
-    private SectionKey registerInternal(SectionKey key, Section section) {
-        if (sectionMap.containsKey(key))
-            throw new RuntimeException("Bruh"); //TODO change to checked exception
-
-        sectionMap.put(key, section);
-
-        return key;
+    override fun unregisterSection(key: SectionKey) { //TODO
     }
 
-    @Override
-    public void unregisterSection(SectionKey key) {
-        //TODO
-    }
-
-    @Override
-    public Section getSectionFor(int x, int z, World world) {
-        //TODO consider performance
-        for (Section section : sectionMap.values()) {
-            if (section.getWorld().equals(world) && section.getRegion().contains(x, z)) {
-                return section;
+    override fun getSectionFor(x: Int, z: Int, world: World): Section? { //TODO consider performance
+        for (section in sectionMap.values) {
+            if (section.world == world && section.region.contains(x, z)) {
+                return section
             }
         }
-
-        return null;
+        return null
     }
 
-    @Override
-    public Section getSectionFor(SectionKey key) {
-        return sectionMap.get(key);
+    override fun getSectionFor(key: SectionKey): Section? {
+        return sectionMap[key]
     }
 
-    @Override
-    public Section getSectionFor(String key) {
-        return getSectionFor(new AbstractSectionKey.CustomSectionKey(key));
+    override fun getSectionFor(key: String): Section? {
+        return getSectionFor(CustomSectionKey(key))
     }
 
-    @Override
-    public Collection<Section> getSections() {
-        return ImmutableList.copyOf(sectionMap.values());
+    override fun getSections(): Collection<Section> {
+        return ImmutableList.copyOf(sectionMap.values)
     }
 
+    companion object {
+        const val SECTION_KEY = "sections"
+        const val REF_TOP_KEY = "refTop"
+        const val REF_BOTTOM_KEY = "refBottom"
+        const val WORLD_KEY = "world"
+        const val REGION_KEY = "region"
+        const val NAME_KEY = "name"
+    }
+
+    init {
+        val sectionList = config.getMapList(SECTION_KEY)
+        val keys = sectionList.stream().map { sectionData: Map<*, *> -> getKey(sectionData) }.collect(Collectors.toList())
+        for (i in keys.indices) {
+            val map = sectionList[i]
+            val worldName = map[WORLD_KEY] as String?
+            val world = Bukkit.getWorld(worldName!!)
+            val regionPoints = map[REGION_KEY] as List<Int>
+            val region = Region(regionPoints[0], regionPoints[1], regionPoints[2], regionPoints[3]) //TODO use worldguard regions in the future
+            val refBottom = parseLocation(map[REF_BOTTOM_KEY] as List<Int>, world)
+            val refTop = parseLocation(map[REF_TOP_KEY] as List<Int>, world)
+
+            val section = Section(world = world!!,
+                    region = region,
+                    key = keys[i],
+                    referenceTop = refTop,
+                    referenceBottom = refBottom,
+                    aboveKey = if (i != 0) keys[i - 1] else SectionKey.TERMINAL,
+                    belowKey = if (i < keys.size - 1) keys[i + 1] else SectionKey.TERMINAL)
+
+            registerSection(keys[i], section)
+        }
+    }
 }

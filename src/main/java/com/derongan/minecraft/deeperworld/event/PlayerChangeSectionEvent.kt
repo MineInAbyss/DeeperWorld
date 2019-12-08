@@ -1,50 +1,27 @@
-package com.derongan.minecraft.deeperworld.event;
+package com.derongan.minecraft.deeperworld.event
 
-import com.derongan.minecraft.deeperworld.world.section.Section;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.player.PlayerEvent;
+import com.derongan.minecraft.deeperworld.world.section.Section
+import org.bukkit.entity.Player
+import org.bukkit.event.Cancellable
+import org.bukkit.event.HandlerList
+import org.bukkit.event.player.PlayerEvent
 
-public abstract class PlayerChangeSectionEvent extends PlayerEvent implements Cancellable {
-    private boolean cancelled;
-
-    private Section fromSection;
-    private Section toSection;
-
-    public PlayerChangeSectionEvent(Player player, Section fromSection, Section toSection) {
-        super(player);
-
-        this.fromSection = fromSection;
-        this.toSection = toSection;
+abstract class PlayerChangeSectionEvent(player: Player, val fromSection: Section, val toSection: Section) : PlayerEvent(player), Cancellable {
+    private var cancelled = false
+    override fun isCancelled(): Boolean {
+        return cancelled
     }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
+    override fun setCancelled(cancel: Boolean) {
+        cancelled = cancel
     }
 
-    @Override
-    public void setCancelled(boolean cancel) {
-        cancelled = cancel;
+    override fun getHandlers(): HandlerList {
+        return handlerList
     }
 
-    private static final HandlerList handlers = new HandlerList();
-
-    public HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
-
-    public Section getFromSection() {
-        return fromSection;
-    }
-
-    public Section getToSection() {
-        return toSection;
+    companion object {
+        @JvmStatic
+        val handlerList = HandlerList()
     }
 }
