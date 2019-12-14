@@ -1,12 +1,15 @@
 apply plugin: 'java'
 apply plugin: 'kotlin'
+apply plugin: 'com.github.johnrengelman.shadow'
 
-group = pluginGroup
-version = pluginVersion
+ext.kotlin_version = '1.3.61'
+ext.plugin_path = '' //Put your plugins folder directory here! If it is left as '', jars won't be copied
+
+group = 'com.derongan.minecraft'
+version = plugin_version + "-SNAPSHOT"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
     maven {
@@ -20,8 +23,8 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+    testImplementation 'junit:junit:4.12'
+    implementation 'org.spigotmc:spigot-api:1.15-R0.1-SNAPSHOT'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
@@ -33,25 +36,14 @@ processResources {
     }
 }
 
-jar {
-    from sourceSets.main.output
-}
-
-task copyJar(type: Copy) {
-    from jar // here it automatically reads jar file produced from jar task
-    into '/srv/craftbukkit/plugins/'
-}
-
-build.dependsOn copyJar
-buildscript {
-    ext.kotlin_version = '1.3.61'
-    repositories {
-        mavenCentral()
-    }
+shadowJar {
+    getArchiveClassifier().set(null)
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        include(dependency("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"))
     }
 }
+build.dependsOn shadowJar
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
@@ -62,3 +54,12 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
+
+//Move into plugins folder
+if (plugin_path != '') {
+    task copyJar(type: Copy) {
+        from shadowJar // here it automatically reads jar file produced from jar task
+        into plugin_path
+    }
+    build.dependsOn copyJar
+} else println("Skipped copyJar")

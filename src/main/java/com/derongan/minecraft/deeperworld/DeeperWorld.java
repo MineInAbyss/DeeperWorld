@@ -11,7 +11,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 
 public final class DeeperWorld extends JavaPlugin {
-
     private WorldManagerImpl worldManager;
     private MovementListener movementListener;
 
