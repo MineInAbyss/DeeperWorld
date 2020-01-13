@@ -8,17 +8,14 @@ import org.bukkit.event.player.PlayerEvent
 
 abstract class PlayerChangeSectionEvent(player: Player, val fromSection: Section, val toSection: Section) : PlayerEvent(player), Cancellable {
     private var cancelled = false
-    override fun isCancelled(): Boolean {
-        return cancelled
-    }
+
+    override fun isCancelled() = cancelled
 
     override fun setCancelled(cancel: Boolean) {
         cancelled = cancel
     }
 
-    override fun getHandlers(): HandlerList {
-        return handlerList
-    }
+    override fun getHandlers() = handlerList
 
     companion object {
         @JvmStatic

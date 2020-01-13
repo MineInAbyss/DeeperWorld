@@ -118,8 +118,10 @@ public class MovementListener implements Listener {
 
                 if (above != null) {
                     int shared = SectionUtils.getSharedBlocks(current, above);
+                    Location correspondingPos = SectionUtils.getCorrespondingLocation(current, above, to);
 
-                    if (to.getY() > WORLD_HEIGHT - .3 * shared) {
+                    if (to.getY() > WORLD_HEIGHT - .3 * shared &&
+                            above.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())) {
                         ascend(player, to, current, above);
                     }
                 }
@@ -127,13 +129,14 @@ public class MovementListener implements Listener {
         } else if (changeY < 0) {
             Section current = worldManager.getSectionFor(player.getLocation());
             if (current != null) {
-
                 Section below = worldManager.getSectionFor(current.getKeyForSectionBelow());
 
                 if (below != null) {
                     int shared = SectionUtils.getSharedBlocks(current, below);
+                    Location correspondingPos = SectionUtils.getCorrespondingLocation(current, below, to);
 
-                    if (to.getY() < .3 * shared) {
+                    if (to.getY() < .3 * shared &&
+                            below.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())) {
                         descend(player, to, current, below);
                     }
                 }

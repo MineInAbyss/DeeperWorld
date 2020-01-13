@@ -1,6 +1,5 @@
 package com.derongan.minecraft.deeperworld.world;
 
-import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey;
 import com.derongan.minecraft.deeperworld.world.section.Section;
 import com.derongan.minecraft.deeperworld.world.section.SectionKey;
 import org.bukkit.Location;

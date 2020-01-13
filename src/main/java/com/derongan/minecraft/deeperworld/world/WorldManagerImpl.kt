@@ -77,6 +77,8 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
     init {
         val sectionList = config.getMapList(SECTION_KEY)
         val keys = sectionList.stream().map { sectionData: Map<*, *> -> getKey(sectionData) }.collect(Collectors.toList())
+
+        @Suppress("UNCHECKED_CAST")
         for (i in keys.indices) {
             val map = sectionList[i]
             val worldName = map[WORLD_KEY] as String?
