@@ -7,6 +7,7 @@ import com.derongan.minecraft.deeperworld.world.WorldManager;
 import com.derongan.minecraft.deeperworld.world.section.Section;
 import com.derongan.minecraft.deeperworld.world.section.SectionUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -27,6 +28,9 @@ import java.util.function.BiConsumer;
 import static com.derongan.minecraft.deeperworld.MinecraftConstants.WORLD_HEIGHT;
 
 public class MovementListener implements Listener {
+    private static BiConsumer<Block, Block> UPDATE_BLOCK_DATA = (original, corresponding) -> {
+        corresponding.setBlockData(original.getBlockData().clone());
+    };
     private WorldManager worldManager;
     private PlayerManager playerManager;
 
@@ -103,12 +107,9 @@ public class MovementListener implements Listener {
         }
     }
 
-    private static BiConsumer<Block, Block> UPDATE_BLOCK_DATA = (original, corresponding) -> {
-        corresponding.setBlockData(original.getBlockData().clone());
-    };
-
     private void onPlayerMoveInternal(Player player, Location from, Location to) {
         double changeY = to.getY() - from.getY();
+        boolean inSpectator = player.getGameMode().equals(GameMode.SPECTATOR);
 
         if (changeY > 0) {
             Section current = worldManager.getSectionFor(player.getLocation());
@@ -120,10 +121,11 @@ public class MovementListener implements Listener {
                     int shared = SectionUtils.getSharedBlocks(current, above);
                     Location correspondingPos = SectionUtils.getCorrespondingLocation(current, above, to);
 
-                    if (to.getY() > WORLD_HEIGHT - .3 * shared &&
-                            above.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())) {
-                        ascend(player, to, current, above);
-                    }
+                    if (to.getY() > WORLD_HEIGHT - .3 * shared)
+                        if (!above.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())
+                                || !inSpectator && !correspondingPos.getBlock().isPassable())
+                            player.setVelocity(player.getVelocity().setY(-0.3 * Math.min(player.getFlySpeed(), 1)));
+                        else ascend(player, to, current, above);
                 }
             }
         } else if (changeY < 0) {
@@ -135,10 +137,11 @@ public class MovementListener implements Listener {
                     int shared = SectionUtils.getSharedBlocks(current, below);
                     Location correspondingPos = SectionUtils.getCorrespondingLocation(current, below, to);
 
-                    if (to.getY() < .3 * shared &&
-                            below.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())) {
-                        descend(player, to, current, below);
-                    }
+                    if (to.getY() < .3 * shared)
+                        if (!below.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())
+                                || !inSpectator && !correspondingPos.getBlock().isPassable())
+                            player.setVelocity(player.getVelocity().setY(0.3 * Math.min(player.getFlySpeed(), 1)));
+                        else descend(player, to, current, below);
                 }
             }
         }

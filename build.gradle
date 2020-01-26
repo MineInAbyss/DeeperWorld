@@ -58,7 +58,9 @@ processResources {
 
 shadowJar {
     getArchiveClassifier().set(null)
-    minimize()
+    minimize {
+        exclude(dependency("org.jetbrains.kotlin:.*"))
+    }
 }
 
 build.dependsOn shadowJar
