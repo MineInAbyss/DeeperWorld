@@ -1,178 +1,140 @@
-package com.derongan.minecraft.deeperworld;
+package com.derongan.minecraft.deeperworld
 
-import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent;
-import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent;
-import com.derongan.minecraft.deeperworld.player.PlayerManager;
-import com.derongan.minecraft.deeperworld.world.WorldManager;
-import com.derongan.minecraft.deeperworld.world.section.Section;
-import com.derongan.minecraft.deeperworld.world.section.SectionUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.util.Vector;
+import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
+import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
+import com.derongan.minecraft.deeperworld.player.PlayerManager
+import com.derongan.minecraft.deeperworld.world.WorldManager
+import com.derongan.minecraft.deeperworld.world.section.Section
+import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import com.derongan.minecraft.deeperworld.world.section.SectionUtils
+import org.bukkit.Bukkit
+import org.bukkit.GameMode
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.block.Block
+import org.bukkit.block.Sign
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
+import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.block.SignChangeEvent
+import org.bukkit.event.player.PlayerMoveEvent
 
-import java.util.Arrays;
-import java.util.function.BiConsumer;
-
-import static com.derongan.minecraft.deeperworld.MinecraftConstants.WORLD_HEIGHT;
-
-public class MovementListener implements Listener {
-    private static BiConsumer<Block, Block> UPDATE_BLOCK_DATA = (original, corresponding) -> {
-        corresponding.setBlockData(original.getBlockData().clone());
-    };
-    private WorldManager worldManager;
-    private PlayerManager playerManager;
-
-    public MovementListener(PlayerManager playerManager) {
-        worldManager = Bukkit.getServicesManager().load(WorldManager.class);
-        this.playerManager = playerManager;
+class MovementListener(private val playerManager: PlayerManager) : Listener {
+    private val worldManager: WorldManager = Bukkit.getServicesManager().load(WorldManager::class.java)!!
+    private val updateBlockData = { original: Block, corresponding: Block ->
+        corresponding.blockData = original.blockData.clone()
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onPlayerMove(PlayerMoveEvent playerMoveEvent) {
-        Player player = playerMoveEvent.getPlayer();
-
+    fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
+        val player = playerMoveEvent.player
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && playerManager.playerCanTeleport(player)) {
-            onPlayerMoveInternal(player, playerMoveEvent.getFrom(), playerMoveEvent.getTo());
+            onPlayerMoveInternal(player, playerMoveEvent.from, playerMoveEvent.to)
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockBreakEvent(BlockBreakEvent blockBreakEvent) {
-        Block block = blockBreakEvent.getBlock();
-
-        updateCorrespondingBlock(block.getLocation(), (orig, corr) -> {
-            corr.setType(Material.AIR);
-        });
+    fun onBlockBreakEvent(blockBreakEvent: BlockBreakEvent) {
+        val block = blockBreakEvent.block
+        updateCorrespondingBlock(block.location) { _, corr ->
+            corr.type = Material.AIR
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onSignChangeEvent(SignChangeEvent signChangeEvent) {
-        Block block = signChangeEvent.getBlock();
-        Location location = block.getLocation();
-
-        updateCorrespondingBlock(location, (orig, corr) -> {
-            UPDATE_BLOCK_DATA.accept(orig, corr);
-
-            if (corr.getState() instanceof Sign) {
-                Sign sign = (Sign) corr.getState();
-
-                if (!Arrays.equals(sign.getLines(), signChangeEvent.getLines())) {
-                    for (int i = 0; i < signChangeEvent.getLines().length; i++) {
-                        sign.setLine(i, signChangeEvent.getLine(i));
+    fun onSignChangeEvent(signChangeEvent: SignChangeEvent) {
+        val block = signChangeEvent.block
+        val location = block.location
+        updateCorrespondingBlock(location) { orig, corr ->
+            updateBlockData(orig, corr)
+            if (corr.state is Sign) {
+                val sign = corr.state as Sign
+                if (!sign.lines.contentEquals(signChangeEvent.lines)) {
+                    for (i in signChangeEvent.lines.indices) {
+                        sign.setLine(i, signChangeEvent.getLine(i)!!)
                     }
                 }
-
-                sign.update();
+                sign.update()
             }
-        });
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onBlockPlaceEvent(BlockPlaceEvent blockPlaceEvent) {
-        Block block = blockPlaceEvent.getBlock();
-        Location location = block.getLocation();
-
-        updateCorrespondingBlock(location, UPDATE_BLOCK_DATA);
+    fun onBlockPlaceEvent(blockPlaceEvent: BlockPlaceEvent) {
+        val block = blockPlaceEvent.block
+        val location = block.location
+        updateCorrespondingBlock(location, updateBlockData)
     }
 
-    private void updateCorrespondingBlock(Location original, BiConsumer<Block, Block> updater) {
-        Section section = worldManager.getSectionFor(original);
+    private fun updateCorrespondingBlock(original: Location, updater: (original: Block, corresponding: Block) -> Unit) {
+        val section = worldManager.getSectionFor(original) ?: return
+        val above = worldManager.getSectionFor(section.aboveKey)
+        val below = worldManager.getSectionFor(section.belowKey)
 
-        if (section != null) {
-            Section above = worldManager.getSectionFor(section.getKeyForSectionAbove());
-            Section below = worldManager.getSectionFor(section.getKeyForSectionBelow());
+        val toSection: Section = when {
+            above != null && SectionUtils.isSharedLocation(section, above, original) -> above
+            below != null && SectionUtils.isSharedLocation(section, below, original) -> below
+            else -> null
+        } ?: return
+        val corresponding: Location = SectionUtils.getCorrespondingLocation(section, toSection, original)
+        //ensure blocks don't get altered outside of the corresponding region
+        if (toSection.region.contains(corresponding.blockX, corresponding.blockZ))
+            updater(original.block, corresponding.block)
+    }
 
-            Location corresponding = null;
-            if (above != null && SectionUtils.isSharedLocation(section, above, original)) {
-                corresponding = SectionUtils.getCorrespondingLocation(section, above, original);
-            } else if (below != null && SectionUtils.isSharedLocation(section, below, original)) {
-                corresponding = SectionUtils.getCorrespondingLocation(section, below, original);
+    private fun onPlayerMoveInternal(player: Player, from: Location, to: Location?) {
+        to ?: return
+        val changeY = to.y - from.y
+        if (changeY == 0.0) return
+
+        val inSpectator = player.gameMode == GameMode.SPECTATOR
+        val current = worldManager.getSectionFor(player.location) ?: return
+
+        fun tpIfAbleTo(key: SectionKey, tpFun: (Player, Location?, Section, Section) -> Unit, boundaryCheck: (y: Double, shared: Int) -> Boolean, pushVelocity: Double) {
+            val toSection = worldManager.getSectionFor(key) ?: return
+            val shared = SectionUtils.getSharedBlocks(current, toSection)
+            val correspondingPos = SectionUtils.getCorrespondingLocation(current, toSection, to)
+
+            if (boundaryCheck(to.y, shared)) {
+                if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
+                        || !inSpectator && !correspondingPos.block.isPassable)
+                    player.velocity = player.velocity.setY(pushVelocity)
+                else
+                    tpFun(player, to, current, toSection)
             }
+        }
 
-            if (corresponding != null) {
-                updater.accept(original.getBlock(), corresponding.getBlock());
-            }
+        when {
+            changeY > 0.0 -> tpIfAbleTo(current.aboveKey, ::ascend, { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared }, -0.4)
+            changeY < 0.0 -> tpIfAbleTo(current.belowKey, ::descend, { y, shared -> y < .3 * shared }, 0.4)
         }
     }
 
-    private void onPlayerMoveInternal(Player player, Location from, Location to) {
-        double changeY = to.getY() - from.getY();
-        boolean inSpectator = player.getGameMode().equals(GameMode.SPECTATOR);
-
-        if (changeY > 0) {
-            Section current = worldManager.getSectionFor(player.getLocation());
-
-            if (current != null) {
-                Section above = worldManager.getSectionFor(current.getKeyForSectionAbove());
-
-                if (above != null) {
-                    int shared = SectionUtils.getSharedBlocks(current, above);
-                    Location correspondingPos = SectionUtils.getCorrespondingLocation(current, above, to);
-
-                    if (to.getY() > WORLD_HEIGHT - .3 * shared)
-                        if (!above.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())
-                                || !inSpectator && !correspondingPos.getBlock().isPassable())
-                            player.setVelocity(player.getVelocity().setY(-0.3 * Math.min(player.getFlySpeed(), 1)));
-                        else ascend(player, to, current, above);
-                }
-            }
-        } else if (changeY < 0) {
-            Section current = worldManager.getSectionFor(player.getLocation());
-            if (current != null) {
-                Section below = worldManager.getSectionFor(current.getKeyForSectionBelow());
-
-                if (below != null) {
-                    int shared = SectionUtils.getSharedBlocks(current, below);
-                    Location correspondingPos = SectionUtils.getCorrespondingLocation(current, below, to);
-
-                    if (to.getY() < .3 * shared)
-                        if (!below.getRegion().contains(correspondingPos.getBlockX(), correspondingPos.getBlockZ())
-                                || !inSpectator && !correspondingPos.getBlock().isPassable())
-                            player.setVelocity(player.getVelocity().setY(0.3 * Math.min(player.getFlySpeed(), 1)));
-                        else descend(player, to, current, below);
-                }
-            }
+    private fun descend(player: Player, to: Location?, oldSection: Section, newSection: Section) {
+        val event = PlayerDescendEvent(player, oldSection, newSection)
+        Bukkit.getServer().pluginManager.callEvent(event)
+        if (!event.isCancelled) {
+            teleportBetweenSections(player, to, oldSection, newSection)
         }
     }
 
-    private void descend(Player player, Location to, Section oldSection, Section newSection) {
-        PlayerDescendEvent event = new PlayerDescendEvent(player, oldSection, newSection);
-        Bukkit.getServer().getPluginManager().callEvent(event);
-
-        if (!event.isCancelled()) {
-            teleportBetweenSections(player, to, oldSection, newSection);
+    private fun ascend(player: Player, to: Location?, oldSection: Section, newSection: Section) {
+        val event = PlayerAscendEvent(player, oldSection, newSection)
+        Bukkit.getServer().pluginManager.callEvent(event)
+        if (!event.isCancelled) {
+            teleportBetweenSections(player, to, oldSection, newSection)
         }
     }
 
-    private void ascend(Player player, Location to, Section oldSection, Section newSection) {
-        PlayerAscendEvent event = new PlayerAscendEvent(player, oldSection, newSection);
-        Bukkit.getServer().getPluginManager().callEvent(event);
-
-        if (!event.isCancelled()) {
-            teleportBetweenSections(player, to, oldSection, newSection);
-        }
-    }
-
-    private void teleportBetweenSections(Player player, Location to, Section oldSection, Section newSection) {
-        Location newLoc = SectionUtils.getCorrespondingLocation(oldSection, newSection, to);
-
-        float fallDistance = player.getFallDistance();
-        Vector oldVelocity = player.getVelocity();
-        player.teleport(newLoc);
-        player.setFallDistance(fallDistance);
-        player.setVelocity(oldVelocity);
-
+    private fun teleportBetweenSections(player: Player, to: Location?, oldSection: Section, newSection: Section) {
+        val newLoc = SectionUtils.getCorrespondingLocation(oldSection, newSection, to)
+        val fallDistance = player.fallDistance
+        val oldVelocity = player.velocity
+        player.teleport(newLoc)
+        player.fallDistance = fallDistance
+        player.velocity = oldVelocity
     }
 }
