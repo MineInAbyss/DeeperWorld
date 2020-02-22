@@ -17,13 +17,11 @@ plugins {
     id 'idea'
 }
 
-//Stops errors when a parent project defines the version being used for a plugin like kotlin
-ext.addPlugin = { String pluginId -> if (!project.getPlugins().hasPlugin(pluginId)) apply plugin: pluginId }
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.github.johnrengelman.shadow'
 
-addPlugin('org.jetbrains.kotlin.jvm')
-addPlugin('com.github.johnrengelman.shadow')
-
-ext.plugin_path = '' //Put your plugins folder directory here! If it is left as '', jars won't be copied
+//Put your plugins folder directory here! If it is left as '', jars will only be copied if the parent project has a path specified
+ext.plugin_path = ''
 
 group = 'com.derongan.minecraft'
 version = pluginVersion + "-SNAPSHOT"
@@ -40,12 +38,17 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
+    maven{
+        name = 'rutger-repo'
+        url = 'http://www.rutgerkok.nl/repo'
+    }
 }
 
 dependencies {
     testImplementation 'junit:junit:4.12'
     compileOnly 'org.spigotmc:spigot-api:1.15-R0.1-SNAPSHOT'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compileOnly "nl.rutgerkok:blocklocker:1.7"
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -78,9 +81,17 @@ compileTestKotlin {
 
 //Move into plugins folder
 if (plugin_path != '') {
+    println("Copying to plugin directory")
     task copyJar(type: Copy) {
         from shadowJar // here it automatically reads jar file produced from jar task
         into plugin_path
+    }
+    build.dependsOn copyJar
+} else if (parent != null && parent.hasProperty("plugin_path")) {
+    println("Copying to parent project's plugin directory")
+    task copyJar(type: Copy) {
+        from shadowJar
+        into parent.ext.plugin_path
     }
     build.dependsOn copyJar
 } else println("Skipped copyJar")
