@@ -1,11 +1,29 @@
-apply plugin: 'java'
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+    }
+}
 
-group = pluginGroup
-version = pluginVersion
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+//Put your plugins folder directory here! If it is left as '', jars will only be copied if the parent project has a path specified
+ext.plugin_path = ''
+
+group = 'com.derongan.minecraft'
+version = pluginVersion + "-SNAPSHOT"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
     maven {
@@ -19,8 +37,8 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+    testImplementation 'junit:junit:4.12'
+    compileOnly 'org.spigotmc:spigot-api:1.15-R0.1-SNAPSHOT'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -31,13 +49,27 @@ processResources {
     }
 }
 
-jar {
-    from sourceSets.main.output
+shadowJar {
+    getArchiveClassifier().set(null)
+    minimize {
+    }
 }
 
-task copyJar(type: Copy) {
-    from jar // here it automatically reads jar file produced from jar task
-    into '/srv/craftbukkit/plugins/'
-}
+build.dependsOn shadowJar
 
-build.dependsOn copyJar
+//Move into plugins folder
+if (plugin_path != '') {
+    println("Copying to plugin directory")
+    task copyJar(type: Copy) {
+        from shadowJar // here it automatically reads jar file produced from jar task
+        into plugin_path
+    }
+    build.dependsOn copyJar
+} else if (parent != null && parent.hasProperty("plugin_path")) {
+    println("Copying to parent project's plugin directory")
+    task copyJar(type: Copy) {
+        from shadowJar
+        into parent.ext.plugin_path
+    }
+    build.dependsOn copyJar
+} else println("Skipped copyJar")
