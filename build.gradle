@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id 'java'
     id 'idea'
+    id 'maven-publish'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
