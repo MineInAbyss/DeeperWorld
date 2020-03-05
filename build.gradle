@@ -43,7 +43,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/MineInAbyss/geary")
+            url = uri("https://maven.pkg.github.com/MineInAbyss/DeeperWorld")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
