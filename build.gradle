@@ -12,13 +12,18 @@ buildscript {
 plugins {
     id 'java'
     id 'idea'
+    id 'maven-publish'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
 
 group = 'com.derongan.minecraft'
-version = pluginVersion + "-SNAPSHOT"
+version = pluginVersion
+
+if(project.hasProperty("snapshot") && snapshot.toBoolean() != false) {
+    version += "-SNAPSHOT"
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -31,6 +36,24 @@ repositories {
     maven {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/MineInAbyss/geary")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
     }
 }
 
