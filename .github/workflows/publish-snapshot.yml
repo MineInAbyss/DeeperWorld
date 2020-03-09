@@ -21,4 +21,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run:
-          ./gradlew -Psnapshot=true publish
+          ./gradlew -PbuildNo=${{ github.run_number }} publish

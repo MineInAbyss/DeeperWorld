@@ -21,8 +21,8 @@ apply plugin: 'com.github.johnrengelman.shadow'
 group = 'com.derongan.minecraft'
 version = pluginVersion
 
-if(project.hasProperty("snapshot") && snapshot.toBoolean() != false) {
-    version += "-SNAPSHOT"
+if (project.hasProperty("buildNo")) {
+    version += "-" + buildNo
 }
 
 sourceCompatibility = 1.8
