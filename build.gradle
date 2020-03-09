@@ -40,6 +40,14 @@ repositories {
         name = 'rutger-repo'
         url = 'http://www.rutgerkok.nl/repo'
     }
+    maven {
+        name = "MineInAbyss"
+        url = uri("https://maven.pkg.github.com/MineInAbyss/Idofront")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("PASSWORD")
+        }
+    }
 }
 
 dependencies {
@@ -47,6 +55,9 @@ dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.15-R0.1-SNAPSHOT'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly "nl.rutgerkok:blocklocker:1.7"
+
+    if (useLocalIdofront.toBoolean()) implementation project(':idofront')
+    else implementation group: 'com.mineinabyss', name: 'idofront', version: '0.1.1-alpha-5'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens

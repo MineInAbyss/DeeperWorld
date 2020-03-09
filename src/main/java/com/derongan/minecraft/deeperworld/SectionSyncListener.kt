@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
+import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -44,9 +45,9 @@ class SectionSyncListener : Listener {
         updateCorrespondingBlock(block.location) { original, corr ->
             val state = corr.state
             if (state is Container && original.location.y > corr.location.y) { //if this a container in the lower section
-                //only drops items that aren't matched between containers TODO haven't tested ingame yet
-                state.inventory.toList().dropItems(original.location, false, (corr.state as Container).inventory.toList())
-                state.inventory.clear()
+                val corrInv = state.inventory
+                corrInv.toList().dropItems(original.location, false)
+                corrInv.clear()
             }
             if (state is Sign && state.lines[0] == "[Private]") {
                 //TODO ignore blocklocker code if it isn't present
@@ -98,8 +99,7 @@ class SectionSyncListener : Listener {
                     updateMaterial(Material.AIR)(orig, corr)
             }
 
-    //TODO move out all the section syncing events into a different listener
-    //TODO doesn't work between worlds
+    //FIXME doesn't work between worlds
     @EventHandler
     fun onInteractWithChest(event: PlayerInteractEvent) {
         val clicked = event.clickedBlock ?: return
@@ -124,10 +124,12 @@ class SectionSyncListener : Listener {
                 return
 
             event.isCancelled = true
-            val inventory: List<ItemStack?> = container.inventory.toList()
+            val otherInventory = ((linkedBlock.state as? Container) ?: return).inventory.toList()
+
+            //only drops items that aren't matched between containers
+            val inventory: List<ItemStack?> = container.inventory.toList().filterIndexed { i, item -> otherInventory[i] != item }.filterNotNull()
             if (inventory.isNotEmpty()) {
-                container.inventory
-                inventory.dropItems(loc, true, (linkedBlock.state as Container).inventory.toList())
+                inventory.dropItems(loc, true)
                 container.inventory.clear()
                 player.sendMessage("${ChatColor.GOLD}This container had items in it, which have been ejected to synchronize it with the upper section. Hoppers may cause this!")
                 return
@@ -136,11 +138,26 @@ class SectionSyncListener : Listener {
         }
     }
 
-    private fun List<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean, compareTo: List<ItemStack?>) {
+    /**
+     * Synchronize hopper pickups between sections
+     */
+    @EventHandler
+    fun hopperGrabEvent(e: InventoryPickupItemEvent) {
+        updateCorrespondingBlock(e.inventory.location ?: return) { original, corresponding ->
+            val section = original.location.section ?: return@updateCorrespondingBlock
+            val linkedSection = corresponding.location.section ?: return@updateCorrespondingBlock
+            if (linkedSection.isOnTopOf(section)) {
+                //if there are no leftover items, remove the itemstack
+                if ((corresponding.state as? Container)?.inventory?.addItem(e.item.itemStack)?.isEmpty() != false)
+                    e.item.remove()
+                e.isCancelled = true
+            }
+        }
+    }
+
+    private fun List<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean) {
         val spawnLoc = loc.clone().add(0.5, if (noVelocity) 1.0 else 0.0, 0.5)
-        filterIndexed { i, it -> compareTo[i] != it } //don't drop items that are in the same slot
-                .filterNotNull()
-                .forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
+        filterNotNull().forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
