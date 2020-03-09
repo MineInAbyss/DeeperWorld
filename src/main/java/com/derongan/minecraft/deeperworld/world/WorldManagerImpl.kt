@@ -4,7 +4,6 @@ import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.Custo
 import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.InternalSectionKey
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
-import com.google.common.collect.ImmutableList
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.World
@@ -12,6 +11,8 @@ import org.bukkit.configuration.file.FileConfiguration
 import java.util.stream.Collectors
 
 class WorldManagerImpl(config: FileConfiguration) : WorldManager {
+    override val sections get() = sectionMap.values.toSet()
+
     private val sectionMap: MutableMap<SectionKey, Section> = HashMap()
 
     private fun getKey(sectionData: Map<*, *>): SectionKey {
@@ -27,13 +28,11 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
         return getSectionFor(location.blockX, location.blockZ, location.world!!)
     }
 
-    override fun registerSection(name: String, section: Section): SectionKey {
-        return registerInternal(CustomSectionKey(name), section)
-    }
+    override fun registerSection(name: String, section: Section): SectionKey =
+            registerInternal(CustomSectionKey(name), section)
 
-    override fun registerSection(sectionKey: SectionKey, section: Section): SectionKey {
-        return registerInternal(sectionKey, section)
-    }
+    override fun registerSection(sectionKey: SectionKey, section: Section): SectionKey =
+            registerInternal(sectionKey, section)
 
     private fun registerInternal(key: SectionKey, section: Section): SectionKey {
         if (sectionMap.containsKey(key)) throw RuntimeException("Bruh") //TODO change to checked exception
@@ -53,17 +52,8 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
         return null
     }
 
-    override fun getSectionFor(key: SectionKey): Section? {
-        return sectionMap[key]
-    }
-
-    override fun getSectionFor(key: String): Section? {
-        return getSectionFor(CustomSectionKey(key))
-    }
-
-    override fun getSections(): Collection<Section> {
-        return ImmutableList.copyOf(sectionMap.values)
-    }
+    override fun getSectionFor(key: SectionKey) = sectionMap[key]
+    override fun getSectionFor(key: String) = sectionMap[CustomSectionKey(key)]
 
     companion object {
         const val SECTION_KEY = "sections"

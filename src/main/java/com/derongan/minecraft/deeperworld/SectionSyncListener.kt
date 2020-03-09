@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.util.Vector
 
 
 class SectionSyncListener : Listener {
@@ -43,8 +44,8 @@ class SectionSyncListener : Listener {
         updateCorrespondingBlock(block.location) { original, corr ->
             val state = corr.state
             if (state is Container && original.location.y > corr.location.y) { //if this a container in the lower section
-                state.inventory.contents
-                state.inventory.toList().filterNotNull().dropItems(original.location, false)
+                //only drops items that aren't matched between containers TODO haven't tested ingame yet
+                state.inventory.toList().dropItems(original.location, false, (corr.state as Container).inventory.toList())
                 state.inventory.clear()
             }
             if (state is Sign && state.lines[0] == "[Private]") {
@@ -110,12 +111,12 @@ class SectionSyncListener : Listener {
             val linkedSection = loc.correspondingSection ?: return
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection).block
 
-            blockLocker.protectionFinder.findProtection(linkedBlock, SearchMode.ALL).ifPresent {
-                it.signs.forEach { sign -> updateCorrespondingBlock(sign.location, signUpdater()) }
-            }
-            blockLocker.protectionFinder.findProtection(clicked, SearchMode.ALL).ifPresent {
-                it.signs.forEach { linkedSign -> updateCorrespondingBlock(linkedSign.location, signUpdater()) }
-            }
+            fun updateProtection(block: Block) =
+                    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
+                        it.signs.forEach { sign -> updateCorrespondingBlock(sign.location, signUpdater()) }
+                    }
+            updateProtection(linkedBlock)
+            updateProtection(clicked)
 
             if (section.isOnTopOf(linkedSection) || player.inventory.itemInMainHand.type.name.contains("SIGN")) return
 
@@ -123,9 +124,10 @@ class SectionSyncListener : Listener {
                 return
 
             event.isCancelled = true
-            val inventory = container.inventory.toList().filterNotNull()
+            val inventory: List<ItemStack?> = container.inventory.toList()
             if (inventory.isNotEmpty()) {
-                inventory.dropItems(loc, true)
+                container.inventory
+                inventory.dropItems(loc, true, (linkedBlock.state as Container).inventory.toList())
                 container.inventory.clear()
                 player.sendMessage("${ChatColor.GOLD}This container had items in it, which have been ejected to synchronize it with the upper section. Hoppers may cause this!")
                 return
@@ -134,9 +136,11 @@ class SectionSyncListener : Listener {
         }
     }
 
-    private fun List<ItemStack>.dropItems(loc: Location, noVelocity: Boolean) {
+    private fun List<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean, compareTo: List<ItemStack?>) {
         val spawnLoc = loc.clone().add(0.5, if (noVelocity) 1.0 else 0.0, 0.5)
-        forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = org.bukkit.util.Vector(0, 0, 0) } }
+        filterIndexed { i, it -> compareTo[i] != it } //don't drop items that are in the same slot
+                .filterNotNull()
+                .forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -144,7 +148,7 @@ class SectionSyncListener : Listener {
         updateCorrespondingBlock(signChangeEvent.block.location, signUpdater(signChangeEvent.lines))
     }
 
-    fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
+    private fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
         updateBlockData(original, corresponding)
         val sign = original.state
         if (sign is Sign) {
