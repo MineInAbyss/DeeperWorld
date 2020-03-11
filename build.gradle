@@ -91,6 +91,8 @@ processResources {
 
 shadowJar {
     getArchiveClassifier().set(null)
+    relocate 'com.mineinabyss.idofront', "${project.group}.${project.name}.idofront"
+
     minimize {
         exclude(dependency("org.jetbrains.kotlin:.*"))
     }
