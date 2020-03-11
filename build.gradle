@@ -13,13 +13,14 @@ buildscript {
 plugins {
     id 'java'
     id 'idea'
+    id 'maven-publish'
 }
 
 apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'com.derongan.minecraft'
-version = pluginVersion + "-SNAPSHOT"
+version = pluginVersion
 
 if (project.hasProperty("buildNo")) {
     version += "." + buildNo
