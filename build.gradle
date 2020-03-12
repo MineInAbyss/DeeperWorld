@@ -22,9 +22,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 group = 'com.derongan.minecraft'
 version = pluginVersion
 
-if (project.hasProperty("buildNo")) {
-    version += "." + buildNo
-}
+if (project.hasProperty("buildNo")) version += ".$buildNo"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -78,7 +76,7 @@ dependencies {
     compileOnly "nl.rutgerkok:blocklocker:1.7"
 
     if (useLocalIdofront.toBoolean()) implementation project(':idofront')
-    else implementation group: 'com.mineinabyss', name: 'idofront', version: '0.1.1-alpha-5'
+    else implementation group: 'com.mineinabyss', name: 'idofront', version: '0.1.2-alpha.6'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
