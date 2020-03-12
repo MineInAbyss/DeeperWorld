@@ -16,11 +16,20 @@ public class Region {
         return x <= Math.max(a.getX(), b.getX()) && x >= Math.min(a.getX(), b.getX()) && z <= Math.max(a.getZ(), b.getZ()) && z >= Math.min(a.getZ(), b.getZ());
     }
 
+
+    public boolean contains(Point p) {
+        return contains(p.getX(), p.getZ());
+    }
+
     public Point getA() {
         return a;
     }
 
     public Point getB() {
         return b;
+    }
+
+    public Point midPoint(){
+        return a.plus(b).div(2);
     }
 }
