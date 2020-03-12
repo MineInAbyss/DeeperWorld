@@ -1,7 +1,5 @@
 package com.derongan.minecraft.deeperworld.world.section;
 
-import com.derongan.minecraft.deeperworld.world.WorldManagerImpl;
-
 import java.util.Objects;
 
 /**
@@ -30,6 +28,11 @@ public abstract class AbstractSectionKey implements SectionKey {
         return Objects.hash(key);
     }
 
+    @Override
+    public String toString() {
+        return key;
+    }
+
     //TODO should this be in here?
     public static class CustomSectionKey extends AbstractSectionKey {
         public CustomSectionKey(String key) {
@@ -41,10 +44,5 @@ public abstract class AbstractSectionKey implements SectionKey {
         public InternalSectionKey() {
             super(String.valueOf(internalKeyCount++));
         }
-    }
-
-    @Override
-    public String toString() {
-        return key;
     }
 }

@@ -3,17 +3,15 @@ package com.derongan.minecraft.deeperworld;
 import com.derongan.minecraft.deeperworld.player.PlayerManager;
 import com.derongan.minecraft.deeperworld.world.WorldManager;
 import com.derongan.minecraft.deeperworld.world.WorldManagerImpl;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 
 public final class DeeperWorld extends JavaPlugin {
-
     private WorldManagerImpl worldManager;
     private MovementListener movementListener;
+    private SectionSyncListener sectionSyncListener;
 
     @Override
     public void onEnable() {
@@ -25,7 +23,9 @@ public final class DeeperWorld extends JavaPlugin {
         this.getServer().getServicesManager().register(WorldManager.class, worldManager, this, ServicePriority.Lowest);
 
         movementListener = new MovementListener(playerManager);
+        sectionSyncListener = new SectionSyncListener();
         this.getServer().getPluginManager().registerEvents(movementListener, this);
+        this.getServer().getPluginManager().registerEvents(sectionSyncListener, this);
 
         DeeperCommandExecutor commandExecutor = new DeeperCommandExecutor(playerManager, worldManager);
 

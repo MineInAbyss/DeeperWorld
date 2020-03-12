@@ -1,24 +1,21 @@
-package com.derongan.minecraft.deeperworld.world;
+package com.derongan.minecraft.deeperworld.world
 
-import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey;
-import com.derongan.minecraft.deeperworld.world.section.Section;
-import com.derongan.minecraft.deeperworld.world.section.SectionKey;
-import org.bukkit.Location;
-import org.bukkit.World;
-
-import java.util.Collection;
+import com.derongan.minecraft.deeperworld.world.section.Section
+import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import org.bukkit.Location
+import org.bukkit.World
 
 /**
  * Manages sections within the world.
  */
-public interface WorldManager {
+interface WorldManager {
     /**
      * Given a location, return the Section it is within
      *
      * @param location The location to check
      * @return The section or null if the location is not within a section.
      */
-    Section getSectionFor(Location location);
+    fun getSectionFor(location: Location): Section?
 
     /**
      * Given x,y coords and a world, return the Section it is within
@@ -28,7 +25,7 @@ public interface WorldManager {
      * @param world The world
      * @return The section or null if the location is not within a section.
      */
-    Section getSectionFor(int x, int z, World world);
+    fun getSectionFor(x: Int, z: Int, world: World): Section?
 
     /**
      * Gets the section associated with the provided key
@@ -36,7 +33,7 @@ public interface WorldManager {
      * @param key The section key
      * @return The section associated or null of none exists
      */
-    Section getSectionFor(SectionKey key);
+    fun getSectionFor(key: SectionKey): Section?
 
     /**
      * Gets the section associated with the provided string
@@ -44,7 +41,7 @@ public interface WorldManager {
      * @param key The section name
      * @return The section associated or null of none exists
      */
-    Section getSectionFor(String key);
+    fun getSectionFor(key: String): Section?
 
     /**
      * Register a section with a specific name
@@ -53,7 +50,7 @@ public interface WorldManager {
      * @param section The section
      * @return a key used for retrieving this section
      */
-    SectionKey registerSection(String name, Section section);
+    fun registerSection(name: String, section: Section): SectionKey
 
     /**
      * Register a section with an automatically computed name.
@@ -62,17 +59,17 @@ public interface WorldManager {
      * @param section    The section
      * @return a key used for retrieving this section
      */
-    SectionKey registerSection(SectionKey sectionKey, Section section);
+    fun registerSection(sectionKey: SectionKey, section: Section): SectionKey
 
     /**
      * Removes a registered section
      *
      * @param key The section key returned when registering this section
      */
-    void unregisterSection(SectionKey key);
+    fun unregisterSection(key: SectionKey)
 
     /**
      * Gets an immutable copy of the currently loaded sections.
      */
-    Collection<Section> getSections();
+    val sections: Set<Section>
 }
