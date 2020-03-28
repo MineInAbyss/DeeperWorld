@@ -1,47 +1,38 @@
-package com.derongan.minecraft.deeperworld
+package com.derongan.minecraft.deeperworld.synchronization
 
+import com.derongan.minecraft.deeperworld.DeeperContext
 import com.derongan.minecraft.deeperworld.world.section.*
+import com.mineinabyss.idofront.messaging.color
+import com.mineinabyss.idofront.messaging.logInfo
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
-import nl.rutgerkok.blocklocker.BlockLockerPlugin
 import nl.rutgerkok.blocklocker.SearchMode
-import org.bukkit.ChatColor
-import org.bukkit.Location
+import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.Container
 import org.bukkit.block.Sign
 import org.bukkit.block.data.Waterlogged
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
+import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.world.ChunkUnloadEvent
 import org.bukkit.inventory.ItemStack
-import org.bukkit.util.Vector
 
-
-class SectionSyncListener : Listener {
-    var blockLocker: BlockLockerPlugin = BlockLockerAPIv2.getPlugin()
-    private val updateBlockData = { original: Block, corresponding: Block ->
-        corresponding.blockData = original.blockData.clone()
-    }
-
-    private fun updateCorrespondingBlock(original: Location, updater: (original: Block, corresponding: Block) -> Unit) {
-        val corresponding: Location = original.correspondingLocation ?: return
-        //ensure blocks don't get altered when we are outside of the corresponding region
-        if (corresponding.inSectionOverlap)
-            updater(original.block, corresponding.block)
-    }
-
-    private fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
-
+/**
+ * Synchronizes the overlap between sections
+ */
+object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun onBlockBreakEvent(blockBreakEvent: BlockBreakEvent) {
         val block = blockBreakEvent.block
-
         updateCorrespondingBlock(block.location) { original, corr ->
             val state = corr.state
             if (state is Container && original.location.y > corr.location.y) { //if this a container in the lower section
@@ -49,7 +40,7 @@ class SectionSyncListener : Listener {
                 corrInv.toList().dropItems(original.location, false)
                 corrInv.clear()
             }
-            if (state is Sign && state.lines[0] == "[Private]") {
+            if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
                 //TODO ignore blocklocker code if it isn't present
                 blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
                     it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
@@ -67,9 +58,7 @@ class SectionSyncListener : Listener {
     }
 
 
-    /**
-     * Disables pistons if they are in the overlap of two sections
-     */
+    /** Disables pistons if they are in the overlap of two sections */
     @EventHandler
     fun onPistonEvent(event: BlockPistonExtendEvent) {
         if (event.block.location.correspondingSection != null)
@@ -99,9 +88,12 @@ class SectionSyncListener : Listener {
                     updateMaterial(Material.AIR)(orig, corr)
             }
 
-    //FIXME doesn't work between worlds
+    /** Tells a chunk what players are accessing inventories on its [Section] border*/
+    private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
+
+    /** Synchronize container interactions between sections*/
     @EventHandler
-    fun onInteractWithChest(event: PlayerInteractEvent) {
+    fun onInteractWithContainer(event: PlayerInteractEvent) {
         val clicked = event.clickedBlock ?: return
         val loc = clicked.location
         val container = clicked.state
@@ -111,39 +103,77 @@ class SectionSyncListener : Listener {
             val linkedSection = loc.correspondingSection ?: return
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection).block
 
-            fun updateProtection(block: Block) =
-                    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
-                        it.signs.forEach { sign -> updateCorrespondingBlock(sign.location, signUpdater()) }
-                    }
-            updateProtection(linkedBlock)
-            updateProtection(clicked)
+            if (DeeperContext.isBlockLockerLoaded) {
+                fun updateProtection(block: Block) = blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
+                    it.signs.forEach { sign -> updateCorrespondingBlock(sign.location, signUpdater()) }
+                }
+                updateProtection(linkedBlock)
+                updateProtection(clicked)
 
-            if (section.isOnTopOf(linkedSection) || player.inventory.itemInMainHand.type.name.contains("SIGN")) return
+                if (player.inventory.itemInMainHand.type.name.contains("SIGN") //allow chest protection signs to be placed
+                        || !BlockLockerAPIv2.isAllowed(player, clicked, true)
+                        || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true))
+                    return
+            }
 
-            if (!BlockLockerAPIv2.isAllowed(player, clicked, true) || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true))
-                return
+            if (section.isOnTopOf(linkedSection)) return
 
             event.isCancelled = true
-            val otherInventory = ((linkedBlock.state as? Container) ?: return).inventory
-            val invList: List<ItemStack> = container.inventory.toList().filterNotNull()
-            if (invList.isNotEmpty()) {
-                //try adding items to the chest above, if something doesn't fit, drop it
-                invList.map { otherInventory.addItem(it).values }.flatten().also {
-                    if (it.isNotEmpty())
-                        player.sendMessage("${ChatColor.GOLD}This container had items in it, which have been ejected to synchronize it with the upper section.")
-                }.dropItems(loc, true)
-                container.inventory.clear()
+
+            //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
+            val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
+            if (player.openInventory(linkedInventory) != null) {
+                logInfo("openeed successfully!")
+                //synchronize chests and drop anything that doesn't fit
+                val otherInventory = ((linkedBlock.state as? Container) ?: return).inventory
+                val invList: List<ItemStack> = container.inventory.toList().filterNotNull()
+                if (invList.isNotEmpty()) {
+                    //try adding items to the chest above, if something doesn't fit, drop it
+                    invList.map { otherInventory.addItem(it).values }.flatten().also {
+                        if (it.isNotEmpty())
+                            player.sendMessage("&6This container had items in it, which have been ejected to synchronize it with the upper section.".color())
+                    }.dropItems(loc, true)
+                    container.inventory.clear()
+                }
+
+                //add player to map of players using this inventory
+                if (!linkedBlock.chunk.isForceLoaded)
+                    keepLoadedInventories.getOrPut(linkedBlock.chunk, { mutableListOf() }) += player
             }
-            player.openInventory(((linkedBlock.state as? Container) ?: return).inventory)
         }
     }
 
-    /**
-     * Synchronize hopper pickups between sections
-     */
+    /** If there are any players accessing a synced inventory in this chunk, don't unload it*/
+    @EventHandler
+    fun onChunkUnload(cue: ChunkUnloadEvent) {
+        if (keepLoadedInventories.containsKey(cue.chunk)) cue.chunk.load()
+    }
+
+    /** Removes the player from the [keepLoadedInventories] map*/
+    @EventHandler
+    fun onCloseInventory(ice: InventoryCloseEvent) {
+        val inventory = ice.inventory
+        val chunk = inventory.location?.chunk ?: return
+        if (keepLoadedInventories[chunk]?.remove(ice.player) != null) {
+            if (keepLoadedInventories[chunk]?.isEmpty() == true)
+                keepLoadedInventories -= chunk
+        }
+    }
+
+    /** Synchronize explosions */
+    @EventHandler
+    fun onExplodeEvent(explodeEvent: EntityExplodeEvent) {
+        if (!explodeEvent.isCancelled)
+            explodeEvent.blockList().forEach { explodedBlock ->
+                updateCorrespondingBlock(explodedBlock.location, updateMaterial(Material.AIR))
+            }
+    }
+
+    /** Synchronize hopper pickups between sections */
     @EventHandler
     fun hopperGrabEvent(e: InventoryPickupItemEvent) {
-        updateCorrespondingBlock(e.inventory.location ?: return) { original, corresponding ->
+        updateCorrespondingBlock(e.inventory.location
+                ?: return) { original, corresponding ->
             val section = original.location.section ?: return@updateCorrespondingBlock
             val linkedSection = corresponding.location.section ?: return@updateCorrespondingBlock
             if (linkedSection.isOnTopOf(section)) {
@@ -155,26 +185,8 @@ class SectionSyncListener : Listener {
         }
     }
 
-    private fun List<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean) {
-        val spawnLoc = loc.clone().add(0.5, if (noVelocity) 1.0 else 0.0, 0.5)
-        filterNotNull().forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun onSignChangeEvent(signChangeEvent: SignChangeEvent) {
         updateCorrespondingBlock(signChangeEvent.block.location, signUpdater(signChangeEvent.lines))
-    }
-
-    private fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
-        updateBlockData(original, corresponding)
-        val sign = original.state
-        if (sign is Sign) {
-            val readLines = lines ?: sign.lines
-            val corrSign = corresponding.state
-            if (corrSign is Sign && !corrSign.lines.contentEquals(readLines)) {
-                readLines.forEachIndexed { i, line -> corrSign.setLine(i, line) }
-                corrSign.update()
-            }
-        }
     }
 }

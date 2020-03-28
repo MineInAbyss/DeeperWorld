@@ -4,6 +4,7 @@ import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.player.PlayerManager
 import com.derongan.minecraft.deeperworld.world.section.*
+import com.mineinabyss.idofront.messaging.color
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -14,7 +15,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
 
 class MovementListener(private val playerManager: PlayerManager) : Listener {
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
         val player = playerMoveEvent.player
@@ -24,12 +24,19 @@ class MovementListener(private val playerManager: PlayerManager) : Listener {
     }
 
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location?) {
+        val current = worldManager.getSectionFor(player.location) ?: let {
+            if (DeeperContext.damagePlayersOutsideSections >= 0.0 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+                player.damage(0.01) //give a damage effect
+                player.health = (player.health - DeeperContext.damagePlayersOutsideSections/10).coerceAtLeast(0.0) //ignores armor
+                player.sendTitle("&cYou are not in a managed section".color(), "&7You will take damage upon moving!".color(), 0, 20, 10)
+            }
+            return
+        }
         to ?: return
         val changeY = to.y - from.y
         if (changeY == 0.0) return
 
         val inSpectator = player.gameMode == GameMode.SPECTATOR
-        val current = worldManager.getSectionFor(player.location) ?: return
 
         fun tpIfAbleTo(key: SectionKey, tpFun: (Player, Location, Section, Section) -> Unit, boundaryCheck: (y: Double, shared: Int) -> Boolean, pushVelocity: Double) {
             val toSection = worldManager.getSectionFor(key) ?: return

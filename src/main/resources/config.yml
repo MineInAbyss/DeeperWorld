@@ -11,3 +11,6 @@
 #    region: [196, -92, 380, 92]
 #    world: TestWorld
 #    name: section1
+
+# The damage players will take when outside a managed section
+# damage-outside-sections: 0.0

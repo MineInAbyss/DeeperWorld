@@ -76,7 +76,7 @@ dependencies {
     compileOnly "nl.rutgerkok:blocklocker:1.7"
 
     if (useLocalIdofront.toBoolean()) implementation project(':idofront')
-    else implementation group: 'com.mineinabyss', name: 'idofront', version: '0.1.2-alpha.6'
+    else implementation "com.mineinabyss:idofront:0.1.+"
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
