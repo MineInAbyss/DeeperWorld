@@ -11,9 +11,19 @@ commands:
   sectionon:
     description: Enables automatic teleports between sections for a player
     usage: /sectionon [player]
+    permission: deeperworld.admin
   sectionoff:
     description: Disables automatic teleports between sections for a player
     usage: /sectionoff [player]
+    permission: deeperworld.admin
   linfo:
     description: Gets information about a players section
     usage: /linfo [player]
+permissions:
+  deeperworld.*:
+      description: Gives access to all commands
+      children:
+        deeperworld.admin: true
+  deeperworld.admin:
+      description: Have power to use admin comands
+      default: op

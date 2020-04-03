@@ -28,8 +28,6 @@ public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Player player = null;
 
-        if(sender.hasPermission(Permissions.CHANGE_SECTION_PERMISSION))
-
         if (args.length > 0) {
             player = Bukkit.getPlayer(args[0]);
         } else if (sender instanceof Player) {
