@@ -40,8 +40,7 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
         return key
     }
 
-    override fun unregisterSection(key: SectionKey) { //TODO
-    }
+    override fun unregisterSection(key: SectionKey) = TODO()
 
     override fun getSectionFor(x: Int, z: Int, world: World): Section? { //TODO consider performance
         for (section in sectionMap.values) {

@@ -25,7 +25,7 @@ class MovementListener(private val playerManager: PlayerManager) : Listener {
 
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location?) {
         val current = worldManager.getSectionFor(player.location) ?: let {
-            if (DeeperContext.damagePlayersOutsideSections >= 0.0 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+            if (DeeperContext.damagePlayersOutsideSections > 0.0 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
                 player.damage(0.01) //give a damage effect
                 player.health = (player.health - DeeperContext.damagePlayersOutsideSections/10).coerceAtLeast(0.0) //ignores armor
                 player.sendTitle("&cYou are not in a managed section".color(), "&7You will take damage upon moving!".color(), 0, 20, 10)
