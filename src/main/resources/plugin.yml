@@ -19,11 +19,16 @@ commands:
   linfo:
     description: Gets information about a players section
     usage: /linfo [player]
+    permission: deeperworld.linfo
 permissions:
   deeperworld.*:
-      description: Gives access to all commands
-      children:
-        deeperworld.admin: true
+    description: Gives access to all commands
+    children:
+      deeperworld.admin: true
+      deeperworld.linfo: true
   deeperworld.admin:
-      description: Have power to use admin comands
-      default: op
+    description: Have power to use admin comands
+    default: op
+  deeperworld.linfo:
+    description: Gives access to linfo
+    default: op

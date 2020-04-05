@@ -35,18 +35,18 @@ public class DeeperCommandExecutor implements CommandExecutor, TabCompleter {
         }
 
         if (player != null) {
-            if (command.getName().equalsIgnoreCase("sectionoff") && sender.hasPermission(Permissions.CHANGE_SECTION_PERMISSION)) {
+            if (command.getName().equalsIgnoreCase("sectionoff")) {
                 playerManager.setPlayerCanTeleport(player, false);
                 sender.sendMessage(String.format("Automatic TP disabled for %s", player.getName()));
                 return true;
-            } else if (command.getName().equalsIgnoreCase("sectionon") && sender.hasPermission(Permissions.CHANGE_SECTION_PERMISSION)) {
+            } else if (command.getName().equalsIgnoreCase("sectionon")) {
                 playerManager.setPlayerCanTeleport(player, true);
                 sender.sendMessage(String.format("Automatic TP enabled for %s", player.getName()));
                 return true;
-            } else if (command.getName().equalsIgnoreCase("linfo") && sender.hasPermission(Permissions.SHOW_LAYER_INFO_PERMISSION)) {
+            } else if(command.getName().equalsIgnoreCase("linfo")){
                 Section section = worldManager.getSectionFor(player.getLocation());
 
-                if (section == null) {
+                if(section == null){
                     sender.sendMessage(String.format("%s is not in a managed section", (player.getName())));
                 } else {
                     sender.sendMessage(String.format("%s is in section %s", player.getName(), section.getKey()));
