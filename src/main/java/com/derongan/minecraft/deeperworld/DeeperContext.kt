@@ -5,6 +5,10 @@ package com.derongan.minecraft.deeperworld
  */
 object DeeperContext {
     val config = deeperWorld.config
+    val preventTeleportInUnmanaged =
+        if (config.contains("prevent-teleport-in-unmanaged"))
+                config.getBoolean("prevent-teleport-in-unmanaged")
+        else true
     val damagePlayersOutsideSections =
             if (config.contains("damage-outside-sections"))
                 config.getDouble("damage-outside-sections")
