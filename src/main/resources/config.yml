@@ -14,3 +14,6 @@
 
 # The damage players will take when outside a managed section
 # damage-outside-sections: 0.0
+
+# Cancel teleport into unmanaged section
+ prevent-teleport-in-unmanaged: true

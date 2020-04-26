@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld;
 
+import com.derongan.minecraft.deeperworld.listeners.PlayerListener;
 import com.derongan.minecraft.deeperworld.player.PlayerManager;
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener;
 import com.derongan.minecraft.deeperworld.world.WorldManager;
@@ -23,6 +24,7 @@ public final class DeeperWorld extends JavaPlugin {
         this.getServer().getServicesManager().register(WorldManager.class, worldManager, this, ServicePriority.Lowest);
 
         this.getServer().getPluginManager().registerEvents(new MovementListener(playerManager), this);
+        this.getServer().getPluginManager().registerEvents(PlayerListener.INSTANCE, this);
         this.getServer().getPluginManager().registerEvents(SectionSyncListener.INSTANCE, this);
 
         DeeperCommandExecutor commandExecutor = new DeeperCommandExecutor(playerManager, worldManager);
