@@ -15,7 +15,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
 
 class MovementListener(private val playerManager: PlayerManager) : Listener {
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
         val player = playerMoveEvent.player
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && playerManager.playerCanTeleport(player)) {
