@@ -57,11 +57,17 @@ object SectionSyncListener : Listener {
         updateCorrespondingBlock(location, updateBlockData)
     }
 
-
-    /** Disables pistons if they are in the overlap of two sections */
+    /** Disables pistons extending if they are in the overlap of two sections */
     @EventHandler
-    fun onPistonEvent(event: BlockPistonExtendEvent) {
+    fun onPistonExtendEvent(event: BlockPistonExtendEvent) {
         //TODO handle pistons properly instead of just cancelling the event
+        if (event.blocks.any { it.location.correspondingSection != null })
+            event.isCancelled = true
+    }
+
+    /** Disables pistons retracting if they are in the overlap of two sections */
+    @EventHandler
+    fun onPistonRetractEvent(event: BlockPistonRetractEvent) {
         if (event.blocks.any { it.location.correspondingSection != null })
             event.isCancelled = true
     }
