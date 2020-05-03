@@ -61,7 +61,8 @@ object SectionSyncListener : Listener {
     /** Disables pistons if they are in the overlap of two sections */
     @EventHandler
     fun onPistonEvent(event: BlockPistonExtendEvent) {
-        if (event.block.location.correspondingSection != null)
+        //TODO handle pistons properly instead of just cancelling the event
+        if (event.blocks.any { it.location.correspondingSection != null })
             event.isCancelled = true
     }
 
