@@ -13,7 +13,7 @@ import org.bukkit.util.Vector
 
 internal val blockLocker: BlockLockerPlugin by lazy { BlockLockerAPIv2.getPlugin() }
 
-internal val updateBlockData = { original: Block, corresponding: Block ->
+internal val copyBlockData = { original: Block, corresponding: Block ->
     corresponding.blockData = original.blockData.clone()
 }
 
@@ -27,7 +27,7 @@ internal fun updateCorrespondingBlock(original: Location, updater: (original: Bl
 }
 
 internal fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
-    updateBlockData(original, corresponding)
+    copyBlockData(original, corresponding)
     val sign = original.state
     if (sign is Sign) {
         val readLines = lines ?: sign.lines

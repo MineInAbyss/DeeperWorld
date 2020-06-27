@@ -4,11 +4,13 @@ import com.derongan.minecraft.deeperworld.DeeperContext
 import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.logInfo
+import com.mineinabyss.idofront.messaging.logVal
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.BlockState
 import org.bukkit.block.Container
 import org.bukkit.block.Sign
 import org.bukkit.block.data.Waterlogged
@@ -17,6 +19,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
+import org.bukkit.event.entity.EntityBreakDoorEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
@@ -31,7 +34,7 @@ import org.bukkit.inventory.ItemStack
  */
 object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    fun onBlockBreakEvent(blockBreakEvent: BlockBreakEvent) {
+    fun onBlockBreakEvent(blockBreakEvent: BlockEvent) {
         val block = blockBreakEvent.block
         updateCorrespondingBlock(block.location) { original, corr ->
             val state = corr.state
@@ -54,7 +57,26 @@ object SectionSyncListener : Listener {
     fun onBlockPlaceEvent(blockPlaceEvent: BlockPlaceEvent) {
         val block = blockPlaceEvent.block
         val location = block.location
-        updateCorrespondingBlock(location, updateBlockData)
+        updateCorrespondingBlock(location, copyBlockData)
+    }
+
+    //handles fertilized crops as well
+    @EventHandler
+    fun onBlockGrowEvent(blockEvent: BlockGrowEvent) {
+        blockEvent.newState.updateBlock()
+    }
+
+    @EventHandler
+    fun onBlockMultiPlaceEvent(blockEvent: BlockMultiPlaceEvent) {
+        blockEvent.replacedBlockStates.logVal("states ").copyBlocks()
+    }
+
+    //TODO make a clean way for some basic stuff like this to be used for all the listeners
+    private fun List<BlockState>.copyBlocks() = forEach { it.copyBlock() }
+    private fun BlockState.copyBlock() = updateCorrespondingBlock(location, copyBlockData)
+    private fun List<BlockState>.updateBlocks() = forEach { it.updateBlock() }
+    private fun BlockState.updateBlock() = updateCorrespondingBlock(location) { _, corresponding ->
+        corresponding.blockData = this.blockData
     }
 
     /** Disables pistons extending if they are in the overlap of two sections */
