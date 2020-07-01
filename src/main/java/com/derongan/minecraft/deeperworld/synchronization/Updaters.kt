@@ -7,6 +7,7 @@ import nl.rutgerkok.blocklocker.BlockLockerPlugin
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.BlockState
 import org.bukkit.block.Sign
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
@@ -15,6 +16,14 @@ internal val blockLocker: BlockLockerPlugin by lazy { BlockLockerAPIv2.getPlugin
 
 internal val copyBlockData = { original: Block, corresponding: Block ->
     corresponding.blockData = original.blockData.clone()
+}
+
+//TODO make a clean way for some basic stuff like this to be used for all the listeners
+internal fun List<BlockState>.copyBlocks() = forEach { it.copyBlock() }
+internal fun BlockState.copyBlock() = updateCorrespondingBlock(location, copyBlockData)
+internal fun List<BlockState>.updateBlocks() = forEach { it.updateBlock() }
+internal fun BlockState.updateBlock() = updateCorrespondingBlock(location) { _, corresponding ->
+    corresponding.blockData = this.blockData
 }
 
 internal fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
