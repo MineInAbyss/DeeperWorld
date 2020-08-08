@@ -1,66 +1,35 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
-    }
-}
-
 plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'com.github.johnrengelman.shadow'
+    id 'io.github.0ffz.github-packages'
 }
 
-apply plugin: 'org.jetbrains.kotlin.jvm'
-apply plugin: 'com.github.johnrengelman.shadow'
-
-group = 'com.derongan.minecraft'
-version = pluginVersion
+group 'com.derongan.minecraft'
+version pluginVersion
 
 if (project.hasProperty("buildNo")) version += ".$buildNo"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+java {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    withJavadocJar()
+    withSourcesJar()
+}
 
 repositories {
     mavenCentral()
-    maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/groups/public/'
-    }
-    maven {
-        name = 'sonatype'
-        url = 'https://oss.sonatype.org/content/groups/public/'
-    }
-    maven {
-        name = 'rutger-repo'
-        url = 'http://www.rutgerkok.nl/repo'
-    }
-    maven {
-        name = "MineInAbyss"
-        url = uri("https://maven.pkg.github.com/MineInAbyss/Idofront")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-        }
-    }
+    maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
+    maven { url 'https://oss.sonatype.org/content/groups/public/' }
+    maven { url 'http://www.rutgerkok.nl/repo' }
+    maven githubPackage.invoke("MineInAbyss/Idofront")
+    maven githubPackage.invoke("rutgerkok/BlockLocker")
 }
 
 publishing {
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/MineInAbyss/DeeperWorld")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
+        maven githubPackage.invoke("MineInAbyss/DeeperWorld")
     }
     publications {
         gpr(MavenPublication) {
@@ -70,36 +39,27 @@ publishing {
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.12'
-    compileOnly 'org.spigotmc:spigot-api:1.15-R0.1-SNAPSHOT'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compileOnly "nl.rutgerkok:blocklocker:1.7"
+    compileOnly 'org.spigotmc:spigot-api:1.16.1-R0.1-SNAPSHOT'
+    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    compileOnly 'nl.rutgerkok:blocklocker:1.6.2-SNAPSHOT'
 
-    if (useLocalIdofront.toBoolean()) implementation project(':idofront')
-    else implementation "com.mineinabyss:idofront:0.1.+"
+    implementation 'com.mineinabyss:idofront:0.1.+'
+
+    testImplementation 'junit:junit:4.12'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
 processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        filter ReplaceTokens, tokens: [version: version]
-    }
+    filter ReplaceTokens, tokens: [version: version]
 }
 
 shadowJar {
     getArchiveClassifier().set(null)
     relocate 'com.mineinabyss.idofront', "${project.group}.${project.name}.idofront"
-
-    minimize {
-        exclude(dependency("org.jetbrains.kotlin:.*"))
-    }
+    minimize()
 }
-
 build.dependsOn shadowJar
-
-compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
-compileTestKotlin { kotlinOptions { jvmTarget = "1.8" } }
 
 //Move into plugins folder
 if (project.hasProperty("plugin_path") && plugin_path) {
@@ -110,3 +70,6 @@ if (project.hasProperty("plugin_path") && plugin_path) {
     }
     build.dependsOn copyJar
 }
+
+compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
+compileTestKotlin { kotlinOptions { jvmTarget = "1.8" } }
