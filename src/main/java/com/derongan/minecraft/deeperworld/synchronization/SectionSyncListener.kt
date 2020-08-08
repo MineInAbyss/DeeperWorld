@@ -41,7 +41,6 @@ object SectionSyncListener : Listener {
                 corrInv.clear()
             }
             if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
-                //TODO ignore blocklocker code if it isn't present
                 blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
                     it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
                 }
@@ -54,8 +53,20 @@ object SectionSyncListener : Listener {
     fun onBlockPlaceEvent(blockPlaceEvent: BlockPlaceEvent) {
         val block = blockPlaceEvent.block
         val location = block.location
-        updateCorrespondingBlock(location, updateBlockData)
+        updateCorrespondingBlock(location, copyBlockData)
     }
+
+    //handles fertilized crops as well
+    @EventHandler
+    fun onBlockGrowEvent(blockEvent: BlockGrowEvent) {
+        blockEvent.newState.updateBlock()
+    }
+
+    //TODO this causes duplication glitches that need to be fixed first
+    /*@EventHandler
+    fun onBlockMultiPlaceEvent(blockEvent: BlockMultiPlaceEvent) {
+        blockEvent.replacedBlockStates.copyBlocks()
+    }*/
 
     /** Disables pistons extending if they are in the overlap of two sections */
     @EventHandler
