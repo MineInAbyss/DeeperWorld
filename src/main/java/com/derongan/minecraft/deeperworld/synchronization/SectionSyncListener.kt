@@ -62,10 +62,11 @@ object SectionSyncListener : Listener {
         blockEvent.newState.updateBlock()
     }
 
-    @EventHandler
+    //TODO this causes duplication glitches that need to be fixed first
+    /*@EventHandler
     fun onBlockMultiPlaceEvent(blockEvent: BlockMultiPlaceEvent) {
         blockEvent.replacedBlockStates.copyBlocks()
-    }
+    }*/
 
     /** Disables pistons extending if they are in the overlap of two sections */
     @EventHandler
