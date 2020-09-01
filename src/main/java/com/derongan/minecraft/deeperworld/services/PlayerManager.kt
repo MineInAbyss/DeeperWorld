@@ -1,6 +1,6 @@
 package com.derongan.minecraft.deeperworld.services
 
-import com.derongan.minecraft.deeperworld.getService
+import com.mineinabyss.idofront.plugin.getService
 import org.bukkit.entity.Player
 
 /**

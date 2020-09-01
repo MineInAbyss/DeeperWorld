@@ -9,6 +9,8 @@ import com.derongan.minecraft.deeperworld.synchronization.ContainerSyncListener
 import com.derongan.minecraft.deeperworld.synchronization.ExploitPreventionListener
 import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
+import com.mineinabyss.idofront.plugin.registerEvents
+import com.mineinabyss.idofront.plugin.registerService
 import org.bukkit.Bukkit
 import org.bukkit.event.Listener
 import org.bukkit.plugin.Plugin

@@ -24,7 +24,7 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun syncBlockBreak(blockBreakEvent: BlockBreakEvent) {
         val block = blockBreakEvent.block
-        block.location.sync() { original, corr ->
+        block.location.sync { original, corr ->
             val state = corr.state
 
             //if breaking from bottom container, drop items stored in top container here
@@ -63,7 +63,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun syncWaterEmpty(event: PlayerBucketEmptyEvent) =
-            event.block.location.sync() { orig, corr ->
+            event.block.sync { orig, corr ->
                 val data = corr.blockData
                 if (data is Waterlogged) {
                     data.isWaterlogged = true
@@ -75,7 +75,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun syncWaterFill(event: PlayerBucketFillEvent) =
-            event.block.location.sync() { orig, corr ->
+            event.block.sync { orig, corr ->
                 val data = corr.blockData
                 if (data is Waterlogged) {
                     data.isWaterlogged = false

@@ -1,8 +1,8 @@
 package com.derongan.minecraft.deeperworld.services
 
-import com.derongan.minecraft.deeperworld.getService
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import com.mineinabyss.idofront.plugin.getService
 import org.bukkit.Location
 import org.bukkit.World
 

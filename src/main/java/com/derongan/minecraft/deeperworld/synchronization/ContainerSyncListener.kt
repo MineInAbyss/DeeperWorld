@@ -1,8 +1,8 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
-import com.derongan.minecraft.deeperworld.component1
 import com.derongan.minecraft.deeperworld.world.section.*
+import com.mineinabyss.idofront.events.component1
 import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.logInfo
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
@@ -97,7 +97,7 @@ object ContainerSyncListener: Listener {
     /** Synchronize hopper pickups between sections */
     @EventHandler
     fun hopperGrabEvent(e: InventoryPickupItemEvent) {
-        (e.inventory.location ?: return).sync() { original, corresponding, section, corrSection ->
+        (e.inventory.location ?: return).sync { _, corresponding, section, corrSection ->
             if (corrSection.isOnTopOf(section)) {
                 //if there are no leftover items, remove the itemstack
                 if ((corresponding.state as? Container)?.inventory?.addItem(e.item.itemStack)?.isEmpty() != false)
