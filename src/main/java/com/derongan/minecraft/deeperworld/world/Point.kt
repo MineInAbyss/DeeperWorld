@@ -1,64 +1,18 @@
-package com.derongan.minecraft.deeperworld.world;
+package com.derongan.minecraft.deeperworld.world
 
-import java.util.Objects;
-import org.bukkit.Location;
+import kotlin.math.sqrt
+
 /**
  * Represents a single X/Z column in a minecraft world.
  */
-public class Point {
-    private int x;
-    private int z;
+data class Point(val x: Int, val z: Int) {
+    operator fun plus(other: Point) = Point(x + other.x, z + other.z)
 
-    public Point(int x, int z) {
-        this.x = x;
-        this.z = z;
-    }
+    operator fun minus(other: Point) = Point(x - other.x, z - other.z)
 
+    operator fun div(o: Float) = Point((x / o).toInt(), (z / o).toInt())
 
-    public Point(Location l) {
-        this.x = l.getBlockX();
-        this.z = l.getBlockZ();
-    }
+    operator fun div(o: Int) = Point(x / o, z / o)
 
-    public int getX() {
-        return x;
-    }
-
-    public int getZ() {
-        return z;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Point)) return false;
-        Point that = (Point) o;
-        return getX() == that.getX() &&
-                getZ() == that.getZ();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getX(), getZ());
-    }
-
-    public Point plus(Point other){
-        return  new Point(x+other.x, z+other.z);
-    }
-
-    public  Point minus(Point other){
-        return  new Point(x-other.x, z-other.z);
-    }
-
-    public  Point div(float o){
-        return new Point((int)(x/o), (int)(z/o));
-    }
-
-    public  Point div(int o){
-        return new Point((x/o), (z/o));
-    }
-
-    public double length(){
-        return Math.sqrt(x*x+z*z);
-    }
+    val length get() = sqrt((x * x + z * z).toDouble())
 }

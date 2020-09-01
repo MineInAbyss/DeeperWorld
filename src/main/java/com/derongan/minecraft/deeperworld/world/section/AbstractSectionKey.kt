@@ -1,48 +1,29 @@
-package com.derongan.minecraft.deeperworld.world.section;
+package com.derongan.minecraft.deeperworld.world.section
 
-import java.util.Objects;
+import java.util.*
 
 /**
  * By wrapping the name we can allow users to register
  * sections with any name without restriction.
  */
-public abstract class AbstractSectionKey implements SectionKey {
-    //TODO maybe a generator here will be better for future?
-    private static int internalKeyCount;
-    private String key;
-
-    AbstractSectionKey(String key) {
-        this.key = key;
+abstract class AbstractSectionKey(private val key: String) : SectionKey {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val key1 = other as AbstractSectionKey
+        return key == key1.key
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AbstractSectionKey key1 = (AbstractSectionKey) o;
-        return Objects.equals(key, key1.key);
-    }
+    override fun hashCode() = Objects.hash(key)
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(key);
-    }
-
-    @Override
-    public String toString() {
-        return key;
-    }
+    override fun toString() = key
 
     //TODO should this be in here?
-    public static class CustomSectionKey extends AbstractSectionKey {
-        public CustomSectionKey(String key) {
-            super(key);
-        }
-    }
+    class CustomSectionKey(key: String) : AbstractSectionKey(key)
+    class InternalSectionKey : AbstractSectionKey(internalKeyCount++.toString())
 
-    public static class InternalSectionKey extends AbstractSectionKey {
-        public InternalSectionKey() {
-            super(String.valueOf(internalKeyCount++));
-        }
+    companion object {
+        //TODO maybe a generator here will be better for future?
+        private var internalKeyCount = 0
     }
 }

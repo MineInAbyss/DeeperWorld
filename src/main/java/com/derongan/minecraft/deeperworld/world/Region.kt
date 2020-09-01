@@ -1,35 +1,17 @@
-package com.derongan.minecraft.deeperworld.world;
+package com.derongan.minecraft.deeperworld.world
+
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Represents a region of the world. Contains all Y values.
  */
-public class Region {
-    private Point a;
-    private Point b;
+class Region(val a: Point, val b: Point) {
+    constructor(ax: Int, az: Int, bx: Int, bz: Int) : this(Point(ax, az), Point(bx, bz))
 
-    public Region(int ax, int az, int bx, int bz) {
-        a = new Point(ax,az);
-        b = new Point(bx, bz);
-    }
+    val center: Point get() = a.plus(b).div(2)
 
-    public boolean contains(int x, int z) {
-        return x <= Math.max(a.getX(), b.getX()) && x >= Math.min(a.getX(), b.getX()) && z <= Math.max(a.getZ(), b.getZ()) && z >= Math.min(a.getZ(), b.getZ());
-    }
+    fun contains(x: Int, z: Int): Boolean = x in min(a.x, b.x)..max(a.x, b.x) && z in min(a.z, b.z)..max(a.z, b.z)
 
-
-    public boolean contains(Point p) {
-        return contains(p.getX(), p.getZ());
-    }
-
-    public Point getA() {
-        return a;
-    }
-
-    public Point getB() {
-        return b;
-    }
-
-    public Point midPoint(){
-        return a.plus(b).div(2);
-    }
+    operator fun contains(p: Point) = contains(p.x, p.z)
 }

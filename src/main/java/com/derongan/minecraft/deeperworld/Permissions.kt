@@ -1,5 +1,5 @@
-package com.derongan.minecraft.deeperworld;
+package com.derongan.minecraft.deeperworld
 
-public class Permissions {
-    public static final String CHANGE_SECTION_PERMISSION = "deeperworld.changesection";
+object Permissions {
+    const val CHANGE_SECTION_PERMISSION = "deeperworld.changesection"
 }

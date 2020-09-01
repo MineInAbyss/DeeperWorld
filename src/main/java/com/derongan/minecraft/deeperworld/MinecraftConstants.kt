@@ -1,5 +1,5 @@
-package com.derongan.minecraft.deeperworld;
+package com.derongan.minecraft.deeperworld
 
-public class MinecraftConstants {
-    public static final int WORLD_HEIGHT = 256;
+object MinecraftConstants {
+    const val WORLD_HEIGHT = 256
 }
