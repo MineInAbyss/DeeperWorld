@@ -5,19 +5,16 @@ import org.bukkit.GameMode
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerTeleportEvent
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
 
 object PlayerListener : Listener {
-
     @EventHandler
     fun onPlayerTeleport(event: PlayerTeleportEvent) {
-        val player = event.player;
-        if (player.gameMode == GameMode.SURVIVAL) {
-            if (event.cause == PlayerTeleportEvent.TeleportCause.ENDER_PEARL || event.cause == PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT) {
-                if (event.to?.section == null) {
-                    event.isCancelled = true;
-                }
-            }
-
+        if (event.player.gameMode == GameMode.SURVIVAL
+                && (event.cause == ENDER_PEARL || event.cause == CHORUS_FRUIT)
+                && event.to?.section == null) {
+            event.isCancelled = true
         }
     }
 }

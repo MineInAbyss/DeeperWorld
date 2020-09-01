@@ -1,7 +1,7 @@
 package com.derongan.minecraft.deeperworld
 
-import com.derongan.minecraft.deeperworld.player.PlayerManager
-import com.derongan.minecraft.deeperworld.world.WorldManager
+import com.derongan.minecraft.deeperworld.services.canMoveSections
+import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
@@ -10,25 +10,23 @@ import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
 
 @ExperimentalCommandDSL
-class DeeperCommandExecutor(
-        private val worldManager: WorldManager
-) : IdofrontCommandExecutor() {
+object DeeperCommandExecutor : IdofrontCommandExecutor() {
     override val commands: CommandHolder = commands(deeperWorld) {
         "sectionoff" {
             playerAction {
-                PlayerManager.setPlayerCanTeleport(player, false)
+                player.canMoveSections = false
                 sender.success("Automatic TP disabled for ${player.name}")
             }
         }
         "sectionon" {
             playerAction {
-                PlayerManager.setPlayerCanTeleport(player, true)
+                player.canMoveSections = true
                 sender.success("Automatic TP enabled for ${player.name}")
             }
         }
         "linfo" {
             playerAction {
-                val section = worldManager.getSectionFor(player.location)
+                val section = WorldManager.getSectionFor(player.location)
                 if (section == null)
                     sender.info("${player.name} is not in a managed section")
                 else

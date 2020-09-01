@@ -1,5 +1,6 @@
-package com.derongan.minecraft.deeperworld.world
+package com.derongan.minecraft.deeperworld.services
 
+import com.derongan.minecraft.deeperworld.getService
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
 import org.bukkit.Location
@@ -9,6 +10,8 @@ import org.bukkit.World
  * Manages sections within the world.
  */
 interface WorldManager {
+    companion object : @JvmStatic WorldManager by getService()
+
     /**
      * Given a location, return the Section it is within
      *

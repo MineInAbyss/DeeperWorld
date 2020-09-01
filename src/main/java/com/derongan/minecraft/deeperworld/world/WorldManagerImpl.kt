@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld.world
 
+import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
 import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.InternalSectionKey
 import com.derongan.minecraft.deeperworld.world.section.Section
@@ -42,14 +43,8 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
 
     override fun unregisterSection(key: SectionKey) = TODO()
 
-    override fun getSectionFor(x: Int, z: Int, world: World): Section? { //TODO consider performance
-        for (section in sectionMap.values) {
-            if (section.world == world && section.region.contains(x, z)) {
-                return section
-            }
-        }
-        return null
-    }
+    override fun getSectionFor(x: Int, z: Int, world: World): Section? = //TODO consider performance
+            sectionMap.values.firstOrNull { it.world == world && it.region.contains(x, z) }
 
     override fun getSectionFor(key: SectionKey) = sectionMap[key]
     override fun getSectionFor(key: String) = sectionMap[CustomSectionKey(key)]
@@ -70,20 +65,22 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
         @Suppress("UNCHECKED_CAST")
         for (i in keys.indices) {
             val map = sectionList[i]
-            val worldName = map[WORLD_KEY] as String?
-            val world = Bukkit.getWorld(worldName!!)
+            val worldName = map[WORLD_KEY] as String
+            val world = Bukkit.getWorld(worldName)!!
             val regionPoints = map[REGION_KEY] as List<Int>
             val region = Region(regionPoints[0], regionPoints[1], regionPoints[2], regionPoints[3]) //TODO use worldguard regions in the future
             val refBottom = parseLocation(map[REF_BOTTOM_KEY] as List<Int>, world)
             val refTop = parseLocation(map[REF_TOP_KEY] as List<Int>, world)
 
-            val section = Section(world = world!!,
+            val section = Section(
+                    world = world,
                     region = region,
                     key = keys[i],
+                    aboveKey = if (i != 0) keys[i - 1] else SectionKey.TERMINAL,
+                    belowKey = if (i < keys.size - 1) keys[i + 1] else SectionKey.TERMINAL,
                     referenceTop = refTop,
                     referenceBottom = refBottom,
-                    aboveKey = if (i != 0) keys[i - 1] else SectionKey.TERMINAL,
-                    belowKey = if (i < keys.size - 1) keys[i + 1] else SectionKey.TERMINAL)
+            )
 
             registerSection(keys[i], section)
         }

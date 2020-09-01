@@ -20,8 +20,8 @@ data class Section(val region: Region,
                    val key: SectionKey,
                    @get:JvmName("getKeyForSectionAbove") val aboveKey: SectionKey = SectionKey.TERMINAL,
                    @get:JvmName("getKeyForSectionBelow") val belowKey: SectionKey = SectionKey.TERMINAL,
-                   @get:JvmName("getReferenceLocationTop") val referenceTop: Location? = null,
-                   @get:JvmName("getReferenceLocationBottom") val referenceBottom: Location? = null) {
+                   @get:JvmName("getReferenceLocationTop") val referenceTop: Location,
+                   @get:JvmName("getReferenceLocationBottom") val referenceBottom: Location) {
 
     override fun toString(): String {
         return key.toString()

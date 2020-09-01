@@ -6,7 +6,11 @@ import org.bukkit.event.Cancellable
 import org.bukkit.event.HandlerList
 import org.bukkit.event.player.PlayerEvent
 
-abstract class PlayerChangeSectionEvent(player: Player, val fromSection: Section, val toSection: Section) : PlayerEvent(player), Cancellable {
+abstract class PlayerChangeSectionEvent(
+        player: Player,
+        val fromSection: Section,
+        val toSection: Section
+) : PlayerEvent(player), Cancellable {
     private var cancelled = false
 
     override fun isCancelled() = cancelled

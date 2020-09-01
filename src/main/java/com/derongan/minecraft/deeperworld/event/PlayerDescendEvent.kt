@@ -4,7 +4,11 @@ import com.derongan.minecraft.deeperworld.world.section.Section
 import org.bukkit.entity.Player
 import org.bukkit.event.HandlerList
 
-class PlayerDescendEvent(player: Player, fromSection: Section?, toSection: Section?) : PlayerChangeSectionEvent(player, fromSection!!, toSection!!) {
+class PlayerDescendEvent(
+        player: Player,
+        fromSection: Section,
+        toSection: Section
+) : PlayerChangeSectionEvent(player, fromSection, toSection) {
     override fun getHandlers() = handlerList
 
     companion object {
