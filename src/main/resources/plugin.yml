@@ -1,5 +1,5 @@
 name: DeeperWorld
-version: @version@
+version: @plugin_version@
 main: com.derongan.minecraft.deeperworld.DeeperWorld
 authors: [Derongan]
 api-version: '1.16'
