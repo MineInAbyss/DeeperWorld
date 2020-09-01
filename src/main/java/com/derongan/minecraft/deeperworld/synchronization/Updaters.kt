@@ -1,39 +1,37 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
-import com.derongan.minecraft.deeperworld.world.section.correspondingLocation
-import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
+import com.derongan.minecraft.deeperworld.world.section.*
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.BlockLockerPlugin
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.Block
-import org.bukkit.block.BlockState
 import org.bukkit.block.Sign
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
 internal val blockLocker: BlockLockerPlugin by lazy { BlockLockerAPIv2.getPlugin() }
 
-internal val copyBlockData = { original: Block, corresponding: Block ->
+internal fun copyBlockData(original: Block, corresponding: Block) {
     corresponding.blockData = original.blockData.clone()
-}
-
-//TODO make a clean way for some basic stuff like this to be used for all the listeners
-internal fun List<BlockState>.copyBlocks() = forEach { it.copyBlock() }
-internal fun BlockState.copyBlock() = updateCorrespondingBlock(location, copyBlockData)
-internal fun List<BlockState>.updateBlocks() = forEach { it.updateBlock() }
-internal fun BlockState.updateBlock() = updateCorrespondingBlock(location) { _, corresponding ->
-    corresponding.blockData = this.blockData
 }
 
 internal fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
 
-internal fun updateCorrespondingBlock(original: Location, updater: (original: Block, corresponding: Block) -> Unit) {
-    val corresponding: Location = original.correspondingLocation ?: return
-    //ensure blocks don't get altered when we are outside of the corresponding region
-    if (corresponding.inSectionOverlap)
-        updater(original.block, corresponding.block)
+internal fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) = location.sync(updater)
+
+internal inline fun Location.sync(
+        updater: (original: Block, corresponding: Block, section: Section, corrSection: Section) -> Unit
+) {
+    if (!inSectionOverlap) return //ensure blocks don't get altered when we are outside of the corresponding region
+    val section = section ?: return
+    val correspondingSection = correspondingSection ?: return
+    val corresponding = getCorrespondingLocation(section, correspondingSection) ?: return
+    updater(block, corresponding.block, section, correspondingSection)
 }
+
+internal inline fun Location.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
+        sync { original, corresponding, _, _ -> updater(original, corresponding) }
 
 internal fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
     copyBlockData(original, corresponding)

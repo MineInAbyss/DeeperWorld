@@ -5,6 +5,8 @@ import com.derongan.minecraft.deeperworld.services.PlayerManager
 import com.derongan.minecraft.deeperworld.player.PlayerManagerImpl
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener
 import com.derongan.minecraft.deeperworld.services.WorldManager
+import com.derongan.minecraft.deeperworld.synchronization.ContainerSyncListener
+import com.derongan.minecraft.deeperworld.synchronization.ExploitPreventionListener
 import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import org.bukkit.Bukkit
@@ -24,7 +26,9 @@ class DeeperWorld : JavaPlugin() {
         registerEvents(
                 MovementListener,
                 PlayerListener,
-                SectionSyncListener
+                SectionSyncListener,
+                ExploitPreventionListener,
+                ContainerSyncListener
         )
 
         //register command executor

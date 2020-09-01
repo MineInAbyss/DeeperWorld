@@ -35,7 +35,7 @@ val Location.correspondingSection: Section?
  */
 val Location.correspondingLocation: Location?
     get() {
-        return this.getCorrespondingLocation(section ?: return null, correspondingSection ?: return null)
+        return getCorrespondingLocation(section ?: return null, correspondingSection ?: return null)
     }
 
 /**
@@ -46,13 +46,13 @@ val Location.correspondingLocation: Location?
  * @param sectionB        the section we are translating the point to
  * @return A new location that corresponds to the original location
  */
-fun Location.getCorrespondingLocation(sectionA: Section, sectionB: Section): Location {
-    validateSectionsAdjacent(sectionA, sectionB)
+fun Location.getCorrespondingLocation(sectionA: Section, sectionB: Section): Location? {
+    if(!sectionA.isAdjacentTo(sectionB)) return null
 
     // We decide which two points we are translating between.
     val (fromSectionLoc, toSectionLoc) = when (sectionA.isOnTopOf(sectionB)) {
-        true -> Pair(sectionA.referenceBottom!!, sectionB.referenceTop!!)
-        false -> Pair(sectionA.referenceTop!!, sectionB.referenceBottom!!)
+        true -> sectionA.referenceBottom to sectionB.referenceTop
+        false -> sectionA.referenceTop to sectionB.referenceBottom
     }
 
     // fromX + n = toX
@@ -69,20 +69,20 @@ val Location.inSectionOverlap: Boolean
     }
 
 fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
-    val shared = getSharedBlocks(section, otherSection)
+    val overlap = section.overlapWith(otherSection) ?: return false
     return when {
-        section.isOnTopOf(otherSection) -> blockY <= shared
-        otherSection.isOnTopOf(section) -> blockY >= MinecraftConstants.WORLD_HEIGHT - shared
+        section.isOnTopOf(otherSection) -> blockY <= overlap
+        otherSection.isOnTopOf(section) -> blockY >= MinecraftConstants.WORLD_HEIGHT - overlap
         else -> false
     }
 }
 
-fun getSharedBlocks(sectionA: Section, sectionB: Section): Int {
-    validateSectionsAdjacent(sectionA, sectionB)
+fun Section.overlapWith(other: Section): Int? {
+    if(!isAdjacentTo(other)) return null
     // We decide which two points we are translating between.
-    val (locA, locB) = when (sectionA.isOnTopOf(sectionB)) {
-        true -> Pair(sectionA.referenceBottom!!, sectionB.referenceTop!!)
-        false -> Pair(sectionA.referenceTop!!, sectionB.referenceBottom!!)
+    val (locA, locB) = when (isOnTopOf(other)) {
+        true -> referenceBottom to other.referenceTop
+        false -> referenceTop to other.referenceBottom
     }
     val yA = locA.blockY
     val yB = locB.blockY
@@ -91,5 +91,5 @@ fun getSharedBlocks(sectionA: Section, sectionB: Section): Int {
 
 fun Section.isOnTopOf(other: Section) = key == other.aboveKey
 
-fun validateSectionsAdjacent(sectionA: Section, sectionB: Section) =
-        Validate.isTrue(sectionA.isOnTopOf(sectionB) || sectionB.isOnTopOf(sectionA), "Sections must be adjacent")
+/** Whether a section is adjacent to another */
+fun Section.isAdjacentTo(other: Section) = this.isOnTopOf(other) || other.isOnTopOf(this)
