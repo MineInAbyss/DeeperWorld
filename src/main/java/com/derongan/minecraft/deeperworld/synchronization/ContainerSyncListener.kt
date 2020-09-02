@@ -2,7 +2,7 @@ package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
 import com.derongan.minecraft.deeperworld.world.section.*
-import com.mineinabyss.idofront.events.component1
+import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.logInfo
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2

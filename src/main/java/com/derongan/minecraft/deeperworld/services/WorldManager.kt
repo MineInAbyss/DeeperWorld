@@ -10,7 +10,7 @@ import org.bukkit.World
  * Manages sections within the world.
  */
 interface WorldManager {
-    companion object : @JvmStatic WorldManager by getService()
+    companion object : WorldManager by getService()
 
     /**
      * Given a location, return the Section it is within
