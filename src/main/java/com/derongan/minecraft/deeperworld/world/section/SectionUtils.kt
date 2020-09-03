@@ -5,14 +5,12 @@ package com.derongan.minecraft.deeperworld.world.section
 
 import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.services.WorldManager
-import org.bukkit.Bukkit
 import org.bukkit.Location
 import kotlin.math.max
 import kotlin.math.min
 
-internal val worldManager: WorldManager = Bukkit.getServicesManager().load(WorldManager::class.java)!!
 
-val Location.section: Section? get() = worldManager.getSectionFor(this)
+val Location.section: Section? get() = WorldManager.getSectionFor(this)
 
 /**
  * The corresponding section which overlaps with this location's section. Will be null if the section is not in an
@@ -21,8 +19,8 @@ val Location.section: Section? get() = worldManager.getSectionFor(this)
 val Location.correspondingSection: Section?
     get() {
         val section = this.section ?: return null
-        val above: Section? = worldManager.getSectionFor(section.aboveKey)
-        val below: Section? = worldManager.getSectionFor(section.belowKey)
+        val above: Section? = WorldManager.getSectionFor(section.aboveKey)
+        val below: Section? = WorldManager.getSectionFor(section.belowKey)
         return when {
             above != null && sharedBetween(section, above) -> above
             below != null && sharedBetween(section, below) -> below
