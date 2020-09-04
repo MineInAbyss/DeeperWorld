@@ -2,8 +2,12 @@ package com.derongan.minecraft.deeperworld
 
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
+import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
-import com.derongan.minecraft.deeperworld.world.section.*
+import com.derongan.minecraft.deeperworld.world.section.Section
+import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import com.derongan.minecraft.deeperworld.world.section.getCorrespondingLocation
+import com.derongan.minecraft.deeperworld.world.section.overlapWith
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
@@ -25,7 +29,7 @@ object MovementListener : Listener {
     }
 
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location) {
-        val current = worldManager.getSectionFor(player.location) ?: let {
+        val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
             if (DeeperContext.damagePlayersOutsideSections > 0.0 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
                 player.damage(0.01) //give a damage effect
@@ -40,7 +44,7 @@ object MovementListener : Listener {
         val inSpectator = player.gameMode == GameMode.SPECTATOR
 
         fun tpIfAbleTo(key: SectionKey, tpFun: (Player, Location, Section, Section) -> Unit, boundaryCheck: (y: Double, shared: Int) -> Boolean, pushVelocity: Double) {
-            val toSection = worldManager.getSectionFor(key) ?: return
+            val toSection = WorldManager.getSectionFor(key) ?: return
             val overlap = current.overlapWith(toSection) ?: return
             val correspondingPos = to.getCorrespondingLocation(current, toSection) ?: return
 

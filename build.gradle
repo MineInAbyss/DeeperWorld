@@ -3,6 +3,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm'
+    id 'org.jetbrains.kotlin.plugin.serialization'
     id 'com.github.johnrengelman.shadow'
     id 'io.github.0ffz.github-packages'
 }
@@ -14,17 +15,20 @@ version plugin_version
 
 repositories {
     mavenCentral()
+    jcenter()
     maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
     maven { url 'https://oss.sonatype.org/content/groups/public/' }
     maven { url 'http://www.rutgerkok.nl/repo' }
     maven githubPackage.invoke("MineInAbyss/Idofront")
     maven githubPackage.invoke("rutgerkok/BlockLocker")
+    maven githubPackage.invoke("MineInAbyss/KotlinSpice")
 }
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:$server_version"
     compileOnly 'nl.rutgerkok:blocklocker:1.6.2-SNAPSHOT'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compileOnly "org.cultofclang.minecraft:kotlinspice:$kotlin_version+"
 
     implementation 'com.mineinabyss:idofront:0.3.24'
 
