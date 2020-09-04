@@ -5,6 +5,7 @@ import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bukkit.Location
 import org.bukkit.World
@@ -42,7 +43,9 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
 
     @Serializable //TODO if we ever get more configurable values, move into a proper config class
     data class Config(
-            val sections: List<Section>
+            val sections: List<Section>,
+            @SerialName("damage-outside-sections")
+            val damageOutsideSections: Double
     )
 
     init {

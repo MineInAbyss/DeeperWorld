@@ -28,7 +28,7 @@ class Region(val a: Point, val b: Point) {
 
 object RegionSerializer : KSerializer<Region> {
     private val serializer = ListSerializer(Int.serializer())
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Region", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = serializer.descriptor
 
     override fun serialize(encoder: Encoder, value: Region) {
         val (x, y) = value.a
