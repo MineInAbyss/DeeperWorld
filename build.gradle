@@ -30,7 +30,7 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly "org.cultofclang.minecraft:kotlinspice:$kotlin_version+"
 
-    implementation 'com.mineinabyss:idofront:0.3.24'
+    implementation 'com.mineinabyss:idofront:0.3.25'
 
     testImplementation 'junit:junit:4.12'
 }
