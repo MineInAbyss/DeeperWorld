@@ -1,18 +1,19 @@
-package com.derongan.minecraft.deeperworld
+package com.derongan.minecraft.deeperworld.listeners
 
+import com.derongan.minecraft.deeperworld.DeeperConfig
+import com.derongan.minecraft.deeperworld.MinecraftConstants
+import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
-import com.derongan.minecraft.deeperworld.world.section.Section
-import com.derongan.minecraft.deeperworld.world.section.SectionKey
-import com.derongan.minecraft.deeperworld.world.section.getCorrespondingLocation
-import com.derongan.minecraft.deeperworld.world.section.overlapWith
+import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
 import org.bukkit.GameMode
 import org.bukkit.Location
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -31,20 +32,23 @@ object MovementListener : Listener {
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location) {
         val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
-            if (DeeperContext.damagePlayersOutsideSections > 0.0 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+            if (!DeeperConfig.data.damageExcludedWorlds.contains(player.location.world)
+                    && DeeperConfig.data.damageOutsideSections > 0.0
+                    && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
                 player.damage(0.01) //give a damage effect
-                player.health = (player.health - DeeperContext.damagePlayersOutsideSections / 10).coerceAtLeast(0.0) //ignores armor
+                player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10).coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
                 player.sendTitle("&cYou are not in a managed section".color(), "&7You will take damage upon moving!".color(), 0, 20, 10)
             }
             return
         }
+
         val changeY = to.y - from.y
         if (changeY == 0.0) return
 
         val inSpectator = player.gameMode == GameMode.SPECTATOR
 
         fun tpIfAbleTo(key: SectionKey, tpFun: (Player, Location, Section, Section) -> Unit, boundaryCheck: (y: Double, shared: Int) -> Boolean, pushVelocity: Double) {
-            val toSection = WorldManager.getSectionFor(key) ?: return
+            val toSection = key.section ?: return
             val overlap = current.overlapWith(toSection) ?: return
             val correspondingPos = to.getCorrespondingLocation(current, toSection) ?: return
 
@@ -58,8 +62,8 @@ object MovementListener : Listener {
         }
 
         when {
-            changeY > 0.0 -> tpIfAbleTo(current.aboveKey, ::ascend, { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared }, -0.4)
-            changeY < 0.0 -> tpIfAbleTo(current.belowKey, ::descend, { y, shared -> y < .3 * shared }, 0.4)
+            changeY > 0.0 -> tpIfAbleTo(current.aboveKey, MovementListener::ascend, { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared }, -0.4)
+            changeY < 0.0 -> tpIfAbleTo(current.belowKey, MovementListener::descend, { y, shared -> y < .3 * shared }, 0.4)
         }
     }
 

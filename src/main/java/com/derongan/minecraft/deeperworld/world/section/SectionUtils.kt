@@ -12,6 +12,8 @@ import kotlin.math.min
 
 val Location.section: Section? get() = WorldManager.getSectionFor(this)
 
+val SectionKey.section get() = WorldManager.getSectionFor(this)
+
 /**
  * The corresponding section which overlaps with this location's section. Will be null if the section is not in an
  * overlap, even if there is a section above or below, since it's unclear which section becomes the corresponding one.
@@ -19,8 +21,8 @@ val Location.section: Section? get() = WorldManager.getSectionFor(this)
 val Location.correspondingSection: Section?
     get() {
         val section = this.section ?: return null
-        val above: Section? = WorldManager.getSectionFor(section.aboveKey)
-        val below: Section? = WorldManager.getSectionFor(section.belowKey)
+        val above: Section? = section.aboveKey.section
+        val below: Section? = section.belowKey.section
         return when {
             above != null && sharedBetween(section, above) -> above
             below != null && sharedBetween(section, below) -> below

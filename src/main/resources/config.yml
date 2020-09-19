@@ -1,19 +1,19 @@
 ### Example config:
-#sections:
-#  -
-#    refTop: [0, 0, 0]
-#    refBottom: [83, 1, -83]
-#    region: [128, 128, -128, -128]
-#    world: TestWorld
-#  -
-#    refTop: [371, 242, -83]
-#    refBottom: [0, 0, 0]
-#    region: [196, -92, 380, 92]
-#    world: TestWorld
-#    name: section1
-
-# The damage players will take when outside a managed section
-# damage-outside-sections: 0.0
-
-# Cancel teleport into unmanaged section
- prevent-teleport-in-unmanaged: true
+sections:
+  - name: section1
+    refTop: [0, 0, 0]
+    # refBottom should connect to the refTop of the next section.
+    refBottom: [0, 16, 0]
+    #x1, y1, x2, y2
+    region: [0, 0, 1000, 1000]
+    world: world
+  - name: section2
+    refTop: [1000, 240, 0]
+    refBottom: [2000, 16, 0]
+    region: [1000, 0, 2000, 1000]
+    world: world
+# The damage players will take when outside a managed section.
+damageOutsideSections: 1.0
+# Worlds which shouldn't damage players when outside of a section.
+#damageExcludedWorlds:
+#  - world

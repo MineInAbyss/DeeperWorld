@@ -1,12 +1,9 @@
 package com.derongan.minecraft.deeperworld.world
 
-import com.charleskorn.kaml.Yaml
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.configuration.file.FileConfiguration
@@ -40,22 +37,4 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
 
     override fun getSectionFor(key: SectionKey) = sectionMap[key]
     override fun getSectionFor(key: String) = sectionMap[CustomSectionKey(key)]
-
-    @Serializable //TODO if we ever get more configurable values, move into a proper config class
-    data class Config(
-            val sections: List<Section>,
-            @SerialName("damage-outside-sections")
-            val damageOutsideSections: Double
-    )
-
-    init {
-        val (sections) = Yaml.default.decodeFromString(Config.serializer(), config.saveToString())
-        sections.forEachIndexed { i, section ->
-            sections.getOrNull(i - 1)?.let { prevSection ->
-                section.aboveKey = prevSection.key
-                prevSection.belowKey = section.key
-            }
-            registerSection(section.key, section) //TODO do we need to pass both section key and section?
-        }
-    }
 }
