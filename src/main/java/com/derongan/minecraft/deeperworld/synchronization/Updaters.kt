@@ -46,7 +46,7 @@ internal fun signUpdater(lines: Array<String>? = null) = { original: Block, corr
     }
 }
 
-internal fun List<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean) {
+internal fun Collection<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean) {
     val spawnLoc = loc.clone().add(0.5, if (noVelocity) 1.0 else 0.0, 0.5)
     filterNotNull().forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
 }
