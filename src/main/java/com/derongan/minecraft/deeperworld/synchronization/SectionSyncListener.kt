@@ -31,6 +31,7 @@ object SectionSyncListener : Listener {
             if (state is Container && original.location.y > corr.location.y) {
                 val corrInv = state.inventory
                 corrInv.toList().dropItems(original.location, false)
+                //TODO if shulker, put them in the shulker itself
                 corrInv.clear()
             }
 

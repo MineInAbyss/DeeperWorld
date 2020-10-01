@@ -1,6 +1,7 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
+import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.color
@@ -17,10 +18,9 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.world.ChunkUnloadEvent
 import org.bukkit.inventory.ItemStack
 
-object ContainerSyncListener: Listener {
+object ContainerSyncListener : Listener {
     /** Tells a chunk what players are accessing inventories on its [Section] border */
     private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
 
@@ -57,7 +57,6 @@ object ContainerSyncListener: Listener {
             //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
             val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
             if (player.openInventory(linkedInventory) != null) {
-                logInfo("openeed successfully!")
                 //synchronize chests and drop anything that doesn't fit
                 val otherInventory = ((linkedBlock.state as? Container) ?: return).inventory
                 val invList: List<ItemStack> = container.inventory.toList().filterNotNull()
@@ -71,26 +70,24 @@ object ContainerSyncListener: Listener {
                 }
 
                 //add player to map of players using this inventory
-                if (!linkedBlock.chunk.isForceLoaded)
-                    keepLoadedInventories.getOrPut(linkedBlock.chunk, { mutableListOf() }) += player
+                keepLoadedInventories.getOrPut(linkedBlock.chunk, { mutableListOf() }) += player
+
+                //keep chunk loaded
+                linkedBlock.chunk.addPluginChunkTicket(deeperWorld)
             }
         }
     }
 
-    /** If there are any players accessing a synced inventory in this chunk, don't unload it */
-    @EventHandler
-    fun onChunkUnload(cue: ChunkUnloadEvent) {
-        if (keepLoadedInventories.containsKey(cue.chunk)) cue.chunk.load()
-    }
-
     /** Removes the player from the [keepLoadedInventories] map */
     @EventHandler
-    fun onCloseInventory(ice: InventoryCloseEvent) {
-        val inventory = ice.inventory
+    fun onCloseInventory(e: InventoryCloseEvent) {
+        val (inventory) = e
         val chunk = inventory.location?.chunk ?: return
-        if (keepLoadedInventories[chunk]?.remove(ice.player) != null) {
-            if (keepLoadedInventories[chunk]?.isEmpty() == true)
+        if (keepLoadedInventories[chunk]?.remove(e.player) != null) {
+            if (keepLoadedInventories[chunk]?.isEmpty() == true) {
                 keepLoadedInventories -= chunk
+                chunk.removePluginChunkTicket(deeperWorld)
+            }
         }
     }
 
