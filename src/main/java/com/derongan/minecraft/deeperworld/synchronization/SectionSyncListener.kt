@@ -1,6 +1,7 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
+import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
 import org.bukkit.block.Container
@@ -53,14 +54,22 @@ object SectionSyncListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun syncBlockPlace(blockPlaceEvent: BlockPlaceEvent) {
-        blockPlaceEvent.block.sync()
+        blockPlaceEvent.block.sync { original, corr ->
+            if(original.type == Material.SHULKER_BOX) {
+                blockPlaceEvent.isCancelled = true
+                blockPlaceEvent.player.error("Shulkers are disabled near section changes due to item loss bugs.")
+                return@sync
+            }
+            corr.blockData = original.blockData.clone()
+        }
     }
 
     //handles fertilized crops as well
-    @EventHandler
+    //disabled for now as it causes significant lag.
+    /*@EventHandler
     fun syncBlockGrow(blockEvent: BlockGrowEvent) {
         blockEvent.newState.location.sync()
-    }
+    }*/
 
     //TODO this causes duplication glitches that need to be fixed first
     /*@EventHandler
