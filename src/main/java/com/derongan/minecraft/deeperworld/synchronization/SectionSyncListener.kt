@@ -55,7 +55,7 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun syncBlockPlace(blockPlaceEvent: BlockPlaceEvent) {
         blockPlaceEvent.block.sync { original, corr ->
-            if(original.type == Material.SHULKER_BOX) {
+            if(original.type.name.contains("SHULKER")) {
                 blockPlaceEvent.isCancelled = true
                 blockPlaceEvent.player.error("Shulkers are disabled near section changes due to item loss bugs.")
                 return@sync
