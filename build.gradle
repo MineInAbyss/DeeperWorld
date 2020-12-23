@@ -19,6 +19,7 @@ repositories {
     maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
     maven { url 'https://oss.sonatype.org/content/groups/public/' }
     maven { url 'http://www.rutgerkok.nl/repo' }
+    maven { url 'http://nexus.okkero.com/repository/maven-releases/' } //Skedule
     maven githubPackage.invoke("MineInAbyss/Idofront")
     maven githubPackage.invoke("rutgerkok/BlockLocker")
     maven githubPackage.invoke("MineInAbyss/KotlinSpice")
@@ -30,7 +31,7 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly "org.cultofclang.minecraft:kotlinspice:$kotlin_version+"
 
-    implementation 'com.mineinabyss:idofront:0.3.25'
+    implementation 'com.mineinabyss:idofront:0.3.27'
 
     testImplementation 'junit:junit:4.12'
 }
