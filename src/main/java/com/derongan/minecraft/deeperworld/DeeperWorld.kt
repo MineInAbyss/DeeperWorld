@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld
 
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
+import com.derongan.minecraft.deeperworld.player.FallingDamageManager
 import com.derongan.minecraft.deeperworld.services.PlayerManager
 import com.derongan.minecraft.deeperworld.player.PlayerManagerImpl
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener
@@ -37,11 +38,15 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
-        Bukkit.getScheduler().schedule(this){
-            repeating(1)
-            while(true){
-                MovementListener.currentServerTick++
-                yield()
+        if(DeeperConfig.data.maxFallingDistance != -1f){
+            Bukkit.getScheduler().schedule(this){
+                repeating(20)
+                while(true){
+                    Bukkit.getServer().onlinePlayers.forEach{
+                        FallingDamageManager.updateFallingDamage(it)
+                    }
+                    yield()
+                }
             }
         }
     }

@@ -5,7 +5,6 @@ import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
-import com.derongan.minecraft.deeperworld.getVehicleRecursive
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
@@ -20,45 +19,13 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
-import java.util.*
 
 object MovementListener : Listener {
-    var currentServerTick: Long = 0
-    private val previousFallingDamageTick: MutableMap<UUID, Long> = mutableMapOf()
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
         val (player) = playerMoveEvent
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && player.canMoveSections) {
             onPlayerMoveInternal(player, playerMoveEvent.from, playerMoveEvent.to ?: return)
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    fun onPlayerFalling(playerMoveEvent: PlayerMoveEvent) {
-        if(DeeperConfig.data.maxFallingDistance == -1f){
-            return
-        }
-
-        val (player) = playerMoveEvent
-        val actualFallDistance = player.getVehicleRecursive()?.fallDistance ?: player.fallDistance
-        if (actualFallDistance > DeeperConfig.data.maxFallingDistance
-                && !player.isGliding
-                && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
-            val previousTick = previousFallingDamageTick[player.uniqueId]
-
-            if (previousTick != null && currentServerTick - previousTick < player.maximumNoDamageTicks) {
-                return
-            }
-
-            // Always deal a minimum of 1 damage, else the first damage tick would deal (almost) no damage
-            val damageToDeal = (actualFallDistance - DeeperConfig.data.maxFallingDistance) * DeeperConfig.data.fallingDamageMultiplier + 1
-
-            player.damage(0.01) // Damage animation
-            player.health = (player.health - damageToDeal).coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) // Ignores armor
-            previousFallingDamageTick[player.uniqueId] = currentServerTick
-        } else if (previousFallingDamageTick.containsKey(player.uniqueId)) {
-            previousFallingDamageTick.remove(player.uniqueId)
         }
     }
 
