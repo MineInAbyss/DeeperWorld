@@ -12,6 +12,8 @@ import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
+import com.okkero.skedule.schedule
+import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
 class DeeperWorld : JavaPlugin() {
@@ -34,5 +36,13 @@ class DeeperWorld : JavaPlugin() {
 
         //register command executor
         DeeperCommandExecutor
+
+        Bukkit.getScheduler().schedule(this){
+            repeating(1)
+            while(true){
+                MovementListener.currentServerTick++
+                yield()
+            }
+        }
     }
 }

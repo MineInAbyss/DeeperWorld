@@ -19,13 +19,44 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
+import java.util.*
 
 object MovementListener : Listener {
+    var currentServerTick: Long = 0
+    private val previousFallingDamageTick: MutableMap<UUID, Long> = mutableMapOf()
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
         val (player) = playerMoveEvent
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && player.canMoveSections) {
             onPlayerMoveInternal(player, playerMoveEvent.from, playerMoveEvent.to ?: return)
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    fun onPlayerFalling(playerMoveEvent: PlayerMoveEvent) {
+        if(DeeperConfig.data.maxFallingDistance == -1f){
+            return
+        }
+
+        val (player) = playerMoveEvent
+        if (player.fallDistance > DeeperConfig.data.maxFallingDistance
+                && !player.isGliding
+                && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+            val previousTick = previousFallingDamageTick[player.uniqueId]
+
+            if (previousTick != null && currentServerTick - previousTick < player.maximumNoDamageTicks) {
+                return
+            }
+
+            // Always deal a minimum of 1 damage, else it would deal (almost) no damage on the first damage tick
+            val damageToDeal = (player.fallDistance - DeeperConfig.data.maxFallingDistance) * DeeperConfig.data.fallingDamageMultiplier + 1
+
+            player.damage(0.01) //give a damage effect
+            player.health = (player.health - damageToDeal).coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) // Ignores armor
+            previousFallingDamageTick[player.uniqueId] = currentServerTick
+        } else if (previousFallingDamageTick.containsKey(player.uniqueId)) {
+            previousFallingDamageTick.remove(player.uniqueId)
         }
     }
 
