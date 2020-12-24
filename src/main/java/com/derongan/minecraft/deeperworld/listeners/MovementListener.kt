@@ -5,6 +5,7 @@ import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
+import com.derongan.minecraft.deeperworld.getVehicleRecursive
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
@@ -40,7 +41,8 @@ object MovementListener : Listener {
         }
 
         val (player) = playerMoveEvent
-        if (player.fallDistance > DeeperConfig.data.maxFallingDistance
+        val actualFallDistance = player.getVehicleRecursive()?.fallDistance ?: player.fallDistance
+        if (actualFallDistance > DeeperConfig.data.maxFallingDistance
                 && !player.isGliding
                 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
             val previousTick = previousFallingDamageTick[player.uniqueId]
@@ -49,10 +51,10 @@ object MovementListener : Listener {
                 return
             }
 
-            // Always deal a minimum of 1 damage, else it would deal (almost) no damage on the first damage tick
-            val damageToDeal = (player.fallDistance - DeeperConfig.data.maxFallingDistance) * DeeperConfig.data.fallingDamageMultiplier + 1
+            // Always deal a minimum of 1 damage, else the first damage tick would deal (almost) no damage
+            val damageToDeal = (actualFallDistance - DeeperConfig.data.maxFallingDistance) * DeeperConfig.data.fallingDamageMultiplier + 1
 
-            player.damage(0.01) //give a damage effect
+            player.damage(0.01) // Damage animation
             player.health = (player.health - damageToDeal).coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) // Ignores armor
             previousFallingDamageTick[player.uniqueId] = currentServerTick
         } else if (previousFallingDamageTick.containsKey(player.uniqueId)) {
