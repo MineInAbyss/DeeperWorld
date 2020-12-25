@@ -2,7 +2,7 @@ package com.derongan.minecraft.deeperworld
 
 import org.bukkit.entity.Entity
 
-internal fun Entity.getVehicleRecursive() : Entity? {
+internal tailrec fun Entity.getVehicleRecursive() : Entity? {
     if(!passengers.any() && vehicle == null){
         return null
     }

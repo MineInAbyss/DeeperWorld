@@ -15,7 +15,7 @@ sections:
 # The damage players will take when outside a managed section.
 damageOutsideSections: 1.0
 # The maximum safe falling distance, after which players will start taking damage. Set to -1 to disable falling damage
-maxFallingDistance: 20.0
+maxSafeFallingDistance: 20.0
 # The multiplier for damage taken while falling.
 fallingDamageMultiplier: 0.05
 # Worlds which shouldn't damage players when outside of a section.

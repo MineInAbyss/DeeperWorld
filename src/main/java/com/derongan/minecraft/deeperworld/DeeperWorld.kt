@@ -38,8 +38,8 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
-        if(DeeperConfig.data.maxFallingDistance != -1f){
-            Bukkit.getScheduler().schedule(this){
+        if(DeeperConfig.data.maxSafeFallingDistance != -1f){
+            schedule{
                 repeating(20)
                 while(true){
                     Bukkit.getServer().onlinePlayers.forEach{
