@@ -38,11 +38,11 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
-        if(DeeperConfig.data.maxSafeFallingDistance != -1f){
+        if(DeeperConfig.data.maxSafeFallingDistance >= 0f && DeeperConfig.data.fallingDamageMultiplier >= 0.0){
             schedule{
                 repeating(20)
                 while(true){
-                    Bukkit.getServer().onlinePlayers.forEach{
+                    server.onlinePlayers.forEach{
                         FallingDamageManager.updateFallingDamage(it)
                     }
                     yield()

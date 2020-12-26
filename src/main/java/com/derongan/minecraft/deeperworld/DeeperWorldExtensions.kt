@@ -2,12 +2,12 @@ package com.derongan.minecraft.deeperworld
 
 import org.bukkit.entity.Entity
 
-internal tailrec fun Entity.getVehicleRecursive() : Entity? {
-    if(!passengers.any() && vehicle == null){
-        return null
+internal fun Entity.getVehicleRecursive() : Entity? {
+    var currentVehicle = vehicle
+
+    while(currentVehicle?.vehicle != null){
+        currentVehicle = currentVehicle.vehicle
     }
 
-    val currentVehicle = vehicle ?: return this
-
-    return currentVehicle.getVehicleRecursive()
+    return currentVehicle
 }

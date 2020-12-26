@@ -14,7 +14,7 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
             val sections: List<Section>,
             val damageOutsideSections: Double = 0.0,
             val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
-            val maxSafeFallingDistance: Float = Float.MAX_VALUE,
+            val maxSafeFallingDistance: Float = -1f,
             val fallingDamageMultiplier: Double = 0.0,
     )
 
