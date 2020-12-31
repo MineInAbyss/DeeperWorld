@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld
 
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
+import com.derongan.minecraft.deeperworld.player.FallingDamageManager
 import com.derongan.minecraft.deeperworld.services.PlayerManager
 import com.derongan.minecraft.deeperworld.player.PlayerManagerImpl
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener
@@ -12,6 +13,8 @@ import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
+import com.okkero.skedule.schedule
+import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
 class DeeperWorld : JavaPlugin() {
@@ -34,5 +37,17 @@ class DeeperWorld : JavaPlugin() {
 
         //register command executor
         DeeperCommandExecutor
+
+        if(DeeperConfig.data.maxSafeFallingDistance >= 0f && DeeperConfig.data.fallingDamageMultiplier >= 0.0){
+            schedule{
+                repeating(20)
+                while(true){
+                    server.onlinePlayers.forEach{
+                        FallingDamageManager.updateFallingDamage(it)
+                    }
+                    yield()
+                }
+            }
+        }
     }
 }
