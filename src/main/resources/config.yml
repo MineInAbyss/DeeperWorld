@@ -25,6 +25,11 @@ fall:
   # How often to damage players in ticks
   hitDelay: 10
 
+time:
+  mainWorld: world
+  timeOffsets:
+    world: 0
+
 # The delay between teleporting the player and attached entities across sections, in ticks. Needs to be at least 2.
 entityTeleportDelay: 2
 
