@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld.datastructures
 
 import org.bukkit.entity.Entity
 
+//TODO: Might want to move to IdoFront
 /**
  * A generic tree structure implementation.
  */
