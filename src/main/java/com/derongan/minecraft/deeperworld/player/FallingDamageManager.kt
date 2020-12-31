@@ -1,13 +1,13 @@
 package com.derongan.minecraft.deeperworld.player
 
 import com.derongan.minecraft.deeperworld.DeeperConfig
-import com.derongan.minecraft.deeperworld.extensions.getVehicleRecursive
+import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
 
 internal object FallingDamageManager {
     fun updateFallingDamage(player: Player) {
-        val actualFallDistance = player.getVehicleRecursive()?.fallDistance ?: player.fallDistance
+        val actualFallDistance = player.getRootVehicle()?.fallDistance ?: player.fallDistance
 
         if (actualFallDistance > DeeperConfig.data.maxSafeFallingDistance
                 && !player.isGliding
