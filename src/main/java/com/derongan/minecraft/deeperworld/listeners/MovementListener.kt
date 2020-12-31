@@ -17,7 +17,6 @@ import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
 import com.okkero.skedule.schedule
-import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
@@ -135,7 +134,7 @@ object MovementListener : Listener {
 
             player.teleport(newLoc)
 
-            Bukkit.getServer().scheduler.schedule(deeperWorld) {
+            deeperWorld.schedule {
                 waitFor(DeeperConfig.data.entityTeleportDelay)
 
                 vehicleTree.root.applyAll {
@@ -163,7 +162,7 @@ object MovementListener : Listener {
             player.fallDistance = fallDistance
             player.velocity = oldVelocity
 
-            Bukkit.getServer().scheduler.schedule(deeperWorld) {
+            deeperWorld.schedule {
                 waitFor(DeeperConfig.data.entityTeleportDelay)
 
                 oldLeashedEntities.forEach { leashEntity ->
