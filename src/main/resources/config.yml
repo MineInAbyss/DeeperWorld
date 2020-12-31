@@ -1,25 +1,33 @@
 ### Example config:
 sections:
   - name: section1
-    refTop: [0, 0, 0]
+    refTop: [ 0, 0, 0 ]
     # refBottom should connect to the refTop of the next section.
-    refBottom: [0, 16, 0]
+    refBottom: [ 0, 16, 0 ]
     #x1, y1, x2, y2
-    region: [0, 0, 1000, 1000]
+    region: [ 0, 0, 1000, 1000 ]
     world: world
   - name: section2
-    refTop: [1000, 240, 0]
-    refBottom: [2000, 16, 0]
-    region: [1000, 0, 2000, 1000]
+    refTop: [ 1000, 240, 0 ]
+    refBottom: [ 2000, 16, 0 ]
+    region: [ 1000, 0, 2000, 1000 ]
     world: world
 # The damage players will take when outside a managed section.
 damageOutsideSections: 1.0
-# The maximum safe falling distance, after which players will start taking damage. Set to -1 to disable falling damage
-maxSafeFallingDistance: -1
-# The multiplier for damage taken while falling.
-fallingDamageMultiplier: 0
+
+fall:
+  # The maximum safe falling distance, after which players will start taking damage. Set to -1 to disable falling damage
+  maxSafeDist: -1
+  # The multiplier for damage taken while falling. Set to 0 to deal consistent damage.
+  fallDistanceDamageScaler: 0.01
+  # The minimum damage to deal.
+  startingDamage: 1.0
+  # How often to damage players in ticks
+  hitDelay: 10
+
 # The delay between teleporting the player and attached entities across sections, in ticks. Needs to be at least 2.
 entityTeleportDelay: 2
+
 # Worlds which shouldn't damage players when outside of a section.
 #damageExcludedWorlds:
 #  - world

@@ -1,19 +1,25 @@
 package com.derongan.minecraft.deeperworld.player
 
-import com.derongan.minecraft.deeperworld.DeeperConfig
+import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
-import org.bukkit.GameMode
+import org.bukkit.GameMode.ADVENTURE
+import org.bukkit.GameMode.SURVIVAL
 import org.bukkit.entity.Player
 
 internal object FallingDamageManager {
     fun updateFallingDamage(player: Player) {
         val actualFallDistance = player.getRootVehicle()?.fallDistance ?: player.fallDistance
+        val fallConfig = DeeperConfig.data.fall
 
-        if (actualFallDistance > DeeperConfig.data.maxSafeFallingDistance
-                && !player.isGliding
-                && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+        if (actualFallDistance > fallConfig.maxSafeDist
+            && !player.isGliding
+            && !player.allowFlight
+            && (player.gameMode == SURVIVAL || player.gameMode == ADVENTURE)
+        ) {
             // Always deal a minimum of 1 damage, else the first damage tick could deal (almost) no damage
-            val damageToDeal = ((actualFallDistance - DeeperConfig.data.maxSafeFallingDistance) * DeeperConfig.data.fallingDamageMultiplier).coerceAtLeast(1.0)
+            val damageToDeal = ((actualFallDistance - fallConfig.maxSafeDist) * fallConfig.fallDistanceDamageScaler)
+                .coerceAtLeast(fallConfig.startingDamage)
+
             player.damage(0.01) // Damage animation
             player.health = (player.health - damageToDeal).coerceAtLeast(0.0)
         }

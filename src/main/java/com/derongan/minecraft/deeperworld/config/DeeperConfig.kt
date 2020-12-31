@@ -1,5 +1,6 @@
-package com.derongan.minecraft.deeperworld
+package com.derongan.minecraft.deeperworld.config
 
+import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.mineinabyss.idofront.config.IdofrontConfig
@@ -11,12 +12,11 @@ import org.bukkit.World
 object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serializer()) {
     @Serializable
     data class Data(
-            val sections: List<Section>,
-            val damageOutsideSections: Double = 0.0,
-            val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
-            val maxSafeFallingDistance: Float = -1f,
-            val fallingDamageMultiplier: Double = 0.0,
-            val entityTeleportDelay: Long = 2
+        val sections: List<Section>,
+        val damageOutsideSections: Double = 0.0,
+        val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
+        val entityTeleportDelay: Long = 2,
+        val fall: FallDamageConfig = FallDamageConfig()
     )
 
     init {
@@ -35,8 +35,10 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
     }
 
     override fun reload(): ReloadScope.() -> Unit = {
-        attempt(success = "Registered all sections with DeeperWorld",
-                fail = "Failed to register sections with DeeperWorld") {
+        attempt(
+            success = "Registered all sections with DeeperWorld",
+            fail = "Failed to register sections with DeeperWorld"
+        ) {
             load()
         }
     }

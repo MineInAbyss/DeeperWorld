@@ -1,6 +1,6 @@
 package com.derongan.minecraft.deeperworld.listeners
 
-import com.derongan.minecraft.deeperworld.DeeperConfig
+import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.datastructures.VehicleTree

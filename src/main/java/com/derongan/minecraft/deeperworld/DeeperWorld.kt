@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld
 
+import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
 import com.derongan.minecraft.deeperworld.player.FallingDamageManager
@@ -37,9 +38,9 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
-        if (DeeperConfig.data.maxSafeFallingDistance >= 0f && DeeperConfig.data.fallingDamageMultiplier >= 0.0) {
+        if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
             schedule {
-                repeating(20)
+                repeating(DeeperConfig.data.fall.hitDelay.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
