@@ -3,22 +3,32 @@ package com.derongan.minecraft.deeperworld.listeners
 import com.derongan.minecraft.deeperworld.DeeperConfig
 import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.Permissions
+import com.derongan.minecraft.deeperworld.datastructures.VehicleTree
+import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
+import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
+import com.derongan.minecraft.deeperworld.extensions.getNearbyItemEntities
+import com.derongan.minecraft.deeperworld.extensions.getPlayerPassengersRecursive
+import com.derongan.minecraft.deeperworld.extensions.getVehicleRecursive
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
+import com.okkero.skedule.schedule
+import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.event.vehicle.VehicleMoveEvent
 
 object MovementListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
@@ -26,6 +36,16 @@ object MovementListener : Listener {
         val (player) = playerMoveEvent
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && player.canMoveSections) {
             onPlayerMoveInternal(player, playerMoveEvent.from, playerMoveEvent.to ?: return)
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    fun onVehicleMove(vehicleMoveEvent: VehicleMoveEvent) {
+        val (vehicle) = vehicleMoveEvent
+        val players = vehicle.getPlayerPassengersRecursive() ?: return
+
+        players.firstOrNull { it.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && it.canMoveSections }?.let {
+            onPlayerMoveInternal(it, vehicleMoveEvent.from, vehicleMoveEvent.to)
         }
     }
 
@@ -81,10 +101,100 @@ object MovementListener : Listener {
 
     private fun teleportBetweenSections(player: Player, to: Location, oldSection: Section, newSection: Section) {
         val newLoc = to.getCorrespondingLocation(oldSection, newSection) ?: return
-        val fallDistance = player.fallDistance
-        val oldVelocity = player.velocity
-        player.teleport(newLoc)
-        player.fallDistance = fallDistance
-        player.velocity = oldVelocity
+
+        val oldLeashedEntities = player.getLeashedEntities()
+        oldLeashedEntities?.forEach {
+            if (it.customName.isNullOrEmpty()) {
+                it.customName = " "
+            }
+        }
+
+        val rootVehicle = player.getVehicleRecursive()
+        if (rootVehicle != null) {
+            newLoc.yaw = player.location.yaw
+            newLoc.pitch = player.location.pitch
+
+            // Prevent teleportation of other players in the vehicle-passenger structure.
+            rootVehicle.getPlayerPassengersRecursive()?.forEach {
+                if (it != player) {
+                    it.vehicle?.removePassenger(it)
+                }
+            }
+
+            val oldFallDistance = rootVehicle.fallDistance
+            val oldVelocity = rootVehicle.velocity
+
+            val vehicleTree = VehicleTree(rootVehicle)
+
+            vehicleTree.root.applyAll {
+                it.value.passengers.forEach { passenger ->
+                    it.value.removePassenger(passenger)
+                }
+
+                if (it.value.customName.isNullOrEmpty()) {
+                    it.value.customName = " "
+                }
+            }
+
+            player.teleport(newLoc)
+
+            Bukkit.getServer().scheduler.schedule(deeperWorld) {
+                waitFor(DeeperConfig.data.entityTeleportDelay)
+
+                vehicleTree.root.applyAll {
+                    it.value.teleport(player)
+                    if (it.value.customName == " ") {
+                        it.value.customName = null
+                    }
+                }
+
+                vehicleTree.root.applyAll { vehicleNode ->
+                    vehicleNode.children.forEach {
+                        vehicleNode.value.addPassenger(it.value)
+                    }
+                }
+
+                rootVehicle.fallDistance = oldFallDistance
+                rootVehicle.velocity = oldVelocity
+
+                oldLeashedEntities?.forEach { leashEntity ->
+
+                    // Delete the lead that drops when the player teleports and unleashes the entity
+                    leashEntity.getNearbyItemEntities(20.0, 20.0, 20.0, Material.LEAD)
+                            ?.minByOrNull { it.location.distanceSquared(leashEntity.location) }
+                            ?.remove()
+
+                    leashEntity.teleport(player)
+                    leashEntity.setLeashHolder(player)
+                    if (leashEntity.customName == " ") {
+                        leashEntity.customName = null
+                    }
+                }
+            }
+        } else {
+            val fallDistance = player.fallDistance
+            val oldVelocity = player.velocity
+            player.teleport(newLoc)
+            player.fallDistance = fallDistance
+            player.velocity = oldVelocity
+
+            Bukkit.getServer().scheduler.schedule(deeperWorld) {
+                waitFor(DeeperConfig.data.entityTeleportDelay)
+
+                oldLeashedEntities?.forEach { leashEntity ->
+
+                    // Delete the lead that drops when the player teleports and unleashes the entity
+                    leashEntity.getNearbyItemEntities(20.0, 20.0, 20.0, Material.LEAD)
+                            ?.minByOrNull { it.location.distanceSquared(leashEntity.location) }
+                            ?.remove()
+
+                    leashEntity.teleport(player)
+                    leashEntity.setLeashHolder(player)
+                    if (leashEntity.customName == " ") {
+                        leashEntity.customName = null
+                    }
+                }
+            }
+        }
     }
 }
