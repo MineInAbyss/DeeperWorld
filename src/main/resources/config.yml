@@ -18,6 +18,8 @@ damageOutsideSections: 1.0
 maxSafeFallingDistance: -1
 # The multiplier for damage taken while falling.
 fallingDamageMultiplier: 0
+# The delay between teleporting the player and attached entities across sections, in ticks. Needs to be at least 2.
+entityTeleportDelay: 2
 # Worlds which shouldn't damage players when outside of a section.
 #damageExcludedWorlds:
 #  - world

@@ -14,7 +14,6 @@ import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
 import com.okkero.skedule.schedule
-import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
 class DeeperWorld : JavaPlugin() {
@@ -38,11 +37,11 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
-        if(DeeperConfig.data.maxSafeFallingDistance >= 0f && DeeperConfig.data.fallingDamageMultiplier >= 0.0){
-            schedule{
+        if (DeeperConfig.data.maxSafeFallingDistance >= 0f && DeeperConfig.data.fallingDamageMultiplier >= 0.0) {
+            schedule {
                 repeating(20)
-                while(true){
-                    server.onlinePlayers.forEach{
+                while (true) {
+                    server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
                     }
                     yield()
