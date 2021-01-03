@@ -239,19 +239,22 @@ class SectionTeleportPacketAdapter(
                         vehicleNode.value.addPassenger(it.value)
                     }
                 }
+
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
 
-                val rootEntityID = player.vehicle?.entityId ?: return@schedule
-                val passengerIDs = player.vehicle?.passengers?.map { it.entityId }?.toIntArray() ?: return@schedule
-
                 waitFor(DeeperConfig.data.remountPacketDelay)
 
-                // Resends a mount packet to clients to prevent potential visual glitches where the client thinks it's dismounted.
-                protocolManager.sendServerPacket(player, PacketContainer(PacketType.Play.Server.MOUNT).apply {
-                    integers.write(0, rootEntityID)
-                    integerArrays.write(0, passengerIDs)
-                })
+                player.vehicle?.let { vehicle ->
+                    val playerVehicleID = vehicle.entityId
+                    val passengerIDs = vehicle.passengers.map { it.entityId }.toIntArray()
+
+                    // Resends a mount packet to clients to prevent potential visual glitches where the client thinks it's dismounted.
+                    protocolManager.sendServerPacket(player, PacketContainer(PacketType.Play.Server.MOUNT).apply {
+                        integers.write(0, playerVehicleID)
+                        integerArrays.write(0, passengerIDs)
+                    })
+                }
             }
         }
     }
