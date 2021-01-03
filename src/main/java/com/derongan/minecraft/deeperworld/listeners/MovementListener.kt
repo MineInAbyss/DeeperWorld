@@ -1,10 +1,11 @@
 package com.derongan.minecraft.deeperworld.listeners
 
+import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketEvent
+import com.derongan.minecraft.deeperworld.*
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
-import com.derongan.minecraft.deeperworld.MinecraftConstants
-import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.datastructures.VehicleTree
-import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
@@ -20,12 +21,15 @@ import com.okkero.skedule.schedule
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.EntityType
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.vehicle.VehicleMoveEvent
+import org.bukkit.util.Vector
 
 object MovementListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
@@ -50,11 +54,21 @@ object MovementListener : Listener {
         val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
             if (!DeeperConfig.data.damageExcludedWorlds.contains(player.location.world)
-                    && DeeperConfig.data.damageOutsideSections > 0.0
-                    && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)) {
+                && DeeperConfig.data.damageOutsideSections > 0.0
+                && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
+            ) {
                 player.damage(0.01) //give a damage effect
-                player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10).coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
-                player.sendTitle("&cYou are not in a managed section".color(), "&7You will take damage upon moving!".color(), 0, 20, 10)
+                player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10).coerceIn(
+                    0.0,
+                    player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value
+                ) //ignores armor
+                player.sendTitle(
+                    "&cYou are not in a managed section".color(),
+                    "&7You will take damage upon moving!".color(),
+                    0,
+                    20,
+                    10
+                )
             }
             return
         }
@@ -64,14 +78,20 @@ object MovementListener : Listener {
 
         val inSpectator = player.gameMode == GameMode.SPECTATOR
 
-        fun tpIfAbleTo(key: SectionKey, tpFun: (Player, Location, Section, Section) -> Unit, boundaryCheck: (y: Double, shared: Int) -> Boolean, pushVelocity: Double) {
+        fun tpIfAbleTo(
+            key: SectionKey,
+            tpFun: (Player, Location, Section, Section) -> Unit,
+            boundaryCheck: (y: Double, shared: Int) -> Boolean,
+            pushVelocity: Double
+        ) {
             val toSection = key.section ?: return
             val overlap = current.overlapWith(toSection) ?: return
             val correspondingPos = to.getCorrespondingLocation(current, toSection) ?: return
 
             if (boundaryCheck(to.y, overlap)) {
                 if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
-                        || !inSpectator && correspondingPos.block.type.isSolid)
+                    || !inSpectator && correspondingPos.block.type.isSolid
+                )
                     player.velocity = player.velocity.setY(pushVelocity)
                 else
                     tpFun(player, to, current, toSection)
@@ -79,8 +99,18 @@ object MovementListener : Listener {
         }
 
         when {
-            changeY > 0.0 -> tpIfAbleTo(current.aboveKey, MovementListener::ascend, { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared }, -0.4)
-            changeY < 0.0 -> tpIfAbleTo(current.belowKey, MovementListener::descend, { y, shared -> y < .3 * shared }, 0.4)
+            changeY > 0.0 -> tpIfAbleTo(
+                current.aboveKey,
+                MovementListener::ascend,
+                { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared },
+                -0.4
+            )
+            changeY < 0.0 -> tpIfAbleTo(
+                current.belowKey,
+                MovementListener::descend,
+                { y, shared -> y < .3 * shared },
+                0.4
+            )
         }
     }
 
@@ -132,13 +162,95 @@ object MovementListener : Listener {
                 }
             }
 
+            // If the vehicleTree contains a minecart, teleporting the player across worlds within the same tick
+            // as removing the passenger throws a "Removing ticking entity!" exception.
+            // Delay the teleportation by 1 tick in this case.
+            if (vehicleTree.root.where { it.value.type == EntityType.MINECART }.isNotEmpty()) {
+                deeperWorld.schedule {
+                    waitFor(1)
+
+                    player.teleport(newLoc)
+
+                    protocolManager.addPacketListener(
+                        SectionTeleportPacketAdapter(
+                            player,
+                            oldLeashedEntities,
+                            oldFallDistance,
+                            oldVelocity,
+                            vehicleTree
+                        )
+                    )
+                }
+            } else {
+                player.teleport(newLoc)
+
+                protocolManager.addPacketListener(
+                    SectionTeleportPacketAdapter(
+                        player,
+                        oldLeashedEntities,
+                        oldFallDistance,
+                        oldVelocity,
+                        vehicleTree
+                    )
+                )
+            }
+        } else {
+            val oldFallDistance = player.fallDistance
+            val oldVelocity = player.velocity
+
             player.teleport(newLoc)
 
-            deeperWorld.schedule {
-                waitFor(DeeperConfig.data.entityTeleportDelay)
+            player.fallDistance = oldFallDistance
+            player.velocity = oldVelocity
 
-                vehicleTree.root.applyAll {
-                    it.value.teleport(player)
+            if (oldLeashedEntities.isNotEmpty()) {
+                protocolManager.addPacketListener(
+                    SectionTeleportPacketAdapter(
+                        player,
+                        oldLeashedEntities,
+                        oldFallDistance,
+                        oldVelocity
+                    )
+                )
+            }
+        }
+    }
+}
+
+/**
+ * This PacketAdapter serves to teleport entities with the player at the correct time
+ * (after the client sends a POSITION or POSITION_LOOK packet). This circumvents the client side rendering bug
+ * when entities are teleported with the player in the same tick.
+ *
+ * TODO: Remove listener if a player disconnects before sending a POSITION or POSITION_LOOK packet
+ */
+class SectionTeleportPacketAdapter(
+    private val player: Player,
+    private val oldLeashedEntities: List<LivingEntity>,
+    private val oldFallDistance: Float,
+    private val oldVelocity: Vector,
+    private val vehicleTree: VehicleTree? = null
+) : PacketAdapter(deeperWorld, PacketType.Play.Client.POSITION, PacketType.Play.Client.POSITION_LOOK) {
+    override fun onPacketReceiving(event: PacketEvent) {
+        if (event.player != player) return
+
+        protocolManager.removePacketListener(this)
+
+        deeperWorld.schedule {
+            waitFor(1)
+
+            oldLeashedEntities.toSet().forEach {
+                if (it == player) return@forEach
+
+                it.teleport(player)
+                it.setLeashHolder(player)
+            }
+
+            if (vehicleTree != null) {
+                vehicleTree.root.values().toSet().forEach {
+                    if (it == player) return@forEach
+
+                    it.teleport(player)
                 }
 
                 vehicleTree.root.applyAll { vehicleNode ->
@@ -147,28 +259,8 @@ object MovementListener : Listener {
                     }
                 }
 
-                rootVehicle.fallDistance = oldFallDistance
-                rootVehicle.velocity = oldVelocity
-
-                oldLeashedEntities.forEach { leashEntity ->
-                    leashEntity.teleport(player)
-                    leashEntity.setLeashHolder(player)
-                }
-            }
-        } else {
-            val fallDistance = player.fallDistance
-            val oldVelocity = player.velocity
-            player.teleport(newLoc)
-            player.fallDistance = fallDistance
-            player.velocity = oldVelocity
-
-            deeperWorld.schedule {
-                waitFor(DeeperConfig.data.entityTeleportDelay)
-
-                oldLeashedEntities.forEach { leashEntity ->
-                    leashEntity.teleport(player)
-                    leashEntity.setLeashHolder(player)
-                }
+                vehicleTree.root.value.fallDistance = oldFallDistance
+                vehicleTree.root.value.velocity = oldVelocity
             }
         }
     }

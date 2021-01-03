@@ -5,7 +5,7 @@ authors: [Derongan]
 api-version: '1.16'
 description: A plugin for letting you create a deeper world. Or at least fake it.
 
-softdepend: [Multiverse-Core, BlockLocker, KotlinSpice]
+softdepend: [Multiverse-Core, BlockLocker, KotlinSpice, ProtocolLib]
 
 commands:
   sectionon:
