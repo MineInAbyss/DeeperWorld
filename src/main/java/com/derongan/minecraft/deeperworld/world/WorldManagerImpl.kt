@@ -15,10 +15,10 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
 
 
     override fun registerSection(name: String, section: Section): SectionKey =
-            registerInternal(CustomSectionKey(name), section)
+        registerInternal(CustomSectionKey(name), section)
 
     override fun registerSection(sectionKey: SectionKey, section: Section): SectionKey =
-            registerInternal(sectionKey, section)
+        registerInternal(sectionKey, section)
 
     private fun registerInternal(key: SectionKey, section: Section): SectionKey {
         if (sectionMap.containsKey(key)) throw RuntimeException("Bruh") //TODO change to checked exception
@@ -33,7 +33,7 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
     }
 
     override fun getSectionFor(x: Int, z: Int, world: World): Section? = //TODO consider performance
-            sectionMap.values.firstOrNull { it.world == world && it.region.contains(x, z) }
+        sectionMap.values.firstOrNull { it.world == world && it.region.contains(x, z) }
 
     override fun getSectionFor(key: SectionKey) = sectionMap[key]
     override fun getSectionFor(key: String) = sectionMap[CustomSectionKey(key)]

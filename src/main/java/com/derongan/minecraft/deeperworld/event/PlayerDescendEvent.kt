@@ -5,9 +5,9 @@ import org.bukkit.entity.Player
 import org.bukkit.event.HandlerList
 
 class PlayerDescendEvent(
-        player: Player,
-        fromSection: Section,
-        toSection: Section
+    player: Player,
+    fromSection: Section,
+    toSection: Section
 ) : PlayerChangeSectionEvent(player, fromSection, toSection) {
     override fun getHandlers() = handlerList
 

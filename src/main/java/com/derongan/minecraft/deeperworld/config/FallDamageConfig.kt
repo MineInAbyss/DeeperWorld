@@ -8,4 +8,5 @@ class FallDamageConfig(
     val fallDistanceDamageScaler: Double = 0.01,
     val startingDamage: Double = 1.0,
     val hitDelay: Long = 10,
+    val spawnParticles: Boolean = true
 )
