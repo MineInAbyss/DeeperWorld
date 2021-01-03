@@ -27,8 +27,8 @@ fall:
   # Whether to spawn cloud particles when the player is being damaged.
   spawnParticles: true
 
-# The delay between teleporting the player and attached entities across sections, in ticks. Needs to be at least 2.
-entityTeleportDelay: 2
+# Sends an additional remount packet after this delay to prevent client-side mount bugs when moving between sections.
+remountPacketDelay: 40
 
 # Worlds which shouldn't damage players when outside of a section.
 #damageExcludedWorlds:

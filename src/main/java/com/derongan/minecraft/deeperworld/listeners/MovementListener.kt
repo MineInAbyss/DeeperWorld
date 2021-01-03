@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld.listeners
 
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.derongan.minecraft.deeperworld.*
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
@@ -21,7 +22,6 @@ import com.okkero.skedule.schedule
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
-import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -239,9 +239,19 @@ class SectionTeleportPacketAdapter(
                         vehicleNode.value.addPassenger(it.value)
                     }
                 }
-
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
+
+                val rootEntityID = player.vehicle?.entityId ?: return@schedule
+                val passengerIDs = player.vehicle?.passengers?.map { it.entityId }?.toIntArray() ?: return@schedule
+
+                waitFor(DeeperConfig.data.remountPacketDelay)
+
+                // Resends a mount packet to clients to prevent potential visual glitches where the client thinks it's dismounted.
+                protocolManager.sendServerPacket(player, PacketContainer(PacketType.Play.Server.MOUNT).apply {
+                    integers.write(0, rootEntityID)
+                    integerArrays.write(0, passengerIDs)
+                })
             }
         }
     }
