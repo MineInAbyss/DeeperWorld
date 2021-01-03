@@ -38,16 +38,18 @@ object ContainerSyncListener : Listener {
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: return
 
             if (DeeperContext.isBlockLockerLoaded) {
-                fun updateProtection(block: Block) = blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
-                    it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
-                }
+                fun updateProtection(block: Block) =
+                    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
+                        it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
+                    }
                 updateProtection(linkedBlock)
                 updateProtection(clicked)
 
                 //allow chest protection signs to be placed
                 if (player.inventory.itemInMainHand.type.name.contains("SIGN")
-                        || !BlockLockerAPIv2.isAllowed(player, clicked, true)
-                        || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true))
+                    || !BlockLockerAPIv2.isAllowed(player, clicked, true)
+                    || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
+                )
                     return
             }
 

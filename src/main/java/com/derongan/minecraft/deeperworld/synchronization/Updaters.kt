@@ -18,10 +18,11 @@ internal fun copyBlockData(original: Block, corresponding: Block) {
 
 internal fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
 
-internal fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) = location.sync(updater)
+internal fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
+    location.sync(updater)
 
 internal inline fun Location.sync(
-        updater: (original: Block, corresponding: Block, section: Section, corrSection: Section) -> Unit
+    updater: (original: Block, corresponding: Block, section: Section, corrSection: Section) -> Unit
 ) {
     if (!inSectionOverlap) return //ensure blocks don't get altered when we are outside of the corresponding region
     val section = section ?: return
@@ -31,7 +32,7 @@ internal inline fun Location.sync(
 }
 
 internal inline fun Location.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
-        sync { original, corresponding, _, _ -> updater(original, corresponding) }
+    sync { original, corresponding, _, _ -> updater(original, corresponding) }
 
 internal fun signUpdater(lines: Array<String>? = null) = { original: Block, corresponding: Block ->
     copyBlockData(original, corresponding)
@@ -48,5 +49,7 @@ internal fun signUpdater(lines: Array<String>? = null) = { original: Block, corr
 
 internal fun Collection<ItemStack?>.dropItems(loc: Location, noVelocity: Boolean) {
     val spawnLoc = loc.clone().add(0.5, if (noVelocity) 1.0 else 0.0, 0.5)
-    filterNotNull().forEach { loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) } }
+    filterNotNull().forEach {
+        loc.world?.dropItem(spawnLoc, it).apply { if (noVelocity) this?.velocity = Vector(0, 0, 0) }
+    }
 }

@@ -25,11 +25,11 @@ import org.bukkit.util.Vector
  */
 @Serializable
 data class Section(
-        val name: String? = null,
-        val region: Region,
-        val world: World,
-        @SerialName("refTop") private val _refTop: Vector,
-        @SerialName("refBottom") private val _refBottom: Vector
+    val name: String? = null,
+    val region: Region,
+    val world: World,
+    @SerialName("refTop") private val _refTop: Vector,
+    @SerialName("refBottom") private val _refBottom: Vector
 ) {
     @Transient
     val referenceTop = _refTop.toLocation(world)
@@ -39,7 +39,7 @@ data class Section(
 
     @Transient
     val key: SectionKey = name?.let { AbstractSectionKey.CustomSectionKey(name) }
-            ?: AbstractSectionKey.InternalSectionKey()
+        ?: AbstractSectionKey.InternalSectionKey()
 
     @Transient
     internal var aboveKey: SectionKey = SectionKey.TERMINAL

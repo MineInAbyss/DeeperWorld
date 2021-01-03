@@ -32,7 +32,7 @@ object SectionSyncListener : Listener {
             //if breaking from bottom container, drop items stored in top container here
             if (state is Container && original.location.y > corr.location.y) {
                 val corrInv = state.inventory
-                if(state is ShulkerBox) {
+                if (state is ShulkerBox) {
                     e.isDropItems = false
                     //TODO maybe create our own event that gets called from here
                     corr.drops.dropItems(original.location, noVelocity = false)
@@ -55,7 +55,7 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun syncBlockPlace(blockPlaceEvent: BlockPlaceEvent) {
         blockPlaceEvent.block.sync { original, corr ->
-            if(original.type.name.contains("SHULKER")) {
+            if (original.type.name.contains("SHULKER")) {
                 blockPlaceEvent.isCancelled = true
                 blockPlaceEvent.player.error("Shulkers are disabled near section changes due to item loss bugs.")
                 return@sync
@@ -79,26 +79,26 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun syncWaterEmpty(event: PlayerBucketEmptyEvent) =
-            event.block.sync { orig, corr ->
-                val data = corr.blockData
-                if (data is Waterlogged) {
-                    data.isWaterlogged = true
-                    corr.blockData = data
+        event.block.sync { orig, corr ->
+            val data = corr.blockData
+            if (data is Waterlogged) {
+                data.isWaterlogged = true
+                corr.blockData = data
 //                    corr.state.update(true, true) //TODO we need to send a block update somehow and this doesn't work
-                } else
-                    updateMaterial(Material.WATER)(orig, corr)
-            }
+            } else
+                updateMaterial(Material.WATER)(orig, corr)
+        }
 
     @EventHandler
     fun syncWaterFill(event: PlayerBucketFillEvent) =
-            event.block.sync { orig, corr ->
-                val data = corr.blockData
-                if (data is Waterlogged) {
-                    data.isWaterlogged = false
-                    corr.blockData = data
-                } else
-                    updateMaterial(Material.AIR)(orig, corr)
-            }
+        event.block.sync { orig, corr ->
+            val data = corr.blockData
+            if (data is Waterlogged) {
+                data.isWaterlogged = false
+                corr.blockData = data
+            } else
+                updateMaterial(Material.AIR)(orig, corr)
+        }
 
     /** Synchronize explosions */
     @EventHandler
