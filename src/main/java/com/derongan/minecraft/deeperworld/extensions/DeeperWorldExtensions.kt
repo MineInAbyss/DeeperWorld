@@ -27,11 +27,8 @@ internal fun Entity.getPassengersRecursive(): List<Entity> {
 }
 
 internal fun Player.getLeashedEntities(): List<LivingEntity> {
-    return getNearbyEntities(
-        20.0,
-        20.0,
-        20.0
-    ) // Max leashed entity range is 10 blocks, therefore these parameter values
+    // Max leashed entity range is 10 blocks, therefore these parameter values
+    return getNearbyEntities(20.0, 20.0, 20.0)
         .filterIsInstance<LivingEntity>()
         .filter { it.isLeashed && it.leashHolder == this }
 }

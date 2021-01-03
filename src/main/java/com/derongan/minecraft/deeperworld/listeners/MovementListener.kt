@@ -58,16 +58,12 @@ object MovementListener : Listener {
                 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
             ) {
                 player.damage(0.01) //give a damage effect
-                player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10).coerceIn(
-                    0.0,
-                    player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value
-                ) //ignores armor
+                player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10)
+                    .coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
                 player.sendTitle(
                     "&cYou are not in a managed section".color(),
                     "&7You will take damage upon moving!".color(),
-                    0,
-                    20,
-                    10
+                    0, 20, 10
                 )
             }
             return
@@ -162,26 +158,11 @@ object MovementListener : Listener {
                 }
             }
 
-            // If the vehicleTree contains a minecart, teleporting the player across worlds within the same tick
-            // as removing the passenger throws a "Removing ticking entity!" exception.
-            // Delay the teleportation by 1 tick in this case.
-            if (vehicleTree.root.where { it.value.type == EntityType.MINECART }.isNotEmpty()) {
-                deeperWorld.schedule {
-                    waitFor(1)
+            // Delay the teleportation by 1 tick after passenger removal to avoid occasional
+            // "Removing ticking entity!" exceptions.
+            deeperWorld.schedule {
+                waitFor(1)
 
-                    player.teleport(newLoc)
-
-                    protocolManager.addPacketListener(
-                        SectionTeleportPacketAdapter(
-                            player,
-                            oldLeashedEntities,
-                            oldFallDistance,
-                            oldVelocity,
-                            vehicleTree
-                        )
-                    )
-                }
-            } else {
                 player.teleport(newLoc)
 
                 protocolManager.addPacketListener(
