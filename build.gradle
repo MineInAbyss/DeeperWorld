@@ -33,7 +33,7 @@ dependencies {
     compileOnly "org.cultofclang.minecraft:kotlinspice:$kotlin_version+"
     compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
 
-    implementation 'com.mineinabyss:idofront:0.3.27'
+    implementation 'com.mineinabyss:idofront:0.3.30'
 
     testImplementation 'junit:junit:4.12'
 }

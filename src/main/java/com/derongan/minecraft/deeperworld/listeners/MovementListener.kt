@@ -243,7 +243,7 @@ class SectionTeleportPacketAdapter(
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
 
-                waitFor(DeeperConfig.data.remountPacketDelay.ticks)
+                waitFor(DeeperConfig.data.remountPacketDelay.inTicks)
 
                 player.vehicle?.let { vehicle ->
                     val playerVehicleID = vehicle.entityId
