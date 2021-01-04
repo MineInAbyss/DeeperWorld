@@ -23,11 +23,22 @@ fall:
   # The minimum damage to deal.
   startingDamage: 1.0
   # How often to damage players in ticks
+  # TODO: serialize as TimeSpan
   hitDelay: 10
   # Whether to spawn cloud particles when the player is being damaged.
   spawnParticles: true
 
+time:
+  # How often to synchronize time between worlds
+  updateInterval: 1800s
+  # The main synchronization world. Other worlds will get synchronized based on the time in this world.
+  mainWorld: world
+  # The worlds where time should be synchronized with the mainWorld. Optionally specify a time offset (leave 0 if no offset is desired)
+  syncedWorlds:
+    world: 0
+
 # Sends an additional remount packet after this delay to prevent client-side mount bugs when moving between sections.
+# TODO: serialize as TimeSpan
 remountPacketDelay: 40
 
 # Worlds which shouldn't damage players when outside of a section.
