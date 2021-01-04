@@ -16,7 +16,8 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         val damageOutsideSections: Double = 0.0,
         val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
         val remountPacketDelay: Long = 40,
-        val fall: FallDamageConfig = FallDamageConfig()
+        val fall: FallDamageConfig = FallDamageConfig(),
+        val time: TimeConfig = TimeConfig(),
     )
 
     init {

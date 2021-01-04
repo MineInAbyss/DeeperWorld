@@ -42,6 +42,7 @@ class DeeperWorld : JavaPlugin() {
         //register command executor
         DeeperCommandExecutor
 
+        // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
             schedule {
                 repeating(DeeperConfig.data.fall.hitDelay.coerceAtLeast(1))
@@ -50,6 +51,22 @@ class DeeperWorld : JavaPlugin() {
                         FallingDamageManager.updateFallingDamage(it)
                     }
                     yield()
+                }
+            }
+        }
+
+        // Initialize time synchronization task
+        if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
+            DeeperConfig.data.time.mainWorld?.let { mainWorld ->
+                schedule {
+                    repeating(DeeperConfig.data.time.updateInterval.ticks)
+                    while (true) {
+                        val mainWorldTime = mainWorld.time
+                        DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                            world.time = mainWorldTime + offset
+                        }
+                        yield()
+                    }
                 }
             }
         }
