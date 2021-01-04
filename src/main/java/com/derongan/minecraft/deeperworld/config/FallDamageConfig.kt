@@ -10,6 +10,6 @@ class FallDamageConfig(
     val maxSafeDist: Float = -1f,
     val fallDistanceDamageScaler: Double = 0.01,
     val startingDamage: Double = 1.0,
-    val hitDelay: @Serializable(with = TimeSpanSerializer::class) TimeSpan = 10.ticks,
+    val hitDelay: TimeSpan = 10.ticks,
     val spawnParticles: Boolean = true
 )
