@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld
 
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
+import com.derongan.minecraft.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
@@ -45,7 +46,7 @@ class DeeperWorld : JavaPlugin() {
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
             schedule {
-                repeating(DeeperConfig.data.fall.hitDelay.coerceAtLeast(1))
+                repeating(DeeperConfig.data.fall.hitDelay.inTicks.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
@@ -59,11 +60,11 @@ class DeeperWorld : JavaPlugin() {
         if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
             DeeperConfig.data.time.mainWorld?.let { mainWorld ->
                 schedule {
-                    repeating(DeeperConfig.data.time.updateInterval.ticks)
+                    repeating(DeeperConfig.data.time.updateInterval.inTicks)
                     while (true) {
                         val mainWorldTime = mainWorld.time
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
-                            world.time = mainWorldTime + offset
+                            world.time = (mainWorldTime + offset) % FULL_DAY_TIME
                         }
                         yield()
                     }
