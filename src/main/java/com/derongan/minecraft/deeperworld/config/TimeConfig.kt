@@ -12,7 +12,7 @@ import org.bukkit.World
 
 @Serializable
 class TimeConfig(
-    val updateInterval: @Serializable(with = TimeSpanSerializer::class) TimeSpan = 1800.seconds,
+    val updateInterval: TimeSpan = 1800.seconds,
     val mainWorld: World? = null,
     val syncedWorlds: Map<World, Long> = emptyMap(),
 )

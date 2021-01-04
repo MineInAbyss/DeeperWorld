@@ -6,6 +6,9 @@ import com.derongan.minecraft.deeperworld.world.section.Section
 import com.mineinabyss.idofront.config.IdofrontConfig
 import com.mineinabyss.idofront.config.ReloadScope
 import com.mineinabyss.idofront.serialization.WorldSerializer
+import com.mineinabyss.idofront.time.TimeSpan
+import com.mineinabyss.idofront.time.TimeSpanSerializer
+import com.mineinabyss.idofront.time.ticks
 import kotlinx.serialization.Serializable
 import org.bukkit.World
 
@@ -15,7 +18,7 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         val sections: List<Section>,
         val damageOutsideSections: Double = 0.0,
         val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
-        val remountPacketDelay: Long = 40,
+        val remountPacketDelay: TimeSpan = 40.ticks,
         val fall: FallDamageConfig = FallDamageConfig(),
         val time: TimeConfig = TimeConfig(),
     )
