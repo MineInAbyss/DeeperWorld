@@ -42,8 +42,8 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                 val time by intArg()
                 "set"{
                     action {
-                        DeeperConfig.data.time.mainWorld?.let {
-                            it.time = time.toLong()
+                        DeeperConfig.data.time.mainWorld?.let { world ->
+                            world.time = time.toLong()
                         } ?: return@action
 
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
