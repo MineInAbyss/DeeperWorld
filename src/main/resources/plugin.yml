@@ -20,6 +20,17 @@ commands:
     description: Gets information about a players section
     usage: /linfo [player]
     permission: deeperworld.linfo
+  syncedtime:
+    permission: deeperworld.time
+  syncedtime set:
+    description: Set the time of the main synchronization world and the other worlds with their respective offsets
+    useage: /syncedtime set [time]
+    permission: deeperworld.time
+  syncedtime add:
+    description: Add to the main synchronization world time and the other worlds with their respective offsets
+    useage: /syncedtime add [time]
+    permission: deeperworld.time
+
 permissions:
   deeperworld.*:
     description: Gives access to all commands
@@ -31,4 +42,7 @@ permissions:
     default: op
   deeperworld.linfo:
     description: Gives access to linfo
+    default: op
+  deeperworld.time:
+    description: Gives access to the time commands
     default: op
