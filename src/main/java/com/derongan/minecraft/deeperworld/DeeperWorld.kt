@@ -45,7 +45,7 @@ class DeeperWorld : JavaPlugin() {
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
             schedule {
-                repeating(DeeperConfig.data.fall.hitDelay.coerceAtLeast(1))
+                repeating(DeeperConfig.data.fall.hitDelay.ticks.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)

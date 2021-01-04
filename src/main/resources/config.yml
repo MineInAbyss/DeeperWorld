@@ -23,8 +23,7 @@ fall:
   # The minimum damage to deal.
   startingDamage: 1.0
   # How often to damage players in ticks
-  # TODO: serialize as TimeSpan
-  hitDelay: 10
+  hitDelay: 10t
   # Whether to spawn cloud particles when the player is being damaged.
   spawnParticles: true
 
@@ -38,8 +37,7 @@ time:
     world: 0
 
 # Sends an additional remount packet after this delay to prevent client-side mount bugs when moving between sections.
-# TODO: serialize as TimeSpan
-remountPacketDelay: 40
+remountPacketDelay: 40t
 
 # Worlds which shouldn't damage players when outside of a section.
 #damageExcludedWorlds:
