@@ -4,6 +4,7 @@ import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.mineinabyss.idofront.commands.CommandHolder
+import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
@@ -14,48 +15,50 @@ import com.mineinabyss.idofront.messaging.success
 @ExperimentalCommandDSL
 object DeeperCommandExecutor : IdofrontCommandExecutor() {
     override val commands: CommandHolder = commands(deeperWorld) {
-        "sectionoff" {
-            playerAction {
-                player.canMoveSections = false
-                sender.success("Automatic TP disabled for ${player.name}")
-            }
-        }
-        "sectionon" {
-            playerAction {
-                player.canMoveSections = true
-                sender.success("Automatic TP enabled for ${player.name}")
-            }
-        }
-        "linfo" {
-            playerAction {
-                val section = WorldManager.getSectionFor(player.location)
-                if (section == null)
-                    sender.info("${player.name} is not in a managed section")
-                else
-                    sender.info("${player.name} is in section ${section.key}")
-            }
-        }
-        "syncedtime" {
-            "set"{
-                val time by intArg()
-                action {
-                    DeeperConfig.data.time.mainWorld?.let {
-                        it.time = time.toLong()
-                    } ?: return@action
-
-                    DeeperConfig.data.time.syncedWorlds.forEach {
-                        it.key.time = time.toLong() + it.value
+        ("deeperworld" / "dw") {
+            "tp" {
+                val state by booleanArg()
+                playerAction{
+                    if(state){
+                        player.canMoveSections = true
+                        sender.success("Automatic TP enabled for ${player.name}")
+                    }
+                    else{
+                        player.canMoveSections = false
+                        sender.success("Automatic TP disabled for ${player.name}")
                     }
                 }
             }
-            "add"{
-                val timeToAdd by intArg()
-                action {
-                    DeeperConfig.data.time.mainWorld?.let { mainWorld ->
-                        mainWorld.time += timeToAdd.toLong()
+            "linfo" {
+                playerAction {
+                    val section = WorldManager.getSectionFor(player.location)
+                    if (section == null)
+                        sender.info("${player.name} is not in a managed section")
+                    else
+                        sender.info("${player.name} is in section ${section.key}")
+                }
+            }
+            "time" {
+                val time by intArg()
+                "set"{
+                    action {
+                        DeeperConfig.data.time.mainWorld?.let {
+                            it.time = time.toLong()
+                        } ?: return@action
 
-                        DeeperConfig.data.time.syncedWorlds.forEach {
-                            it.key.time = (mainWorld.time + it.value) + timeToAdd.toLong()
+                        DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                            world.time = time.toLong() + offset
+                        }
+                    }
+                }
+                "add"{
+                    action {
+                        DeeperConfig.data.time.mainWorld?.let { mainWorld ->
+                            mainWorld.time += time.toLong()
+
+                            DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                                world.time = (mainWorld.time + offset) + time.toLong()
+                            }
                         }
                     }
                 }
