@@ -10,28 +10,6 @@ softdepend: [Multiverse-Core, BlockLocker, KotlinSpice, ProtocolLib]
 commands:
   deeperworld:
     aliases: [ dw ]
-  deeperworld tp:
-    aliases: [ dw tp ]
-    description: Enables or disables automatic teleports between sections for a player
-    usage: /deeperworld tp [player] <true/false>
-    permission: deeperworld.admin
-  deeperworld linfo:
-    aliases: [ dw linfo ]
-    description: Gets information about a players section
-    usage: /deeperworld linfo [player]
-    permission: deeperworld.linfo
-  deeperworld time:
-    aliases: [ dw time ]
-  deeperworld time set:
-    aliases: [ dw time set ]
-    description: Set the time of the main synchronization world and the other worlds with their respective offsets
-    usage: /deeperworld time set <time>
-    permission: deeperworld.time
-  deeperworld time add:
-    aliases: [ dw time add ]
-    description: Add to the main synchronization world time and the other worlds with their respective offsets
-    usage: /deeperworld time add <time>
-    permission: deeperworld.time
 
 permissions:
   deeperworld.*:
@@ -41,10 +19,4 @@ permissions:
       deeperworld.linfo: true
   deeperworld.admin:
     description: Have power to use admin comands
-    default: op
-  deeperworld.linfo:
-    description: Gives access to linfo
-    default: op
-  deeperworld.time:
-    description: Gives access to the time commands
     default: op
