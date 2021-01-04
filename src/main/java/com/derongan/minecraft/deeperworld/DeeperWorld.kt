@@ -62,8 +62,8 @@ class DeeperWorld : JavaPlugin() {
                     repeating(DeeperConfig.data.time.updateInterval.ticks)
                     while (true) {
                         val mainWorldTime = mainWorld.time
-                        DeeperConfig.data.time.syncedWorlds.forEach {
-                            it.key.time = mainWorldTime + it.value
+                        DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                            world.time = mainWorldTime + offset
                         }
                         yield()
                     }
