@@ -11,6 +11,7 @@ import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
 import com.mineinabyss.idofront.commands.execution.stopCommand
 import com.mineinabyss.idofront.commands.extensions.actions.playerAction
+import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
 
@@ -21,16 +22,11 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
             "tp"(desc = "Enables or disables automatic teleports between sections for a player") {
                 val state by booleanArg()
                 playerAction {
-                    if (state) {
-                        player.canMoveSections = true
-                        sender.success("Automatic TP enabled for ${player.name}")
-                    } else {
-                        player.canMoveSections = false
-                        sender.success("Automatic TP disabled for ${player.name}")
-                    }
+                    player.canMoveSections = state
+                    sender.success("Automatic TP ${if(state) "enabled" else "disabled"} for ${player.name}")
                 }
             }
-            "linfo"(desc = "Gets information about a players section") {
+            ("layerinfo" / "linfo")(desc = "Gets information about a players section") {
                 playerAction {
                     val section = WorldManager.getSectionFor(player.location)
                     if (section == null)
@@ -39,7 +35,7 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                         sender.info("${player.name} is in section ${section.key}")
                 }
             }
-            "time"(desc = "<set/add>") {
+            "time" {
                 val time by intArg()
                 "set"(desc = "Set the time of the main synchronization world and the other worlds with their respective offsets") {
                     playerAction {
@@ -67,6 +63,11 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                         } ?: command.stopCommand("No main world specified for time synchronization. Check the config!")
                     }
                 }
+            }
+        }
+        "linfo"{
+            playerAction{
+                sender.error("Please use /dw linfo or /deeperworld layerinfo instead")
             }
         }
     }

@@ -10,13 +10,13 @@ softdepend: [Multiverse-Core, BlockLocker, KotlinSpice, ProtocolLib]
 commands:
   deeperworld:
     aliases: [ dw ]
+  linfo: {}
 
 permissions:
   deeperworld.*:
     description: Gives access to all commands
     children:
       deeperworld.admin: true
-      deeperworld.linfo: true
   deeperworld.admin:
     description: Have power to use admin comands
     default: op
