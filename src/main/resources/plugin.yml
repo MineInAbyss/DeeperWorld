@@ -8,41 +8,15 @@ description: A plugin for letting you create a deeper world. Or at least fake it
 softdepend: [Multiverse-Core, BlockLocker, KotlinSpice, ProtocolLib]
 
 commands:
-  sectionon:
-    description: Enables automatic teleports between sections for a player
-    usage: /sectionon [player]
-    permission: deeperworld.admin
-  sectionoff:
-    description: Disables automatic teleports between sections for a player
-    usage: /sectionoff [player]
-    permission: deeperworld.admin
-  linfo:
-    description: Gets information about a players section
-    usage: /linfo [player]
-    permission: deeperworld.linfo
-  syncedtime:
-    permission: deeperworld.time
-  syncedtime set:
-    description: Set the time of the main synchronization world and the other worlds with their respective offsets
-    useage: /syncedtime set [time]
-    permission: deeperworld.time
-  syncedtime add:
-    description: Add to the main synchronization world time and the other worlds with their respective offsets
-    useage: /syncedtime add [time]
-    permission: deeperworld.time
+  deeperworld:
+    aliases: [ dw ]
+  linfo: {}
 
 permissions:
   deeperworld.*:
     description: Gives access to all commands
     children:
       deeperworld.admin: true
-      deeperworld.linfo: true
   deeperworld.admin:
     description: Have power to use admin comands
-    default: op
-  deeperworld.linfo:
-    description: Gives access to linfo
-    default: op
-  deeperworld.time:
-    description: Gives access to the time commands
     default: op

@@ -2,6 +2,7 @@ package com.derongan.minecraft.deeperworld
 
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
+import com.derongan.minecraft.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
@@ -63,7 +64,7 @@ class DeeperWorld : JavaPlugin() {
                     while (true) {
                         val mainWorldTime = mainWorld.time
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
-                            world.time = mainWorldTime + offset
+                            world.time = (mainWorldTime + offset) % FULL_DAY_TIME
                         }
                         yield()
                     }

@@ -7,7 +7,6 @@ import com.mineinabyss.idofront.config.IdofrontConfig
 import com.mineinabyss.idofront.config.ReloadScope
 import com.mineinabyss.idofront.serialization.WorldSerializer
 import com.mineinabyss.idofront.time.TimeSpan
-import com.mineinabyss.idofront.time.TimeSpanSerializer
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.serialization.Serializable
 import org.bukkit.World
