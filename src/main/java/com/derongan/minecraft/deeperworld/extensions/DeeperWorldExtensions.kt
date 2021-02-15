@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld.extensions
 
+import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
@@ -31,4 +32,21 @@ internal fun Player.getLeashedEntities(): List<LivingEntity> {
     return getNearbyEntities(20.0, 20.0, 20.0)
         .filterIsInstance<LivingEntity>()
         .filter { it.isLeashed && it.leashHolder == this }
+}
+
+internal fun Player.teleportWithSpectator(loc : Location){
+    val nearbyPlayers = getNearbyEntities(5.0, 5.0, 5.0).filterIsInstance<Player>()
+
+    var spectator : Player? = null
+    for (nearbyPlayer in nearbyPlayers) {
+        if(nearbyPlayer.spectatorTarget == this){
+            spectator = nearbyPlayer
+            break
+        }
+    }
+
+    spectator?.spectatorTarget = null
+    teleport(loc)
+    spectator?.teleport(loc)
+    spectator?.spectatorTarget = this
 }
