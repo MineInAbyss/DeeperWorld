@@ -34,19 +34,19 @@ internal fun Player.getLeashedEntities(): List<LivingEntity> {
         .filter { it.isLeashed && it.leashHolder == this }
 }
 
-internal fun Player.teleportWithSpectator(loc : Location){
-    val nearbyPlayers = getNearbyEntities(5.0, 5.0, 5.0).filterIsInstance<Player>()
+internal fun Player.teleportWithSpectator(loc: Location) {
+    val nearbySpectators = getNearbyEntities(5.0, 5.0, 5.0)
+        .filterIsInstance<Player>()
+        .filter { it.spectatorTarget == this }
 
-    var spectator : Player? = null
-    for (nearbyPlayer in nearbyPlayers) {
-        if(nearbyPlayer.spectatorTarget == this){
-            spectator = nearbyPlayer
-            break
-        }
+    nearbySpectators.forEach {
+        it.spectatorTarget = null
     }
 
-    spectator?.spectatorTarget = null
     teleport(loc)
-    spectator?.teleport(loc)
-    spectator?.spectatorTarget = this
+
+    nearbySpectators.forEach {
+        it.teleport(loc)
+        it.spectatorTarget = this
+    }
 }
