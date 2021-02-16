@@ -12,6 +12,7 @@ import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
 import com.derongan.minecraft.deeperworld.extensions.getPassengersRecursive
 import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
+import com.derongan.minecraft.deeperworld.extensions.teleportWithSpectator
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
@@ -163,7 +164,7 @@ object MovementListener : Listener {
             deeperWorld.schedule {
                 waitFor(1)
 
-                player.teleport(newLoc)
+                player.teleportWithSpectator(newLoc)
 
                 protocolManager.addPacketListener(
                     SectionTeleportPacketAdapter(
@@ -179,7 +180,7 @@ object MovementListener : Listener {
             val oldFallDistance = player.fallDistance
             val oldVelocity = player.velocity
 
-            player.teleport(newLoc)
+            player.teleportWithSpectator(newLoc)
 
             player.fallDistance = oldFallDistance
             player.velocity = oldVelocity
