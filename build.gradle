@@ -24,16 +24,20 @@ repositories {
     maven githubPackage.invoke("MineInAbyss/Idofront")
     maven githubPackage.invoke("rutgerkok/BlockLocker")
     maven githubPackage.invoke("MineInAbyss/KotlinSpice")
+    maven githubPackage.invoke("MineInAbyss/Geary")
 }
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:$server_version"
+
+    compileOnly platform("com.mineinabyss:kotlinspice:$kotlin_version+")
+    compileOnly "com.okkero.skedule:skedule"
+
     compileOnly 'nl.rutgerkok:blocklocker:1.6.2-SNAPSHOT'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compileOnly "org.cultofclang.minecraft:kotlinspice:$kotlin_version+"
     compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
 
-    implementation 'com.mineinabyss:idofront:0.4.3'
+    implementation 'com.mineinabyss:idofront:0.5.6'
 
     testImplementation 'junit:junit:4.12'
 }

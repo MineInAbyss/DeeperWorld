@@ -37,7 +37,7 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         }
     }
 
-    override fun reload(): ReloadScope.() -> Unit = {
+    override fun ReloadScope.reload() {
         attempt(
             success = "Registered all sections with DeeperWorld",
             fail = "Failed to register sections with DeeperWorld"
