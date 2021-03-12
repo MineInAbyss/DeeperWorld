@@ -5,7 +5,6 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'com.github.johnrengelman.shadow'
-    id 'io.github.0ffz.github-packages'
 }
 
 apply from: 'https://raw.githubusercontent.com/MineInAbyss/shared-gradle/master/common.gradle'
@@ -19,36 +18,40 @@ repositories {
     maven { url 'https://hub.spigotmc.org/nexus/content/groups/public/' }
     maven { url 'https://oss.sonatype.org/content/groups/public/' }
     maven { url 'http://www.rutgerkok.nl/repo' }
-    maven { url 'http://nexus.okkero.com/repository/maven-releases/' } //Skedule
     maven { url "https://repo.dmulloy2.net/nexus/repository/public/" }
-    maven githubPackage.invoke("MineInAbyss/Idofront")
-    maven githubPackage.invoke("rutgerkok/BlockLocker")
-    maven githubPackage.invoke("MineInAbyss/KotlinSpice")
-    maven githubPackage.invoke("MineInAbyss/Geary")
+    maven { url 'https://repo.mineinabyss.com/releases'}
+    maven { url 'https://repo.codemc.org/repository/maven-public/' }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:$server_version"
 
     compileOnly platform("com.mineinabyss:kotlinspice:$kotlin_version+")
-    compileOnly "com.okkero.skedule:skedule"
+    compileOnly "com.github.okkero:skedule"
 
-    compileOnly 'nl.rutgerkok:blocklocker:1.6.2-SNAPSHOT'
+    compileOnly 'nl.rutgerkok:blocklocker:1.9.2'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
 
-    implementation 'com.mineinabyss:idofront:0.5.6'
+    implementation 'com.mineinabyss:idofront:0.5.8'
 
     testImplementation 'junit:junit:4.12'
 }
 
 publishing {
     repositories {
-        maven githubPackage.invoke("MineInAbyss/DeeperWorld")
+        maven {
+            url = "https://repo.mineinabyss.com/releases"
+            credentials {
+                username = findProperty('mineinabyssMavenUsername')
+                password = findProperty('mineinabyssMavenPassword')
+            }
+        }
     }
     publications {
-        gpr(MavenPublication) {
-            from(components.java)
+        maven(MavenPublication) {
+            from components.java
         }
     }
 }
