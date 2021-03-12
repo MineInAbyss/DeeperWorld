@@ -46,7 +46,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.mineinabyss:deeperworld:<version>'
+    compileOnly 'com.derongan.minecraft:deeperworld:<version>'
 }
 ```
 
