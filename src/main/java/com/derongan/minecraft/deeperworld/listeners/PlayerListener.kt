@@ -17,9 +17,10 @@ object PlayerListener : Listener {
     @EventHandler
     fun onPlayerTeleport(event: PlayerTeleportEvent) {
         val (player, _, to, cause) = event
-        if ((player.gameMode == SURVIVAL
-                && (cause == ENDER_PEARL || cause == CHORUS_FRUIT)
-                && to?.section == null) && player.canMoveSections
+        if (player.gameMode == SURVIVAL
+            && (cause == ENDER_PEARL || cause == CHORUS_FRUIT)
+            && to?.section == null
+            && player.canMoveSections
         ) {
             event.isCancelled = true
         }
