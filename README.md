@@ -1,7 +1,7 @@
 [![Java CI](https://github.com/MineInAbyss/DeeperWorld/actions/workflows/main.yml/badge.svg)](https://github.com/MineInAbyss/DeeperWorld/actions/workflows/main.yml)
 [![Package](https://badgen.net/maven/v/metadata-url/repo.mineinabyss.com/releases/com/derongan/minecraft/deeperworld/maven-metadata.xml)](https://repo.mineinabyss.com/releases/com/derongan/minecraft/deeperworld)
-[![Wiki](https://badgen.net/badge/color/Project%20Wiki/purple?icon=wiki&label)](https://github.com/MineInAbyss/DeeperWorld/wiki)
-[![Contribute](https://shields.io/badge/Contribute-e57be5?logo=github%20sponsors&style=flat&logoColor=white)](https://github.com/MineInAbyss/MineInAbyss/wiki/Setup-and-Contribution-Guide)
+[![Wiki](https://badgen.net/badge/color/Project%20Wiki/purple?icon=wiki&label)](https://wiki.mineinabyss.com/deeperworld)
+[![Contribute](https://shields.io/badge/Contribute-e57be5?logo=github%20sponsors&style=flat&logoColor=white)](https://wiki.mineinabyss.com/contribute)
 
 # DeeperWorld
 
@@ -55,6 +55,4 @@ dependencies {
 Please contact us in `#plugin-dev` on [Discord](https://discord.gg/QXPCk2y) if you'd like to help out. We are open to
 new features and contributions!
 
-Check out
-our [Setup and Contribution Guide](https://github.com/MineInAbyss/MineInAbyss/wiki/Setup-and-Contribution-Guide) for
-more info.
+Check out the contribution guide button on top.

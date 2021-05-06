@@ -1,5 +1,6 @@
 package com.derongan.minecraft.deeperworld.listeners
 
+import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.section
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.destructure.component2
@@ -19,6 +20,7 @@ object PlayerListener : Listener {
         if (player.gameMode == SURVIVAL
             && (cause == ENDER_PEARL || cause == CHORUS_FRUIT)
             && to?.section == null
+            && player.canMoveSections
         ) {
             event.isCancelled = true
         }
