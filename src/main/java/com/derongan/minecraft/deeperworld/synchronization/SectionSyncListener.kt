@@ -4,6 +4,7 @@ import com.derongan.minecraft.deeperworld.DeeperContext
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
+import org.bukkit.block.Block
 import org.bukkit.block.Container
 import org.bukkit.block.ShulkerBox
 import org.bukkit.block.Sign
@@ -12,20 +13,26 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockGrowEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.block.SignChangeEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
 
+private fun syncBlockLocker(corr: Block) {
+    blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
+        it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
+    }
+}
+
 /**
  * Synchronizes the overlap between sections
  */
 object SectionSyncListener : Listener {
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    fun syncBlockBreak(e: BlockBreakEvent) {
-        val block = e.block
+    fun BlockBreakEvent.syncBlockBreak() {
+        val block = block
         block.location.sync { original, corr ->
             val state = corr.state
 
@@ -33,7 +40,7 @@ object SectionSyncListener : Listener {
             if (state is Container && original.location.y > corr.location.y) {
                 val corrInv = state.inventory
                 if (state is ShulkerBox) {
-                    e.isDropItems = false
+                    isDropItems = false
                     //TODO maybe create our own event that gets called from here
                     corr.drops.dropItems(original.location, noVelocity = false)
                 } else {
@@ -44,20 +51,18 @@ object SectionSyncListener : Listener {
 
             //sync any changes to BlockLocker's signs`
             if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
-                blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
-                    it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
-                }
+                syncBlockLocker(corr)
             }
             corr.type = Material.AIR
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    fun syncBlockPlace(blockPlaceEvent: BlockPlaceEvent) {
-        blockPlaceEvent.block.sync { original, corr ->
+    fun BlockPlaceEvent.syncBlockPlace() {
+        block.sync { original, corr ->
             if (original.type.name.contains("SHULKER")) {
-                blockPlaceEvent.isCancelled = true
-                blockPlaceEvent.player.error("Shulkers are disabled near section changes due to item loss bugs.")
+                isCancelled = true
+                player.error("Shulkers are disabled near section changes due to item loss bugs.")
                 return@sync
             }
             corr.blockData = original.blockData.clone()
@@ -78,8 +83,8 @@ object SectionSyncListener : Listener {
     }*/
 
     @EventHandler
-    fun syncWaterEmpty(event: PlayerBucketEmptyEvent) =
-        event.block.sync { orig, corr ->
+    fun PlayerBucketEmptyEvent.syncWaterEmpty() =
+        block.sync { orig, corr ->
             val data = corr.blockData
             if (data is Waterlogged) {
                 data.isWaterlogged = true
@@ -90,8 +95,8 @@ object SectionSyncListener : Listener {
         }
 
     @EventHandler
-    fun syncWaterFill(event: PlayerBucketFillEvent) =
-        event.block.sync { orig, corr ->
+    fun PlayerBucketFillEvent.syncWaterFill() =
+        block.sync { orig, corr ->
             val data = corr.blockData
             if (data is Waterlogged) {
                 data.isWaterlogged = false
@@ -102,15 +107,15 @@ object SectionSyncListener : Listener {
 
     /** Synchronize explosions */
     @EventHandler
-    fun syncExplosions(explodeEvent: EntityExplodeEvent) {
-        if (!explodeEvent.isCancelled)
-            explodeEvent.blockList().forEach { explodedBlock ->
+    fun EntityExplodeEvent.syncExplosions() {
+        if (!isCancelled)
+            blockList().forEach { explodedBlock ->
                 explodedBlock.location.sync(updateMaterial(Material.AIR))
             }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    fun syncSignText(signChangeEvent: SignChangeEvent) {
-        signChangeEvent.block.sync(signUpdater(signChangeEvent.lines))
+    fun SignChangeEvent.syncSignText() {
+        block.sync(signUpdater(lines))
     }
 }

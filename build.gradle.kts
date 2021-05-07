@@ -15,11 +15,11 @@ sharedSetup()
 
 repositories {
     mavenCentral()
-    maven("https://hub.spigotmc.org/nexus/content/groups/public/")
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://www.rutgerkok.nl/repo")
     maven("https://repo.dmulloy2.net/nexus/repository/public/")
     maven("https://repo.mineinabyss.com/releases")
+    maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
     maven("https://jitpack.io")
 }
@@ -28,7 +28,8 @@ val serverVersion: String by project
 val kotlinVersion: String by project
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:$serverVersion")
+    compileOnly("com.destroystokyo.paper:paper-api:$serverVersion")
+    compileOnly("io.papermc:paperlib:1.0.6")
     compileOnly(kotlin("stdlib-jdk8"))
 
     kotlinSpice("$kotlinVersion+")

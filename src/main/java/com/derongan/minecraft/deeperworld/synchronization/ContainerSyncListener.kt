@@ -6,6 +6,7 @@ import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.info
+import io.papermc.lib.PaperLib
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
@@ -21,7 +22,13 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
+private fun updateProtection(block: Block) =
+    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
+        it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
+    }
+
 object ContainerSyncListener : Listener {
+
     /** Tells a chunk what players are accessing inventories on its [Section] border */
     private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
 
@@ -36,12 +43,8 @@ object ContainerSyncListener : Listener {
             val section = loc.section ?: return
             val linkedSection = loc.correspondingSection ?: return
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: return
-
+//            PaperLib.getBlockState()
             if (DeeperContext.isBlockLockerLoaded) {
-                fun updateProtection(block: Block) =
-                    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
-                        it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
-                    }
                 updateProtection(linkedBlock)
                 updateProtection(clicked)
 

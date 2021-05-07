@@ -18,7 +18,7 @@ internal fun copyBlockData(original: Block, corresponding: Block) {
 
 internal fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
 
-internal fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
+internal inline fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
     location.sync(updater)
 
 internal inline fun Location.sync(
