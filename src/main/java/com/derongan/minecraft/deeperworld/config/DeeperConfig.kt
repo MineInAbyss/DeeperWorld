@@ -20,11 +20,7 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         val remountPacketDelay: TimeSpan = 40.ticks,
         val fall: FallDamageConfig = FallDamageConfig(),
         val time: TimeConfig = TimeConfig(),
-    ) {
-        val worlds = sections.map {
-            it.world
-        }.toSet()
-    }
+    ) { val worlds = sections.map { it.world }.toSet()}
 
     init {
         load()

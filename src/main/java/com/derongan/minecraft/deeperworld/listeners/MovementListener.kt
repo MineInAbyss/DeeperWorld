@@ -54,11 +54,11 @@ object MovementListener : Listener {
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location) {
         val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
-            if (!DeeperConfig.data.damageExcludedWorlds.contains(player.location.world)
-                && DeeperConfig.data.damageOutsideSections > 0.0
+            if (DeeperConfig.data.damageOutsideSections > 0.0
+                && !DeeperConfig.data.damageExcludedWorlds.contains(player.location.world)
                 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
+                && player.location.world in (DeeperConfig.data.worlds)
             ) {
-                if(player.location.world !in DeeperConfig.data.worlds) return
                 player.damage(0.01) //give a damage effect
                 player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10)
                     .coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
