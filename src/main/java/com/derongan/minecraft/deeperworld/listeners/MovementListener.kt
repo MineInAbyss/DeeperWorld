@@ -58,6 +58,7 @@ object MovementListener : Listener {
                 && DeeperConfig.data.damageOutsideSections > 0.0
                 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
             ) {
+                if(player.location.world !in DeeperConfig.data.worlds) return
                 player.damage(0.01) //give a damage effect
                 player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10)
                     .coerceIn(0.0, player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
