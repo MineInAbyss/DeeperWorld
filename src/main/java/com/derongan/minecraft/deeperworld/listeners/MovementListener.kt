@@ -55,7 +55,7 @@ object MovementListener : Listener {
         val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
             if (DeeperConfig.data.damageOutsideSections > 0.0
-                && !DeeperConfig.data.damageExcludedWorlds.contains(player.location.world)
+                && player.location.world !in DeeperConfig.data.damageExcludedWorlds
                 && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
                 && player.location.world in (DeeperConfig.data.worlds)
             ) {
