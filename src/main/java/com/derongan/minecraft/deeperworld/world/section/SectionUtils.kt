@@ -5,6 +5,8 @@ package com.derongan.minecraft.deeperworld.world.section
 
 import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.services.WorldManager
+import com.mineinabyss.idofront.operators.minus
+import com.mineinabyss.idofront.operators.plus
 import org.bukkit.Location
 import kotlin.math.max
 import kotlin.math.min
@@ -57,8 +59,8 @@ fun Location.getCorrespondingLocation(sectionA: Section, sectionB: Section): Loc
 
     // fromX + n = toX
     // toX - fromX = n
-    val delta = toSectionLoc.toVector().subtract(fromSectionLoc.toVector())
-    val newLoc = clone().add(delta)
+    val delta = toSectionLoc.toVector() - (fromSectionLoc.toVector())
+    val newLoc = clone() + delta
     newLoc.world = sectionB.world
     return newLoc
 }

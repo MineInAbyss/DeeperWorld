@@ -6,7 +6,6 @@ import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.info
-import io.papermc.lib.PaperLib
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
@@ -39,11 +38,12 @@ object ContainerSyncListener : Listener {
         val loc = clicked.location
         val container = clicked.state
         val (player) = event
+
         if (container is Container && event.action == Action.RIGHT_CLICK_BLOCK && !player.isSneaking) {
             val section = loc.section ?: return
             val linkedSection = loc.correspondingSection ?: return
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: return
-//            PaperLib.getBlockState()
+
             if (DeeperContext.isBlockLockerLoaded) {
                 updateProtection(linkedBlock)
                 updateProtection(clicked)

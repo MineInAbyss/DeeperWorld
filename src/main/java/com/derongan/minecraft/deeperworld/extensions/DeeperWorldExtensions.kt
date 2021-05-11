@@ -34,7 +34,7 @@ internal fun Player.getLeashedEntities(): List<LivingEntity> {
         .filter { it.isLeashed && it.leashHolder == this }
 }
 
-internal fun Player.teleportWithSpectator(loc: Location) {
+internal fun Player.teleportWithSpectatorsAsync(loc: Location, thenRun: (Boolean) -> Unit) {
     val nearbySpectators = getNearbyEntities(5.0, 5.0, 5.0)
         .filterIsInstance<Player>()
         .filter { it.spectatorTarget == this }
@@ -43,10 +43,12 @@ internal fun Player.teleportWithSpectator(loc: Location) {
         it.spectatorTarget = null
     }
 
-    teleport(loc)
-
-    nearbySpectators.forEach {
-        it.teleport(loc)
-        it.spectatorTarget = this
+    teleportAsync(loc).thenAccept { success ->
+        if (!success) return@thenAccept
+        nearbySpectators.forEach {
+            it.teleport(loc)
+            it.spectatorTarget = this
+        }
+        thenRun(success)
     }
 }

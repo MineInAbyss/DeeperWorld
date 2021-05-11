@@ -21,6 +21,7 @@ repositories {
     maven("https://repo.mineinabyss.com/releases")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
+//    maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
     maven("https://jitpack.io")
 }
 
@@ -29,7 +30,7 @@ val kotlinVersion: String by project
 
 dependencies {
     compileOnly("com.destroystokyo.paper:paper-api:$serverVersion")
-    compileOnly("io.papermc:paperlib:1.0.6")
+//    compileOnly("com.intellectualsites.fawe:FAWE-Bukkit:1.16-637")
     compileOnly(kotlin("stdlib-jdk8"))
 
     kotlinSpice("$kotlinVersion+")
@@ -38,7 +39,7 @@ dependencies {
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
 
-    implementation("com.mineinabyss:idofront:0.5.8")
+    implementation("com.mineinabyss:idofront:0.6.13")
 
     testImplementation("junit:junit:4.12")
 }

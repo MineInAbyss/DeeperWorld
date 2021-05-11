@@ -12,13 +12,14 @@ import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
 import com.derongan.minecraft.deeperworld.extensions.getPassengersRecursive
 import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
-import com.derongan.minecraft.deeperworld.extensions.teleportWithSpectator
+import com.derongan.minecraft.deeperworld.extensions.teleportWithSpectatorsAsync
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
+import com.mineinabyss.idofront.messaging.info
 import com.okkero.skedule.schedule
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -164,36 +165,37 @@ object MovementListener : Listener {
             deeperWorld.schedule {
                 waitFor(1)
 
-                player.teleportWithSpectator(newLoc)
-
-                protocolManager.addPacketListener(
-                    SectionTeleportPacketAdapter(
-                        player,
-                        oldLeashedEntities,
-                        oldFallDistance,
-                        oldVelocity,
-                        vehicleTree
+                player.teleportWithSpectatorsAsync(newLoc) {
+                    protocolManager.addPacketListener(
+                        SectionTeleportPacketAdapter(
+                            player,
+                            oldLeashedEntities,
+                            oldFallDistance,
+                            oldVelocity,
+                            vehicleTree
+                        )
                     )
-                )
+                }
+
             }
         } else {
             val oldFallDistance = player.fallDistance
             val oldVelocity = player.velocity
 
-            player.teleportWithSpectator(newLoc)
+            player.teleportWithSpectatorsAsync(newLoc) {
+                player.fallDistance = oldFallDistance
+                player.velocity = oldVelocity
 
-            player.fallDistance = oldFallDistance
-            player.velocity = oldVelocity
-
-            if (oldLeashedEntities.isNotEmpty()) {
-                protocolManager.addPacketListener(
-                    SectionTeleportPacketAdapter(
-                        player,
-                        oldLeashedEntities,
-                        oldFallDistance,
-                        oldVelocity
+                if (oldLeashedEntities.isNotEmpty()) {
+                    protocolManager.addPacketListener(
+                        SectionTeleportPacketAdapter(
+                            player,
+                            oldLeashedEntities,
+                            oldFallDistance,
+                            oldVelocity
+                        )
                     )
-                )
+                }
             }
         }
     }
