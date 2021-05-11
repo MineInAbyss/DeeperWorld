@@ -24,27 +24,15 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         val worlds = sections.map { it.world }.toSet()
     }
 
-    init {
-        load()
-    }
-
-    //TODO add a load() function in idofront
-    fun load() {
-        data.sections.forEachIndexed { i, section ->
-            data.sections.getOrNull(i - 1)?.let { prevSection ->
-                section.aboveKey = prevSection.key
-                prevSection.belowKey = section.key
+    override fun ReloadScope.load() {
+        "Registering all sections with DeeperWorld" {
+            data.sections.forEachIndexed { i, section ->
+                data.sections.getOrNull(i - 1)?.let { prevSection ->
+                    section.aboveKey = prevSection.key
+                    prevSection.belowKey = section.key
+                }
+                WorldManager.registerSection(section.key, section) //TODO do we need to pass both section key and section?
             }
-            WorldManager.registerSection(section.key, section) //TODO do we need to pass both section key and section?
-        }
-    }
-
-    override fun ReloadScope.reload() {
-        attempt(
-            success = "Registered all sections with DeeperWorld",
-            fail = "Failed to register sections with DeeperWorld"
-        ) {
-            load()
         }
     }
 }

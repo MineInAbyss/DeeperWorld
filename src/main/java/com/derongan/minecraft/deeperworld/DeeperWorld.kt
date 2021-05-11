@@ -29,7 +29,7 @@ class DeeperWorld : JavaPlugin() {
 
         registerService<WorldManager>(WorldManagerImpl(config))
 
-        DeeperConfig
+        DeeperConfig.load()
 
         registerService<PlayerManager>(PlayerManagerImpl())
         registerEvents(
