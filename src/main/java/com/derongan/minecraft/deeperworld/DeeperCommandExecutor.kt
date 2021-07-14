@@ -35,6 +35,11 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                         sender.info("${player.name} is in section ${section.key}")
                 }
             }
+            "info" {
+                playerAction {
+                    sender.error("Please use /dw linfo or /deeperworld layerinfo instead")
+                }
+            }
             "time" {
                 val time by intArg()
                 "set"(desc = "Set the time of the main synchronization world and the other worlds with their respective offsets") {
