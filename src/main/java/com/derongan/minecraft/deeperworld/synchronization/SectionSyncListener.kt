@@ -8,13 +8,15 @@ import org.bukkit.block.Block
 import org.bukkit.block.Container
 import org.bukkit.block.ShulkerBox
 import org.bukkit.block.Sign
+import org.bukkit.block.data.Bisected
 import org.bukkit.block.data.Waterlogged
+import org.bukkit.block.data.type.Bed
+import org.bukkit.block.data.type.Stairs
+import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockPlaceEvent
-import org.bukkit.event.block.SignChangeEvent
+import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
@@ -53,7 +55,37 @@ object SectionSyncListener : Listener {
             if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
                 syncBlockLocker(corr)
             }
+
+            val blockData = block.blockData
+
+            if (blockData is Bed) {
+                corr.setType(Material.STONE, false)
+                when (blockData.part) {
+                    Bed.Part.FOOT -> {
+                        (corr.location.add(blockData.facing.direction))
+                    }
+                    Bed.Part.HEAD -> {
+                        (corr.location.subtract(blockData.facing.direction))
+                    }
+                }.block.type = Material.AIR
+            } else if (
+                blockData is Bisected
+                && blockData !is TrapDoor
+                && blockData !is Stairs
+            ) {
+                corr.setType(Material.STONE, false)
+                when (blockData.half) {
+                    Bisected.Half.BOTTOM -> {
+                        (corr.location.add(0.0, 1.0, 0.0))
+                    }
+                    Bisected.Half.TOP -> {
+                        (corr.location.subtract(0.0, 1.0, 0.0))
+                    }
+                }.block.type = Material.AIR
+            }
+
             corr.type = Material.AIR
+
         }
     }
 
@@ -76,11 +108,12 @@ object SectionSyncListener : Listener {
         blockEvent.newState.location.sync()
     }*/
 
-    //TODO this causes duplication glitches that need to be fixed first
-    /*@EventHandler
-    fun onBlockMultiPlaceEvent(blockEvent: BlockMultiPlaceEvent) {
-        blockEvent.replacedBlockStates.copyBlocks()
-    }*/
+    @EventHandler
+    fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
+        for (blockState in replacedBlockStates) {
+            blockState.block.sync()
+        }
+    }
 
     @EventHandler
     fun PlayerBucketEmptyEvent.syncWaterEmpty() =
