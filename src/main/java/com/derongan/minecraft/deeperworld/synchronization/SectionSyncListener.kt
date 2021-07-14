@@ -106,8 +106,14 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
-        for (blockState in replacedBlockStates) {
-            blockState.block.sync()
+        if(
+            (block.blockData is Bisected || block.blockData is Bed)
+            && block.blockData !is TrapDoor
+            && block.blockData !is Stairs
+        ) {
+            for (blockState in replacedBlockStates) {
+                blockState.block.sync()
+            }
         }
     }
 
