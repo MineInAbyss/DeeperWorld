@@ -75,12 +75,8 @@ object SectionSyncListener : Listener {
             ) {
                 corr.setType(Material.STONE, false)
                 when (blockData.half) {
-                    Bisected.Half.BOTTOM -> {
-                        (corr.location.add(0.0, 1.0, 0.0))
-                    }
-                    Bisected.Half.TOP -> {
-                        (corr.location.subtract(0.0, 1.0, 0.0))
-                    }
+                    Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
+                    Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
                 }.block.type = Material.AIR
             }
 
