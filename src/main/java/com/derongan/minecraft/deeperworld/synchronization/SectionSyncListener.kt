@@ -61,12 +61,8 @@ object SectionSyncListener : Listener {
             if (blockData is Bed) {
                 corr.setType(Material.STONE, false)
                 when (blockData.part) {
-                    Bed.Part.FOOT -> {
-                        (corr.location.add(blockData.facing.direction))
-                    }
-                    Bed.Part.HEAD -> {
-                        (corr.location.subtract(blockData.facing.direction))
-                    }
+                    Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
+                    Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
                 }.block.type = Material.AIR
             } else if (
                 blockData is Bisected
