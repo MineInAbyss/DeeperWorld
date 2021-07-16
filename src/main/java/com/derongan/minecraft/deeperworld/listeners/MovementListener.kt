@@ -4,22 +4,22 @@ import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
-import com.derongan.minecraft.deeperworld.*
+import com.derongan.minecraft.deeperworld.Permissions
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.datastructures.VehicleTree
+import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.event.PlayerAscendEvent
 import com.derongan.minecraft.deeperworld.event.PlayerDescendEvent
 import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
 import com.derongan.minecraft.deeperworld.extensions.getPassengersRecursive
 import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
 import com.derongan.minecraft.deeperworld.extensions.teleportWithSpectatorsAsync
+import com.derongan.minecraft.deeperworld.protocolManager
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
-import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.color
-import com.mineinabyss.idofront.messaging.info
 import com.okkero.skedule.schedule
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -35,20 +35,18 @@ import org.bukkit.util.Vector
 
 object MovementListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
-    fun onPlayerMove(playerMoveEvent: PlayerMoveEvent) {
-        val (player) = playerMoveEvent
+    fun PlayerMoveEvent.move() {
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && player.canMoveSections) {
-            onPlayerMoveInternal(player, playerMoveEvent.from, playerMoveEvent.to ?: return)
+            onPlayerMoveInternal(player, from, to)
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
-    fun onVehicleMove(vehicleMoveEvent: VehicleMoveEvent) {
-        val (vehicle) = vehicleMoveEvent
+    fun VehicleMoveEvent.move() {
         val players = vehicle.getPassengersRecursive().filterIsInstance<Player>()
 
         players.firstOrNull { it.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && it.canMoveSections }?.let {
-            onPlayerMoveInternal(it, vehicleMoveEvent.from, vehicleMoveEvent.to)
+            onPlayerMoveInternal(it, from, to)
         }
     }
 
@@ -73,7 +71,7 @@ object MovementListener : Listener {
         }
 
         val changeY = to.y - from.y
-        if (changeY == 0.0) return
+//        if (changeY == 0.0) return
 
         val inSpectator = player.gameMode == GameMode.SPECTATOR
 
@@ -81,7 +79,6 @@ object MovementListener : Listener {
             key: SectionKey,
             tpFun: (Player, Location, Section, Section) -> Unit,
             boundaryCheck: (y: Double, shared: Int) -> Boolean,
-            pushVelocity: Double
         ) {
             val toSection = key.section ?: return
             val overlap = current.overlapWith(toSection) ?: return
@@ -90,8 +87,10 @@ object MovementListener : Listener {
             if (boundaryCheck(to.y, overlap)) {
                 if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
                     || !inSpectator && correspondingPos.block.type.isSolid
-                )
-                    player.velocity = player.velocity.setY(pushVelocity)
+                ) {
+                    player.teleport(from)
+                    player.sendMessage("&cThere is no where for you to teleport".color())
+                }
                 else
                     tpFun(player, to, current, toSection)
             }
@@ -101,15 +100,11 @@ object MovementListener : Listener {
             changeY > 0.0 -> tpIfAbleTo(
                 current.aboveKey,
                 MovementListener::ascend,
-                { y, shared -> y > MinecraftConstants.WORLD_HEIGHT - .3 * shared },
-                -0.4
-            )
+            ) { y, shared -> y > player.world.maxHeight - .3 * shared }
             changeY < 0.0 -> tpIfAbleTo(
                 current.belowKey,
                 MovementListener::descend,
-                { y, shared -> y < .3 * shared },
-                0.4
-            )
+            ) { y, shared -> y < .3 * shared }
         }
     }
 
