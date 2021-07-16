@@ -3,7 +3,6 @@
 
 package com.derongan.minecraft.deeperworld.world.section
 
-import com.derongan.minecraft.deeperworld.MinecraftConstants
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.mineinabyss.idofront.operators.minus
 import com.mineinabyss.idofront.operators.plus
@@ -74,7 +73,7 @@ fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
     val overlap = section.overlapWith(otherSection) ?: return false
     return when {
         section.isOnTopOf(otherSection) -> blockY <= overlap
-        otherSection.isOnTopOf(section) -> blockY >= MinecraftConstants.WORLD_HEIGHT - overlap
+        otherSection.isOnTopOf(section) -> blockY >= world.maxHeight - overlap
         else -> false
     }
 }
@@ -88,7 +87,7 @@ fun Section.overlapWith(other: Section): Int? {
     }
     val yA = locA.blockY
     val yB = locB.blockY
-    return MinecraftConstants.WORLD_HEIGHT - max(yA, yB) + min(yA, yB)
+    return (world.maxHeight - max(yA, yB)) + (min(yA, yB) - world.minHeight)
 }
 
 fun Section.isOnTopOf(other: Section) = key == other.aboveKey

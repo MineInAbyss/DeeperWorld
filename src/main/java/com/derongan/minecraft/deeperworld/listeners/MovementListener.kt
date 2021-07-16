@@ -104,7 +104,7 @@ object MovementListener : Listener {
             changeY < 0.0 -> tpIfAbleTo(
                 current.belowKey,
                 MovementListener::descend,
-            ) { y, shared -> y < .3 * shared }
+            ) { y, shared -> y < player.world.minHeight + .3 * shared }
         }
     }
 
