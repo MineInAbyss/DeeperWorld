@@ -1,6 +1,7 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
+import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
@@ -16,10 +17,7 @@ import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockMultiPlaceEvent
-import org.bukkit.event.block.BlockPlaceEvent
-import org.bukkit.event.block.SignChangeEvent
+import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
@@ -102,6 +100,11 @@ object SectionSyncListener : Listener {
     fun syncBlockGrow(blockEvent: BlockGrowEvent) {
         blockEvent.newState.location.sync()
     }*/
+
+    @EventHandler
+    fun BlockPhysicsEvent.sync() {
+        if(block.location.inSectionOverlap) isCancelled = true
+    }
 
     @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
