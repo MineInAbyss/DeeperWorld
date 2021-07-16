@@ -1,6 +1,7 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
+import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
@@ -9,6 +10,7 @@ import org.bukkit.block.Container
 import org.bukkit.block.ShulkerBox
 import org.bukkit.block.Sign
 import org.bukkit.block.data.Bisected
+import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.type.Bed
 import org.bukkit.block.data.type.Stairs
@@ -16,10 +18,7 @@ import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.block.BlockBreakEvent
-import org.bukkit.event.block.BlockMultiPlaceEvent
-import org.bukkit.event.block.BlockPlaceEvent
-import org.bukkit.event.block.SignChangeEvent
+import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
@@ -105,6 +104,14 @@ object SectionSyncListener : Listener {
 
 
     @EventHandler
+    fun BlockPhysicsEvent.sync() {
+        if(
+            block.location.inSectionOverlap
+            && block.blockData !is Levelled // Water / Lava
+        ) isCancelled = true
+    }
+
+    @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
         if(
             (block.blockData is Bisected || block.blockData is Bed)
@@ -121,12 +128,15 @@ object SectionSyncListener : Listener {
     fun PlayerBucketEmptyEvent.syncWaterEmpty() =
         block.sync { orig, corr ->
             val data = corr.blockData
+            val material = if (bucket === Material.LAVA_BUCKET) Material.LAVA else Material.WATER
             if (data is Waterlogged) {
                 data.isWaterlogged = true
+                // Trigger block update for water
+                if(corr.state !is Container) corr.type = material
+                corr.type = orig.type
                 corr.blockData = data
-//                    corr.state.update(true, true) //TODO we need to send a block update somehow and this doesn't work
             } else
-                updateMaterial(Material.WATER)(orig, corr)
+                updateMaterial(material)(orig, corr)
         }
 
     @EventHandler
