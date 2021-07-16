@@ -21,7 +21,7 @@ repositories {
     maven("https://repo.mineinabyss.com/releases")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
-//    maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
+    maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
     maven("https://jitpack.io")
 }
 
@@ -30,7 +30,10 @@ val kotlinVersion: String by project
 
 dependencies {
     compileOnly("com.destroystokyo.paper:paper-api:$serverVersion")
-//    compileOnly("com.intellectualsites.fawe:FAWE-Bukkit:1.16-637")
+
+    compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
+    compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
+
     compileOnly(kotlin("stdlib-jdk8"))
 
     kotlinSpice("$kotlinVersion+")
