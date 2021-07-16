@@ -89,103 +89,97 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
             "sync"(desc = "Sync blocks in range") {
                 val range by intArg()
                 playerAction {
-                    val section = WorldManager.getSectionFor(player.location)
-                    if (section == null)
-                        sender.info("${player.name} is not in a managed section")
-                    else {
-                        when {
-                            DeeperContext.isFAWELoaded -> {
-                                try {
-                                    val pos1 = BlockVector3.at(
-                                        (player.location.x + range),
-                                        (player.location.y + range),
-                                        (player.location.z + range)
-                                    );
-                                    val pos2 = BlockVector3.at(
-                                        (player.location.x - range),
-                                        (player.location.y - range),
-                                        (player.location.z - range)
-                                    );
+                    val section =
+                        player.location.section ?: run {
+                            sender.error("${player.name} is not in a managed section")
+                            return@playerAction
+                        }
 
-                                    val region = CuboidRegion(pos1, pos2)
+                    when {
+                        DeeperContext.isFAWELoaded -> {
+                            try {
+                                val pos1 = BlockVector3.at(
+                                    (player.location.x + range),
+                                    (player.location.y + range),
+                                    (player.location.z + range)
+                                )
+                                val pos2 = BlockVector3.at(
+                                    (player.location.x - range),
+                                    (player.location.y - range),
+                                    (player.location.z - range)
+                                )
 
-                                    val clipboard = BlockArrayClipboard(region)
+                                val region = CuboidRegion(pos1, pos2)
+                                val clipboard = BlockArrayClipboard(region)
+                                val wep = WorldEditPlugin.getInstance().bukkitImplAdapter;
+                                val weWorld: World = wep.adapt(player.world)
+                                val editSession: EditSession = EditSessionBuilder(weWorld)
+                                    .limitUnlimited()
+                                    .build()
 
-                                    val wep = WorldEditPlugin.getInstance().bukkitImplAdapter;
+                                val loc = player.location
+                                val linkedSection =
+                                    loc.correspondingSection ?: error("Corresponding Section not found")
 
-                                    val weWorld: World = wep.adapt(player.world)
+                                val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
+                                    ?: error("Corresponding Location not found")
 
-                                    val editSession: EditSession = EditSessionBuilder(weWorld)
-//                                        .limitUnlimited()
-                                        .build()
-
-                                    val loc = player.location
-
-                                    val section = loc.section ?: throw Exception("Section not found")
-                                    val linkedSection =
-                                        loc.correspondingSection ?: throw Exception("Corresponding Section not found")
-
-                                    val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
-                                        ?: throw Exception("Corresponding Location not found")
-
-                                    var offset = if (pos2.y < 0) pos2.y else 0
-                                    TaskManager.IMP.taskNowAsync {
-                                        player.success("Blocks syncing...")
-                                        editSession.use { editSession ->
-                                            // Copy
-                                            val forwardExtentCopy =
-                                                ForwardExtentCopy(
-                                                    editSession, region, clipboard, region.minimumPoint
-                                                )
-                                            forwardExtentCopy.isCopyingEntities = false
-                                            forwardExtentCopy.isCopyingBiomes = true
-                                            Operations.complete(forwardExtentCopy)
-
-                                            // Paste
-                                            val operation: Operation = ClipboardHolder(clipboard)
-                                                .createPaste(editSession)
-                                                .to(
-                                                    BlockVector3.at(
-                                                        linkedBlock.x - range,
-                                                        linkedBlock.y - range - offset,
-                                                        linkedBlock.z - range
-                                                    )
-                                                )
-                                                .build()
-                                            Operations.complete(operation)
-                                        }
-                                        player.success("Blocks synced (FAWE)")
-                                    }
-                                }
-                                catch (e: Exception) {
-                                    player.error("""An error occurred: ${e.message}""")
-                                }
-                            }
-                            range <= 100 -> {
-                                // Get blocks in range specified
-                                for (x in -range..range) {
-                                    for (y in -range..range) {
-                                        for (z in -range..range) {
-                                            val block = player.world.getBlockAt(
-                                                (player.location.x + x).toInt(),
-                                                (player.location.y + y).toInt(),
-                                                (player.location.z + z).toInt()
+                                val offset = if (pos2.y < 0) pos2.y else 0
+                                TaskManager.IMP.taskNowAsync {
+                                    player.success("Blocks syncing...")
+                                    editSession.use { editSession ->
+                                        // Copy
+                                        val forwardExtentCopy =
+                                            ForwardExtentCopy(
+                                                editSession, region, clipboard, region.minimumPoint
                                             )
+                                        forwardExtentCopy.isCopyingEntities = false
+                                        forwardExtentCopy.isCopyingBiomes = true
+                                        Operations.complete(forwardExtentCopy)
 
-                                            block.sync { original, corr ->
-                                                if (original.type != corr.type) {
-                                                    corr.blockData = original.blockData.clone()
-                                                }
+                                        // Paste
+                                        val operation: Operation = ClipboardHolder(clipboard)
+                                            .createPaste(editSession)
+                                            .to(
+                                                BlockVector3.at(
+                                                    linkedBlock.x - range,
+                                                    linkedBlock.y - range - offset,
+                                                    linkedBlock.z - range
+                                                )
+                                            )
+                                            .build()
+                                        Operations.complete(operation)
+                                    }
+                                    player.success("Blocks synced (FAWE)")
+                                }
+                            } catch (e: Exception) {
+                                player.error("""An error occurred: ${e.message}""")
+                            }
+                        }
+                        range <= 100 -> {
+                            // Get blocks in range specified
+                            for (x in -range..range) {
+                                for (y in -range..range) {
+                                    for (z in -range..range) {
+                                        val block = player.world.getBlockAt(
+                                            (player.location.x + x).toInt(),
+                                            (player.location.y + y).toInt(),
+                                            (player.location.z + z).toInt()
+                                        )
+
+                                        block.sync { original, corr ->
+                                            if (original.type != corr.type) {
+                                                corr.blockData = original.blockData.clone()
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                                player.success("Blocks synced")
-                            }
-                            else -> {
-                                sender.error("Please use a range smaller than 100 blocks, or install FAWE to use a larger range")
-                            }
+                            player.success("Blocks synced")
+                        }
+                        else -> {
+                            sender.error("Please use a range smaller than 100 blocks, or install FAWE to use a larger range")
                         }
                     }
                 }
