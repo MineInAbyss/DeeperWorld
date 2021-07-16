@@ -4,6 +4,12 @@ import com.derongan.minecraft.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
+import com.derongan.minecraft.deeperworld.synchronization.sync
+import com.derongan.minecraft.deeperworld.world.section.correspondingSection
+import com.derongan.minecraft.deeperworld.world.section.getCorrespondingLocation
+import com.derongan.minecraft.deeperworld.world.section.section
+import com.fastasyncworldedit.core.FaweAPI
+import com.fastasyncworldedit.core.util.EditSessionBuilder
 import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
@@ -14,6 +20,16 @@ import com.mineinabyss.idofront.commands.extensions.actions.playerAction
 import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
+import com.sk89q.worldedit.EditSession
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
+import com.sk89q.worldedit.function.operation.ForwardExtentCopy
+import com.sk89q.worldedit.function.operation.Operation
+import com.sk89q.worldedit.function.operation.Operations
+import com.sk89q.worldedit.math.BlockVector3
+import com.sk89q.worldedit.regions.CuboidRegion
+import com.sk89q.worldedit.session.ClipboardHolder
+import com.sk89q.worldedit.world.World
+
 
 @ExperimentalCommandDSL
 object DeeperCommandExecutor : IdofrontCommandExecutor() {
@@ -66,6 +82,107 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
 
                             sender.success("Added $time to synced time")
                         } ?: command.stopCommand("No main world specified for time synchronization. Check the config!")
+                    }
+                }
+            }
+            "sync"(desc = "Sync blocks in range") {
+                val range by intArg()
+                playerAction {
+                    val section = WorldManager.getSectionFor(player.location)
+                    if (section == null)
+                        sender.info("${player.name} is not in a managed section")
+                    else {
+                        when {
+                            DeeperContext.isFAWELoaded -> {
+                                try {
+                                    val pos1 = BlockVector3.at(
+                                        (player.location.x + range),
+                                        (player.location.y + range),
+                                        (player.location.z + range)
+                                    );
+                                    val pos2 = BlockVector3.at(
+                                        (player.location.x - range),
+                                        (player.location.y - range),
+                                        (player.location.z - range)
+                                    );
+
+                                    val region = CuboidRegion(pos1, pos2)
+
+                                    val clipboard = BlockArrayClipboard(region)
+
+                                    val weWorld: World = FaweAPI.getWorld(player.world.name)
+
+                                    val editSession: EditSession = EditSessionBuilder(weWorld)
+//                                        .limitUnlimited()
+                                        .build()
+
+                                    val loc = player.location
+
+                                    val section = loc.section ?: throw Exception("Section not found")
+                                    val linkedSection = loc.correspondingSection ?: throw Exception("Corresponding Section not found")
+
+                                    val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: throw Exception("Corresponding Location not found")
+
+                                    var offset = 0
+
+                                    if(pos2.y < 0){
+                                        offset = pos2.y
+                                    }
+
+                                    editSession.use { editSession ->
+                                        // Copy
+                                        val forwardExtentCopy =
+                                            ForwardExtentCopy(
+                                                editSession, region, clipboard, region.minimumPoint
+                                            )
+                                        forwardExtentCopy.isCopyingEntities = false
+                                        forwardExtentCopy.isCopyingBiomes = true
+                                        Operations.complete(forwardExtentCopy)
+
+                                        // Paste
+                                        val operation: Operation = ClipboardHolder(clipboard)
+                                            .createPaste(editSession)
+                                            .to(BlockVector3.at(linkedBlock.x - range, linkedBlock.y - range - offset, linkedBlock.z - range))
+                                            .build()
+                                        Operations.complete(operation)
+
+                                        player.success("Blocks syncing...")
+
+                                    }
+                                }
+                                catch (e: Exception) {
+                                    player.error("""An error occurred: ${e.message}""")
+                                }
+                                finally {
+                                    player.success("Blocks synced (FAWE)")
+                                }
+                            }
+                            range <= 100 -> {
+                                // Get blocks in range specified
+                                for (x in -range..range) {
+                                    for (y in -range..range) {
+                                        for (z in -range..range) {
+                                            val block = player.world.getBlockAt(
+                                                (player.location.x + x).toInt(),
+                                                (player.location.y + y).toInt(),
+                                                (player.location.z + z).toInt()
+                                            )
+
+                                            block.sync { original, corr ->
+                                                if (original.type != corr.type) {
+                                                    corr.blockData = original.blockData.clone()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                player.success("Blocks synced")
+                            }
+                            else -> {
+                                sender.error("Please use a range smaller than 100 blocks, or install FAWE to use a larger range")
+                            }
+                        }
                     }
                 }
             }
