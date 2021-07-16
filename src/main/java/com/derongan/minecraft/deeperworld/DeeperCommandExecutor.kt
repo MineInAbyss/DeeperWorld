@@ -119,15 +119,13 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                                     val loc = player.location
 
                                     val section = loc.section ?: throw Exception("Section not found")
-                                    val linkedSection = loc.correspondingSection ?: throw Exception("Corresponding Section not found")
+                                    val linkedSection =
+                                        loc.correspondingSection ?: throw Exception("Corresponding Section not found")
 
-                                    val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: throw Exception("Corresponding Location not found")
+                                    val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
+                                        ?: throw Exception("Corresponding Location not found")
 
-                                    var offset = 0
-
-                                    if(pos2.y < 0){
-                                        offset = pos2.y
-                                    }
+                                    var offset = if (pos2.y < 0) pos2.y else 0
 
                                     editSession.use { editSession ->
                                         // Copy
