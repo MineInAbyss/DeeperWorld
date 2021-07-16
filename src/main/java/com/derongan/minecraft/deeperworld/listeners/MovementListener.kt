@@ -70,24 +70,7 @@ object MovementListener : Listener {
             return
         }
 
-        val belowCheck = current.belowKey.section?.let { current.overlapWith(it) }
-        val aboveCheck = current.aboveKey.section?.let { current.overlapWith(it) }
-
-        var inOverlap = false;
-
-        if(belowCheck !== null) {
-            if(player.location.y < (player.world.minHeight + belowCheck)) {
-                inOverlap = true
-            }
-        }
-
-        if(aboveCheck !== null) {
-            if(player.location.y > (player.world.maxHeight - aboveCheck)) {
-                inOverlap = true
-            }
-        }
-
-        if(!inOverlap) return;
+        if(!player.location.inSectionOverlap) return;
 
         val changeY = to.y - from.y
         if (changeY == 0.0) return
