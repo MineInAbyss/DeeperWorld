@@ -11,6 +11,7 @@ import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
 import org.bukkit.block.Block
 import org.bukkit.block.Container
+import org.bukkit.block.Lidded
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -20,6 +21,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
+
 
 private fun updateProtection(block: Block) =
     blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
@@ -56,6 +58,11 @@ object ContainerSyncListener : Listener {
                     return
             }
 
+            if(container is Lidded) {
+                (linkedBlock.state as Lidded).open();
+                if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
+            }
+
             if (section.isOnTopOf(linkedSection)) return
 
             event.isCancelled = true
@@ -86,10 +93,14 @@ object ContainerSyncListener : Listener {
 
     /** Removes the player from the [keepLoadedInventories] map */
     @EventHandler
-    fun onCloseInventory(e: InventoryCloseEvent) {
-        val (inventory) = e
+    fun InventoryCloseEvent.onCloseInventory() {
+        inventory.location?.block?.sync { original, corr ->
+            (original.state as Lidded).close()
+            (corr.state as Lidded).close()
+        }
+
         val chunk = inventory.location?.chunk ?: return
-        if (keepLoadedInventories[chunk]?.remove(e.player) != null) {
+        if (keepLoadedInventories[chunk]?.remove(player) != null) {
             if (keepLoadedInventories[chunk]?.isEmpty() == true) {
                 keepLoadedInventories -= chunk
                 chunk.removePluginChunkTicket(deeperWorld)

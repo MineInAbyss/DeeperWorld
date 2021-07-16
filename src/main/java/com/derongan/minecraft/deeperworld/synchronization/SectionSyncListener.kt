@@ -16,7 +16,10 @@ import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.block.*
+import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockMultiPlaceEvent
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.block.SignChangeEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
@@ -61,12 +64,8 @@ object SectionSyncListener : Listener {
             if (blockData is Bed) {
                 corr.setType(Material.STONE, false)
                 when (blockData.part) {
-                    Bed.Part.FOOT -> {
-                        (corr.location.add(blockData.facing.direction))
-                    }
-                    Bed.Part.HEAD -> {
-                        (corr.location.subtract(blockData.facing.direction))
-                    }
+                    Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
+                    Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
                 }.block.type = Material.AIR
             } else if (
                 blockData is Bisected
