@@ -8,8 +8,8 @@ import com.derongan.minecraft.deeperworld.synchronization.sync
 import com.derongan.minecraft.deeperworld.world.section.correspondingSection
 import com.derongan.minecraft.deeperworld.world.section.getCorrespondingLocation
 import com.derongan.minecraft.deeperworld.world.section.section
-import com.fastasyncworldedit.core.FaweAPI
 import com.fastasyncworldedit.core.util.EditSessionBuilder
+import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
@@ -21,6 +21,7 @@ import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
 import com.sk89q.worldedit.EditSession
+import com.sk89q.worldedit.bukkit.WorldEditPlugin
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy
 import com.sk89q.worldedit.function.operation.Operation
@@ -110,7 +111,9 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
 
                                     val clipboard = BlockArrayClipboard(region)
 
-                                    val weWorld: World = FaweAPI.getWorld(player.world.name)
+                                    val wep = WorldEditPlugin.getInstance().bukkitImplAdapter;
+
+                                    val weWorld: World = wep.adapt(player.world)
 
                                     val editSession: EditSession = EditSessionBuilder(weWorld)
 //                                        .limitUnlimited()
@@ -126,33 +129,36 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                                         ?: throw Exception("Corresponding Location not found")
 
                                     var offset = if (pos2.y < 0) pos2.y else 0
-
-                                    editSession.use { editSession ->
-                                        // Copy
-                                        val forwardExtentCopy =
-                                            ForwardExtentCopy(
-                                                editSession, region, clipboard, region.minimumPoint
-                                            )
-                                        forwardExtentCopy.isCopyingEntities = false
-                                        forwardExtentCopy.isCopyingBiomes = true
-                                        Operations.complete(forwardExtentCopy)
-
-                                        // Paste
-                                        val operation: Operation = ClipboardHolder(clipboard)
-                                            .createPaste(editSession)
-                                            .to(BlockVector3.at(linkedBlock.x - range, linkedBlock.y - range - offset, linkedBlock.z - range))
-                                            .build()
-                                        Operations.complete(operation)
-
+                                    TaskManager.IMP.taskNowAsync {
                                         player.success("Blocks syncing...")
+                                        editSession.use { editSession ->
+                                            // Copy
+                                            val forwardExtentCopy =
+                                                ForwardExtentCopy(
+                                                    editSession, region, clipboard, region.minimumPoint
+                                                )
+                                            forwardExtentCopy.isCopyingEntities = false
+                                            forwardExtentCopy.isCopyingBiomes = true
+                                            Operations.complete(forwardExtentCopy)
 
+                                            // Paste
+                                            val operation: Operation = ClipboardHolder(clipboard)
+                                                .createPaste(editSession)
+                                                .to(
+                                                    BlockVector3.at(
+                                                        linkedBlock.x - range,
+                                                        linkedBlock.y - range - offset,
+                                                        linkedBlock.z - range
+                                                    )
+                                                )
+                                                .build()
+                                            Operations.complete(operation)
+                                        }
+                                        player.success("Blocks synced (FAWE)")
                                     }
                                 }
                                 catch (e: Exception) {
                                     player.error("""An error occurred: ${e.message}""")
-                                }
-                                finally {
-                                    player.success("Blocks synced (FAWE)")
                                 }
                             }
                             range <= 100 -> {
