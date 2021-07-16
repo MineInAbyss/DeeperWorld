@@ -26,18 +26,13 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
                     sender.success("Automatic TP ${if(state) "enabled" else "disabled"} for ${player.name}")
                 }
             }
-            ("layerinfo" / "linfo")(desc = "Gets information about a players section") {
+            ("layerinfo" / "linfo" / "info")(desc = "Gets information about a players section") {
                 playerAction {
                     val section = WorldManager.getSectionFor(player.location)
                     if (section == null)
                         sender.info("${player.name} is not in a managed section")
                     else
                         sender.info("${player.name} is in section ${section.key}")
-                }
-            }
-            "info" {
-                playerAction {
-                    sender.error("Please use /dw linfo or /deeperworld layerinfo instead")
                 }
             }
             "time" {
