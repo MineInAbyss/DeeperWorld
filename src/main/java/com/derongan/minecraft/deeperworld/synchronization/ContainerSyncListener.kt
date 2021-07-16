@@ -95,8 +95,10 @@ object ContainerSyncListener : Listener {
     @EventHandler
     fun InventoryCloseEvent.onCloseInventory() {
         inventory.location?.block?.sync { original, corr ->
-            (original.state as Lidded).close()
-            (corr.state as Lidded).close()
+            if(original.state is Lidded) {
+                (original.state as Lidded).close()
+                (corr.state as Lidded).close()
+            }
         }
 
         val chunk = inventory.location?.chunk ?: return
