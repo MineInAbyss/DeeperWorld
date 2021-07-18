@@ -35,7 +35,7 @@ The config has some additional features like damaging players outside managed se
 
 # Setup
 
-Please read the [project wiki](https://github.com/MineInAbyss/DeeperWorld/wiki) for more details on setup and
+Please read the [project wiki](https://wiki.mineinabyss.com/deeperworld/) for more details on setup and
 configuration.
 
 ### Gradle
