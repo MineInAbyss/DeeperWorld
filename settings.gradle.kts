@@ -10,6 +10,15 @@ pluginManagement {
         id("com.github.johnrengelman.shadow") version "6.0.0"
         id("io.github.0ffz.github-packages") version "1.2.0"
     }
+
+    val miaConventionsVersion: String by settings
+
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id.startsWith("com.mineinabyss.conventions"))
+                useVersion(miaConventionsVersion)
+        }
+    }
 }
 
 rootProject.name = "deeperworld"

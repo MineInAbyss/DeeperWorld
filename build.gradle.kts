@@ -1,17 +1,9 @@
-import com.mineinabyss.kotlinSpice
-import com.mineinabyss.sharedSetup
-
 plugins {
-    java
-    idea
-    `maven-publish`
-    kotlin("jvm")
+    id("com.mineinabyss.conventions.kotlin")
     kotlin("plugin.serialization")
-    id("com.github.johnrengelman.shadow")
-    id("com.mineinabyss.shared-gradle") version "0.0.6"
+    id("com.mineinabyss.conventions.papermc")
+    id("com.mineinabyss.conventions.publication")
 }
-
-sharedSetup()
 
 repositories {
     mavenCentral()
@@ -25,42 +17,20 @@ repositories {
     maven("https://jitpack.io")
 }
 
-val serverVersion: String by project
-val kotlinVersion: String by project
-
 dependencies {
-    compileOnly("com.destroystokyo.paper:paper-api:$serverVersion")
-
+    // Kotlin spice dependencies
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json")
+    // Shaded
+    implementation("com.mineinabyss:idofront:1.17.1-0.6.22")
+    // Plugin APIs
     compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
-
-    compileOnly(kotlin("stdlib-jdk8"))
-
-    kotlinSpice("$kotlinVersion+")
-    compileOnly("com.github.okkero:skedule")
-
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
 
-    implementation("com.mineinabyss:idofront:0.6.13")
+    // Other
+    compileOnly("com.github.okkero:skedule")
+    compileOnly("com.charleskorn.kaml:kaml")
 
     testImplementation("junit:junit:4.12")
-}
-
-tasks {
-    shadowJar {
-        relocate("com.mineinabyss.idofront", "${project.group}.${project.name}.idofront".toLowerCase())
-
-        minimize()
-    }
-
-    build {
-        dependsOn(shadowJar)
-    }
-}
-
-publishing {
-    mineInAbyss(project) {
-        from(components["java"])
-    }
 }
