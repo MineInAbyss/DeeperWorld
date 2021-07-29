@@ -5,7 +5,7 @@ import com.derongan.minecraft.deeperworld.world.section.section
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.destructure.component2
 import com.mineinabyss.idofront.destructure.component3
-import org.bukkit.GameMode
+import org.bukkit.GameMode.ADVENTURE
 import org.bukkit.GameMode.SURVIVAL
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -17,7 +17,7 @@ object PlayerListener : Listener {
     @EventHandler
     fun onPlayerTeleport(event: PlayerTeleportEvent) {
         val (player, _, to, cause) = event
-        if (player.gameMode == SURVIVAL
+        if ((player.gameMode == SURVIVAL || player.gameMode == ADVENTURE)
             && (cause == ENDER_PEARL || cause == CHORUS_FRUIT)
             && to?.section == null
             && player.canMoveSections
