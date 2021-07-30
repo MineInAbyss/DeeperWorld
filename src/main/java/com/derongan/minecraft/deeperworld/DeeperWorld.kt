@@ -17,6 +17,7 @@ import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
+import com.mineinabyss.idofront.slimjar.LibraryLoaderInjector
 import com.okkero.skedule.schedule
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -25,6 +26,8 @@ val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 class DeeperWorld : JavaPlugin() {
     @ExperimentalCommandDSL
     override fun onEnable() {
+        LibraryLoaderInjector.inject(this)
+
         saveDefaultConfig()
 
         registerService<WorldManager>(WorldManagerImpl(config))
