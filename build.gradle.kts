@@ -1,8 +1,11 @@
+val idofrontVersion: String by project
+
 plugins {
     id("com.mineinabyss.conventions.kotlin")
     kotlin("plugin.serialization")
     id("com.mineinabyss.conventions.papermc")
     id("com.mineinabyss.conventions.publication")
+    id("com.mineinabyss.conventions.testing")
 }
 
 repositories {
@@ -18,19 +21,18 @@ repositories {
 }
 
 dependencies {
-    // Kotlin spice dependencies
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json")
-    // Shaded
-    implementation("com.mineinabyss:idofront:1.17.1-0.6.22")
     // Plugin APIs
     compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
 
-    // Other
-    compileOnly("com.github.okkero:skedule")
-    compileOnly("com.charleskorn.kaml:kaml")
+    // Download at runtime
+    slim(kotlin("stdlib-jdk8"))
+    slim("org.jetbrains.kotlinx:kotlinx-serialization-json")
+    slim("com.github.okkero:skedule")
+    slim("com.charleskorn.kaml:kaml")
 
-    testImplementation("junit:junit:4.12")
+    // Shaded
+    implementation("com.mineinabyss:idofront:$idofrontVersion")
 }
