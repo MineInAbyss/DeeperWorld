@@ -1,7 +1,10 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
+import com.derongan.minecraft.deeperworld.deeperWorld
+import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
+import com.derongan.minecraft.deeperworld.world.section.section
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
@@ -92,6 +95,16 @@ object SectionSyncListener : Listener {
                 return@sync
             }
             corr.blockData = original.blockData.clone()
+        }
+    }
+
+    @EventHandler
+    fun BlockPlaceEvent.disableBlocks() {
+        val section = WorldManager.getSectionFor(player.location) ?: return
+
+        if (block.type == Material.LADDER && section.name!!.contains("l1|l2".toRegex())) {
+            isCancelled = true
+            player.error("Ladders cannot be placed in §lLayer 1 §cand §lLayer 2")
         }
     }
 
