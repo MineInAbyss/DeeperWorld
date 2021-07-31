@@ -102,9 +102,9 @@ object SectionSyncListener : Listener {
     fun BlockPlaceEvent.disableBlocks() {
         val section = WorldManager.getSectionFor(player.location) ?: return
 
-        if (block.type == Material.LADDER && section.name!!.contains("l1|l2".toRegex())) {
+        if (block.type == Material.LADDER && section.name!!.contains("l1|l2|l3".toRegex())) {
             isCancelled = true
-            player.error("Ladders cannot be placed in §lLayer 1 §cand §lLayer 2")
+            player.error("Ladders cannot be placed in §lLayer 1 §c-> §lLayer 3")
         }
     }
 
