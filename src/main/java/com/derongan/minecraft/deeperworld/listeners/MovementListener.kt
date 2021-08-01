@@ -94,6 +94,17 @@ object MovementListener : Listener {
                 ) {
                     if(current.isOnTopOf(toSection)){
                         from.block.type = Material.BEDROCK
+                        val spawnedBedrock = from.block
+
+                        // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
+                        // If no players are in this radius, destroy the bedrock.
+                        deeperWorld.schedule{
+                            this.repeating(1)
+                            while(spawnedBedrock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()){
+                                yield()
+                            }
+                            spawnedBedrock.type = Material.AIR
+                        }
 
                         val oldFallDistance = player.fallDistance
                         val oldVelocity = player.velocity
@@ -105,7 +116,7 @@ object MovementListener : Listener {
                     }else{
                         player.teleport(from)
                     }
-
+                    player.teleport(from)
                     player.sendMessage("&cThere is no where for you to teleport".color())
                 }
                 else
