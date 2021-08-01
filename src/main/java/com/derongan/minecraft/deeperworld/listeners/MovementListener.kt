@@ -19,10 +19,12 @@ import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.services.canMoveSections
 import com.derongan.minecraft.deeperworld.world.section.*
 import com.mineinabyss.idofront.events.call
+import com.mineinabyss.idofront.location.up
 import com.mineinabyss.idofront.messaging.color
 import com.okkero.skedule.schedule
 import org.bukkit.GameMode
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
@@ -70,7 +72,7 @@ object MovementListener : Listener {
             return
         }
 
-        if(!player.location.inSectionOverlap) return;
+        if(!player.location.inSectionOverlap) return
 
         val changeY = to.y - from.y
         if (changeY == 0.0) return
@@ -90,7 +92,20 @@ object MovementListener : Listener {
                 if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
                     || !inSpectator && correspondingPos.block.type.isSolid
                 ) {
-                    player.teleport(from)
+                    if(current.isOnTopOf(toSection)){
+                        from.block.type = Material.BEDROCK
+
+                        val oldFallDistance = player.fallDistance
+                        val oldVelocity = player.velocity
+
+                        player.teleport(from.up(1))
+
+                        player.fallDistance = oldFallDistance
+                        player.velocity = oldVelocity
+                    }else{
+                        player.teleport(from)
+                    }
+
                     player.sendMessage("&cThere is no where for you to teleport".color())
                 }
                 else
