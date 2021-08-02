@@ -26,6 +26,7 @@ import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.Block
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -36,6 +37,8 @@ import org.bukkit.event.vehicle.VehicleMoveEvent
 import org.bukkit.util.Vector
 
 object MovementListener : Listener {
+    val temporaryBedrock = mutableListOf<Block>()
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun PlayerMoveEvent.move() {
         if (player.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && player.canMoveSections) {
@@ -95,6 +98,7 @@ object MovementListener : Listener {
                     if(current.isOnTopOf(toSection)){
                         from.block.type = Material.BEDROCK
                         val spawnedBedrock = from.block
+                        temporaryBedrock.add(spawnedBedrock)
 
                         // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
                         // If no players are in this radius, destroy the bedrock.
@@ -104,6 +108,7 @@ object MovementListener : Listener {
                                 yield()
                             }
                             spawnedBedrock.type = Material.AIR
+                            temporaryBedrock.remove(spawnedBedrock)
                         }
 
                         val oldFallDistance = player.fallDistance
