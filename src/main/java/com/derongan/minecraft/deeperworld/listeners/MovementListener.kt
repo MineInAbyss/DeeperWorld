@@ -121,7 +121,6 @@ object MovementListener : Listener {
                     }else{
                         player.teleport(from)
                     }
-                    player.teleport(from)
                     player.sendMessage("&cThere is no where for you to teleport".color())
                 }
                 else
