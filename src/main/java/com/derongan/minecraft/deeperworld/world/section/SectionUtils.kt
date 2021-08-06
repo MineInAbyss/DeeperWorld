@@ -72,7 +72,7 @@ val Location.inSectionOverlap: Boolean
 fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
     val overlap = section.overlapWith(otherSection) ?: return false
     return when {
-        section.isOnTopOf(otherSection) -> blockY <= overlap
+        section.isOnTopOf(otherSection) -> blockY <= world.minHeight + overlap
         otherSection.isOnTopOf(section) -> blockY >= world.maxHeight - overlap
         else -> false
     }
