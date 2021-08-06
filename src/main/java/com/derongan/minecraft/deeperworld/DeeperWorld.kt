@@ -19,6 +19,7 @@ import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
 import com.mineinabyss.idofront.slimjar.LibraryLoaderInjector
 import com.okkero.skedule.schedule
+import org.bukkit.Material
 import org.bukkit.plugin.java.JavaPlugin
 
 val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
@@ -73,6 +74,12 @@ class DeeperWorld : JavaPlugin() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onDisable() {
+        MovementListener.temporaryBedrock.forEach{
+            it.type = Material.AIR
         }
     }
 }
