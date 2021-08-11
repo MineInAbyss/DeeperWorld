@@ -4,6 +4,7 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
 import com.derongan.minecraft.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
+import com.derongan.minecraft.deeperworld.ecs.SectionChangeListener
 import com.derongan.minecraft.deeperworld.listeners.MovementListener
 import com.derongan.minecraft.deeperworld.listeners.PlayerListener
 import com.derongan.minecraft.deeperworld.player.FallingDamageManager
@@ -14,6 +15,7 @@ import com.derongan.minecraft.deeperworld.synchronization.ContainerSyncListener
 import com.derongan.minecraft.deeperworld.synchronization.ExploitPreventionListener
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener
 import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
+import com.mineinabyss.geary.ecs.api.services.gearyService
 import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
@@ -43,6 +45,10 @@ class DeeperWorld : JavaPlugin() {
             ExploitPreventionListener,
             ContainerSyncListener
         )
+
+        if (DeeperContext.isGearyLoaded) {
+            registerEvents(SectionChangeListener)
+        }
 
         //register command executor
         DeeperCommandExecutor
@@ -78,7 +84,7 @@ class DeeperWorld : JavaPlugin() {
     }
 
     override fun onDisable() {
-        MovementListener.temporaryBedrock.forEach{
+        MovementListener.temporaryBedrock.forEach {
             it.type = Material.AIR
         }
     }

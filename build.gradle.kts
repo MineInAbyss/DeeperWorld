@@ -26,6 +26,7 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
+    compileOnly ("com.mineinabyss:geary-platform-papermc:0.6.48")
 
     // Download at runtime
     slim(kotlin("stdlib-jdk8"))
