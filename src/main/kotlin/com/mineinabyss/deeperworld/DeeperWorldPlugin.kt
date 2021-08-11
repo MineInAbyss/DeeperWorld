@@ -45,6 +45,9 @@ class DeeperWorldPlugin : JavaPlugin() {
             ContainerSyncListener
         )
 
+        if (DeeperContext.isGearyLoaded)
+            registerEvents(SectionChangeListener)
+
         //register command executor
         DeeperCommandExecutor()
 
