@@ -22,6 +22,7 @@ import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.location.up
 import com.mineinabyss.idofront.messaging.color
 import com.okkero.skedule.schedule
+import io.papermc.paper.event.entity.EntityMoveEvent
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
@@ -53,6 +54,14 @@ object MovementListener : Listener {
         players.firstOrNull { it.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && it.canMoveSections }?.let {
             onPlayerMoveInternal(it, from, to)
         }
+    }
+
+    @EventHandler
+    fun EntityMoveEvent.entityMove() {
+        if (entity.getPassengersRecursive().isEmpty()) return
+        entity.getPassengersRecursive().filterIsInstance<Player>()
+            .filter { rider -> rider.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && rider.canMoveSections }
+            .forEach { onPlayerMoveInternal(it, from, to) }
     }
 
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location) {
