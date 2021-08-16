@@ -21,8 +21,11 @@ object PlayerListener : Listener {
         if (
             (player.gameMode == SURVIVAL || player.gameMode == ADVENTURE)
             && (cause == ENDER_PEARL || cause == CHORUS_FRUIT)
-            && (to.section != player.location.section || to.section == null)
             && player.canMoveSections
+            && (to.section != player.location.section ||
+                to.section == null ||
+                to.blockY >= player.location.world.maxHeight - 5 ||
+                to.blockY <= player.location.world.minHeight + 5)
         ) {
             player.error("Teleportation is disabled between Layers and Sections.")
             event.isCancelled = true
