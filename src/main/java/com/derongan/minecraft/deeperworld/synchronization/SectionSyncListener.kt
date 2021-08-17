@@ -18,11 +18,13 @@ import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.type.Bed
 import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.TrapDoor
+import org.bukkit.entity.EntityType
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
 import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.event.entity.EntitySpawnEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
 
@@ -173,5 +175,17 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun SignChangeEvent.syncSignText() {
         block.sync(signUpdater(lines))
+    }
+
+    /** Disables Iron Golem and Wither summons in section transitions due to duping **/
+    @EventHandler
+    fun EntitySpawnEvent.onEntitySummon() {
+        if (entity.location.inSectionOverlap &&
+           (entityType == EntityType.WITHER || entityType == EntityType.IRON_GOLEM)) {
+            isCancelled = true
+            entity.location.getNearbyPlayers(5.0).forEach {
+                it.error("Spawning of $entityType is disabled in section overlaps.")
+            }
+        }
     }
 }
