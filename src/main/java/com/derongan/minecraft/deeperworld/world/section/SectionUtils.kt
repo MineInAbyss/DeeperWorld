@@ -69,6 +69,13 @@ val Location.inSectionOverlap: Boolean
         return sharedBetween(section ?: return false, correspondingSection ?: return false)
     }
 
+val Location.inSectionTransition: Boolean
+    get() {
+        // Get overlap of this section and corresponding section
+        val shared = section?.overlapWith(correspondingSection ?: return false) ?: return false
+        return blockY >= world.maxHeight - .3 * shared || blockY <= world.minHeight + .3 * shared
+    }
+
 fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
     val overlap = section.overlapWith(otherSection) ?: return false
     return when {
