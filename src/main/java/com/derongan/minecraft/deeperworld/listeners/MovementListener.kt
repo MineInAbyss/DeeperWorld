@@ -22,6 +22,7 @@ import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.location.up
 import com.mineinabyss.idofront.messaging.color
 import com.okkero.skedule.schedule
+import io.papermc.paper.event.entity.EntityMoveEvent
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
@@ -55,6 +56,14 @@ object MovementListener : Listener {
         }
     }
 
+    @EventHandler
+    fun EntityMoveEvent.entityMove() {
+        if (entity.getPassengersRecursive().isEmpty()) return
+        entity.getPassengersRecursive().filterIsInstance<Player>()
+            .filter { rider -> rider.hasPermission(Permissions.CHANGE_SECTION_PERMISSION) && rider.canMoveSections }
+            .forEach { onPlayerMoveInternal(it, from, to) }
+    }
+
     private fun onPlayerMoveInternal(player: Player, from: Location, to: Location) {
         val current = WorldManager.getSectionFor(player.location) ?: let {
             //damage players outside of sections
@@ -84,59 +93,55 @@ object MovementListener : Listener {
 
         fun tpIfAbleTo(
             key: SectionKey,
-            tpFun: (Player, Location, Section, Section) -> Unit,
-            boundaryCheck: (y: Double, shared: Int) -> Boolean,
+            tpFun: (Player, Location, Section, Section) -> Unit
         ) {
             val toSection = key.section ?: return
-            val overlap = current.overlapWith(toSection) ?: return
             val correspondingPos = to.getCorrespondingLocation(current, toSection) ?: return
 
-            if (boundaryCheck(to.y, overlap)) {
-                if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
-                    || !inSpectator && correspondingPos.block.type.isSolid
-                ) {
-                    if(current.isOnTopOf(toSection)){
-                        from.block.type = Material.BEDROCK
-                        val spawnedBedrock = from.block
-                        temporaryBedrock.add(spawnedBedrock)
+            if (!to.inSectionTransition) return
+            if (!toSection.region.contains(correspondingPos.blockX, correspondingPos.blockZ)
+                || !inSpectator && correspondingPos.block.type.isSolid
+            ) {
+                if (current.isOnTopOf(toSection)) {
+                    from.block.type = Material.BEDROCK
+                    val spawnedBedrock = from.block
+                    temporaryBedrock.add(spawnedBedrock)
 
-                        // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
-                        // If no players are in this radius, destroy the bedrock.
-                        deeperWorld.schedule{
-                            this.repeating(1)
-                            while(spawnedBedrock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()){
-                                yield()
-                            }
-                            spawnedBedrock.type = Material.AIR
-                            temporaryBedrock.remove(spawnedBedrock)
+                    // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
+                    // If no players are in this radius, destroy the bedrock.
+                    deeperWorld.schedule {
+                        this.repeating(1)
+                        while (spawnedBedrock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()) {
+                            yield()
                         }
-
-                        val oldFallDistance = player.fallDistance
-                        val oldVelocity = player.velocity
-
-                        player.teleport(from.up(1))
-
-                        player.fallDistance = oldFallDistance
-                        player.velocity = oldVelocity
-                    }else{
-                        player.teleport(from)
+                        spawnedBedrock.type = Material.AIR
+                        temporaryBedrock.remove(spawnedBedrock)
                     }
-                    player.sendMessage("&cThere is no where for you to teleport".color())
+
+                    val oldFallDistance = player.fallDistance
+                    val oldVelocity = player.velocity
+
+                    player.teleport(from.up(1))
+
+                    player.fallDistance = oldFallDistance
+                    player.velocity = oldVelocity
+                } else {
+                    player.teleport(from)
                 }
-                else
-                    tpFun(player, to, current, toSection)
-            }
+                player.sendMessage("&cThere is no where for you to teleport".color())
+            } else
+                tpFun(player, to, current, toSection)
         }
 
         when {
             changeY > 0.0 -> tpIfAbleTo(
                 current.aboveKey,
                 MovementListener::ascend,
-            ) { y, shared -> y > player.world.maxHeight - .3 * shared }
+            )
             changeY < 0.0 -> tpIfAbleTo(
                 current.belowKey,
                 MovementListener::descend,
-            ) { y, shared -> y < player.world.minHeight + .3 * shared }
+            )
         }
     }
 
