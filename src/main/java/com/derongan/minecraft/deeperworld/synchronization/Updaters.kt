@@ -22,7 +22,7 @@ internal inline fun Block.sync(updater: (original: Block, corresponding: Block) 
     location.sync(updater)
 
 internal inline fun Location.sync(
-    updater: (original: Block, corresponding: Block, section: Section, corrSection: Section) -> Unit
+    updater: (original: Block, corresponding: Block, section: ConfigSection, corrSection: ConfigSection) -> Unit
 ) {
     if (!inSectionOverlap) return //ensure blocks don't get altered when we are outside of the corresponding region
     val section = section ?: return

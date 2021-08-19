@@ -26,6 +26,7 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.5")
 
     // Download at runtime
     slim(kotlin("stdlib-jdk8"))

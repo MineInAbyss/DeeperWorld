@@ -30,7 +30,7 @@ private fun updateProtection(block: Block) =
 
 object ContainerSyncListener : Listener {
 
-    /** Tells a chunk what players are accessing inventories on its [Section] border */
+    /** Tells a chunk what players are accessing inventories on its [ConfigSection] border */
     private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
 
     /** Synchronize container interactions between sections */

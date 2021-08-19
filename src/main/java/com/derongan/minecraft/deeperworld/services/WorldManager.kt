@@ -1,6 +1,6 @@
 package com.derongan.minecraft.deeperworld.services
 
-import com.derongan.minecraft.deeperworld.world.section.Section
+import com.derongan.minecraft.deeperworld.world.section.ConfigSection
 import com.derongan.minecraft.deeperworld.world.section.SectionKey
 import com.mineinabyss.idofront.plugin.getService
 import org.bukkit.Location
@@ -18,7 +18,7 @@ interface WorldManager {
      * @param location The location to check
      * @return The section or null if the location is not within a section.
      */
-    fun getSectionFor(location: Location): Section?
+    fun getSectionFor(location: Location): ConfigSection?
 
     /**
      * Given x,y coords and a world, return the Section it is within
@@ -28,7 +28,7 @@ interface WorldManager {
      * @param world The world
      * @return The section or null if the location is not within a section.
      */
-    fun getSectionFor(x: Int, z: Int, world: World): Section?
+    fun getSectionFor(x: Int, z: Int, world: World): ConfigSection?
 
     /**
      * Gets the section associated with the provided key
@@ -36,7 +36,7 @@ interface WorldManager {
      * @param key The section key
      * @return The section associated or null of none exists
      */
-    fun getSectionFor(key: SectionKey): Section?
+    fun getSectionFor(key: SectionKey): ConfigSection?
 
     /**
      * Gets the section associated with the provided string
@@ -44,7 +44,7 @@ interface WorldManager {
      * @param key The section name
      * @return The section associated or null of none exists
      */
-    fun getSectionFor(key: String): Section?
+    fun getSectionFor(key: String): ConfigSection?
 
     /**
      * Register a section with a specific name
@@ -53,7 +53,7 @@ interface WorldManager {
      * @param section The section
      * @return a key used for retrieving this section
      */
-    fun registerSection(name: String, section: Section): SectionKey
+    fun registerSection(name: String, section: ConfigSection): SectionKey
 
     /**
      * Register a section with an automatically computed name.
@@ -62,7 +62,7 @@ interface WorldManager {
      * @param section    The section
      * @return a key used for retrieving this section
      */
-    fun registerSection(sectionKey: SectionKey, section: Section): SectionKey
+    fun registerSection(sectionKey: SectionKey, section: ConfigSection): SectionKey
 
     /**
      * Removes a registered section
@@ -74,5 +74,5 @@ interface WorldManager {
     /**
      * Gets an immutable copy of the currently loaded sections.
      */
-    val sections: Set<Section>
+    val sections: Set<ConfigSection>
 }
