@@ -3,7 +3,6 @@ package com.derongan.minecraft.deeperworld.synchronization
 import com.derongan.minecraft.deeperworld.DeeperContext
 import com.derongan.minecraft.deeperworld.world.section.correspondingSection
 import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
-import com.derongan.minecraft.deeperworld.world.section.isOnTopOf
 import com.derongan.minecraft.deeperworld.world.section.section
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
@@ -39,7 +38,7 @@ private fun syncBlockLocker(corr: Block) {
  */
 object SectionSyncListener : Listener {
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
         val block = block
         block.location.sync { original, corr ->
@@ -113,15 +112,15 @@ object SectionSyncListener : Listener {
         val section = block.location.section ?: return
         val section2 = block.location.correspondingSection ?: return
 
-        if(
+        if (
             block.location.inSectionOverlap
-            && section.isOnTopOf(section2)
+//            && section.isOnTopOf(section2)
             && block.blockData !is Levelled // Water / Lava
         ) isCancelled = true
 
-        if(!section.isOnTopOf(section2)) {
-            block.sync()
-        }
+//        if(!section.isOnTopOf(section2)) {
+//            block.sync()
+//        }
     }
 
     @EventHandler
