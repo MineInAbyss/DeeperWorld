@@ -2,13 +2,12 @@ package com.derongan.minecraft.deeperworld.movement
 
 import com.derongan.minecraft.deeperworld.datastructures.VehicleTree
 import com.derongan.minecraft.deeperworld.deeperWorld
-import com.derongan.minecraft.deeperworld.extensions.getLeashedEntities
 import com.derongan.minecraft.deeperworld.extensions.getPassengersRecursive
 import com.derongan.minecraft.deeperworld.extensions.getRootVehicle
-import com.derongan.minecraft.deeperworld.extensions.teleportWithSpectatorsAsync
 import com.derongan.minecraft.deeperworld.protocolManager
 import com.okkero.skedule.schedule
 import org.bukkit.Location
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 
 class TransitionTeleportHandler(val player: Player, val from: Location, val to: Location) :
@@ -90,6 +89,32 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
 
     override fun isValidTeleport(): Boolean {
         return true
-
     }
+
+    private fun Player.getLeashedEntities(): List<LivingEntity> {
+        // Max leashed entity range is 10 blocks, therefore these parameter values
+        return getNearbyEntities(20.0, 20.0, 20.0)
+            .filterIsInstance<LivingEntity>()
+            .filter { it.isLeashed && it.leashHolder == this }
+    }
+
+    private fun Player.teleportWithSpectatorsAsync(loc: Location, thenRun: (Boolean) -> Unit) {
+        val nearbySpectators = getNearbyEntities(5.0, 5.0, 5.0)
+            .filterIsInstance<Player>()
+            .filter { it.spectatorTarget == this }
+
+        nearbySpectators.forEach {
+            it.spectatorTarget = null
+        }
+
+        teleportAsync(loc).thenAccept { success ->
+            if (!success) return@thenAccept
+            nearbySpectators.forEach {
+                it.teleport(loc)
+                it.spectatorTarget = this
+            }
+            thenRun(success)
+        }
+    }
+
 }

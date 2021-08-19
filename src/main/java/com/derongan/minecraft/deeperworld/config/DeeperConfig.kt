@@ -2,7 +2,7 @@ package com.derongan.minecraft.deeperworld.config
 
 import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.services.WorldManager
-import com.derongan.minecraft.deeperworld.world.section.ConfigSection
+import com.derongan.minecraft.deeperworld.world.section.Section
 import com.mineinabyss.idofront.config.IdofrontConfig
 import com.mineinabyss.idofront.config.ReloadScope
 import com.mineinabyss.idofront.serialization.WorldSerializer
@@ -14,7 +14,7 @@ import org.bukkit.World
 object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serializer()) {
     @Serializable
     data class Data(
-        val sections: List<ConfigSection>,
+        val sections: List<Section>,
         val damageOutsideSections: Double = 0.0,
         val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
         val remountPacketDelay: TimeSpan = 40.ticks,

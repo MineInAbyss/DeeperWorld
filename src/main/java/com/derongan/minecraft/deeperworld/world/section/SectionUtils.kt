@@ -11,7 +11,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-val Location.section: ConfigSection? get() = WorldManager.getSectionFor(this)
+val Location.section: Section? get() = WorldManager.getSectionFor(this)
 
 val SectionKey.section get() = WorldManager.getSectionFor(this)
 
@@ -19,11 +19,11 @@ val SectionKey.section get() = WorldManager.getSectionFor(this)
  * The corresponding section which overlaps with this location's section. Will be null if the section is not in an
  * overlap, even if there is a section above or below, since it's unclear which section becomes the corresponding one.
  */
-val Location.correspondingSection: ConfigSection?
+val Location.correspondingSection: Section?
     get() {
         val section = this.section ?: return null
-        val above: ConfigSection? = section.aboveKey.section
-        val below: ConfigSection? = section.belowKey.section
+        val above: Section? = section.aboveKey.section
+        val below: Section? = section.belowKey.section
         return when {
             above != null && sharedBetween(section, above) -> above
             below != null && sharedBetween(section, below) -> below
@@ -47,7 +47,7 @@ val Location.correspondingLocation: Location?
  * @param sectionB        the section we are translating the point to
  * @return A new location that corresponds to the original location
  */
-fun Location.getCorrespondingLocation(sectionA: ConfigSection, sectionB: ConfigSection): Location? {
+fun Location.getCorrespondingLocation(sectionA: Section, sectionB: Section): Location? {
     if (!sectionA.isAdjacentTo(sectionB)) return null
 
     // We decide which two points we are translating between.
@@ -76,7 +76,7 @@ val Location.inSectionTransition: Boolean
         return blockY >= world.maxHeight - .3 * shared || blockY <= world.minHeight + .3 * shared
     }
 
-fun Location.sharedBetween(section: ConfigSection, otherSection: ConfigSection): Boolean {
+fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
     val overlap = section.overlapWith(otherSection) ?: return false
     return when {
         section.isOnTopOf(otherSection) -> blockY <= world.minHeight + overlap
@@ -85,7 +85,7 @@ fun Location.sharedBetween(section: ConfigSection, otherSection: ConfigSection):
     }
 }
 
-fun ConfigSection.overlapWith(other: ConfigSection): Int? {
+fun Section.overlapWith(other: Section): Int? {
     if (!isAdjacentTo(other)) return null
     // We decide which two points we are translating between.
     val (locA, locB) = when (isOnTopOf(other)) {
@@ -97,7 +97,7 @@ fun ConfigSection.overlapWith(other: ConfigSection): Int? {
     return (world.maxHeight - max(yA, yB)) + (min(yA, yB) - world.minHeight)
 }
 
-fun ConfigSection.isOnTopOf(other: ConfigSection) = key == other.aboveKey
+fun Section.isOnTopOf(other: Section) = key == other.aboveKey
 
 /** Whether a section is adjacent to another */
-fun ConfigSection.isAdjacentTo(other: ConfigSection) = this.isOnTopOf(other) || other.isOnTopOf(this)
+fun Section.isAdjacentTo(other: Section) = this.isOnTopOf(other) || other.isOnTopOf(this)

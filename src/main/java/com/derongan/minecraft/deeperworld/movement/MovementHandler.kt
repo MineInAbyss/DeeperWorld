@@ -1,7 +1,7 @@
 package com.derongan.minecraft.deeperworld.movement
 
 import com.derongan.minecraft.deeperworld.config.DeeperConfig
-import com.derongan.minecraft.deeperworld.movement.transition.ConfigTransitionChecker
+import com.derongan.minecraft.deeperworld.movement.transition.ConfigSectionChecker
 import com.derongan.minecraft.deeperworld.movement.transition.SectionTransition
 import com.derongan.minecraft.deeperworld.movement.transition.TransitionKind
 import com.derongan.minecraft.deeperworld.movement.transition.toEvent
@@ -13,20 +13,24 @@ import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 
 object MovementHandler {
-    private val transitionCheckers = listOf(ConfigTransitionChecker)
+    private val sectionCheckers = listOf(ConfigSectionChecker)
 
     fun handleMovement(player: Player, from: Location, to: Location) {
-        transitionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
-            with(getTeleportHandler(player, it)) {
-                if (this.isValidTeleport()) {
-                    it.toEvent(player).call {
-                        this@with.handleTeleport()
+
+        if (sectionCheckers.any { it.inSection(player) })
+            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
+                with(getTeleportHandler(player, it)) {
+                    if (this.isValidTeleport()) {
+                        it.toEvent(player).call {
+                            this@with.handleTeleport()
+                        }
+                    } else {
+                        this.handleTeleport()
                     }
-                } else {
-                    this.handleTeleport()
                 }
-            }
-        } ?: applyOutOfBoundsDamage(player)
+            } else {
+            applyOutOfBoundsDamage(player)
+        }
     }
 
     private fun applyOutOfBoundsDamage(player: Player) {
@@ -58,18 +62,18 @@ object MovementHandler {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
                 UndoMovementInvalidTeleportHandler(
                     player,
-                    sectionTransition.to,
-                    sectionTransition.from
+                    sectionTransition.from,
+                    sectionTransition.to
                 )
             } else {
                 BedrockBlockingInvalidTeleportHandler(
                     player,
-                    sectionTransition.to,
-                    sectionTransition.from
+                    sectionTransition.from,
+                    sectionTransition.to
                 )
             }
         }
 
-        return TransitionTeleportHandler(player, sectionTransition.to, sectionTransition.from);
+        return TransitionTeleportHandler(player, sectionTransition.from, sectionTransition.to);
     }
 }
