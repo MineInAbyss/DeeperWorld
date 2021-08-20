@@ -1,8 +1,11 @@
 package com.derongan.minecraft.deeperworld.synchronization
 
 import com.derongan.minecraft.deeperworld.DeeperContext
-import com.derongan.minecraft.deeperworld.world.section.correspondingSection
+import com.derongan.minecraft.deeperworld.event.BlockSyncEvent
+import com.derongan.minecraft.deeperworld.event.SyncType
 import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
+import com.mineinabyss.idofront.events.call
+import com.derongan.minecraft.deeperworld.world.section.correspondingSection
 import com.derongan.minecraft.deeperworld.world.section.isOnTopOf
 import com.derongan.minecraft.deeperworld.world.section.section
 import com.mineinabyss.idofront.messaging.error
@@ -41,62 +44,65 @@ object SectionSyncListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockBreakEvent.syncBlockBreak() {
-        val block = block
-        block.location.sync { original, corr ->
-            val state = corr.state
+        BlockSyncEvent(block, SyncType.BREAK).call {
+            block.location.sync { original, corr ->
+                val state = corr.state
 
-            //if breaking from bottom container, drop items stored in top container here
-            if (state is Container && original.location.y > corr.location.y) {
-                val corrInv = state.inventory
-                if (state is ShulkerBox) {
-                    isDropItems = false
-                    //TODO maybe create our own event that gets called from here
-                    corr.drops.dropItems(original.location, noVelocity = false)
-                } else {
-                    corrInv.toList().dropItems(original.location, false)
+                //if breaking from bottom container, drop items stored in top container here
+                if (state is Container && original.location.y > corr.location.y) {
+                    val corrInv = state.inventory
+                    if (state is ShulkerBox) {
+                        isDropItems = false
+                        //TODO maybe create our own event that gets called from here
+                        corr.drops.dropItems(original.location, noVelocity = false)
+                    } else {
+                        corrInv.toList().dropItems(original.location, false)
+                    }
+                    corrInv.clear()
                 }
-                corrInv.clear()
+
+                //sync any changes to BlockLocker's signs`
+                if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
+                    syncBlockLocker(corr)
+                }
+
+                val blockData = block.blockData
+
+                if (blockData is Bed) {
+                    corr.setType(Material.STONE, false)
+                    when (blockData.part) {
+                        Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
+                        Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
+                    }.block.type = Material.AIR
+                } else if (
+                    blockData is Bisected
+                    && blockData !is TrapDoor
+                    && blockData !is Stairs
+                ) {
+                    corr.setType(Material.STONE, false)
+                    when (blockData.half) {
+                        Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
+                        Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
+                    }.block.type = Material.AIR
+                }
+
+                corr.type = Material.AIR
+
             }
-
-            //sync any changes to BlockLocker's signs`
-            if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
-                syncBlockLocker(corr)
-            }
-
-            val blockData = block.blockData
-
-            if (blockData is Bed) {
-                corr.setType(Material.STONE, false)
-                when (blockData.part) {
-                    Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
-                    Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
-                }.block.type = Material.AIR
-            } else if (
-                blockData is Bisected
-                && blockData !is TrapDoor
-                && blockData !is Stairs
-            ) {
-                corr.setType(Material.STONE, false)
-                when (blockData.half) {
-                    Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
-                    Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
-                }.block.type = Material.AIR
-            }
-
-            corr.type = Material.AIR
-
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockPlaceEvent.syncBlockPlace() {
-        block.sync { original, corr ->
-            if (original.type.name.contains("SHULKER")) {
-                isCancelled = true
-                player.error("Shulkers are disabled near section changes due to item loss bugs.")
-                return@sync
+        BlockSyncEvent(block, SyncType.PLACE).call {
+            block.sync { original, corr ->
+                if (original.type.name.contains("SHULKER")) {
+                    isCancelled = true
+                    player.error("Shulkers are disabled near section changes due to item loss bugs.")
+                    return@sync
+                }
+                corr.blockData = original.blockData.clone()
             }
-            corr.blockData = original.blockData.clone()
         }
     }
 
