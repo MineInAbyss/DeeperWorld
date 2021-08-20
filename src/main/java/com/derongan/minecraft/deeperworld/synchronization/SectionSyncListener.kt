@@ -3,11 +3,10 @@ package com.derongan.minecraft.deeperworld.synchronization
 import com.derongan.minecraft.deeperworld.DeeperContext
 import com.derongan.minecraft.deeperworld.event.BlockSyncEvent
 import com.derongan.minecraft.deeperworld.event.SyncType
-import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
-import com.mineinabyss.idofront.events.call
 import com.derongan.minecraft.deeperworld.world.section.correspondingSection
-import com.derongan.minecraft.deeperworld.world.section.isOnTopOf
+import com.derongan.minecraft.deeperworld.world.section.inSectionOverlap
 import com.derongan.minecraft.deeperworld.world.section.section
+import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.error
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
