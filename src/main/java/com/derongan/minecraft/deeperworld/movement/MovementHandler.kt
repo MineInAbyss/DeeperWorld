@@ -33,6 +33,7 @@ object MovementHandler {
         }
     }
 
+    //TODO abstract this away. Should instead do out of bounds action if out of bounds.
     private fun applyOutOfBoundsDamage(player: Player) {
         if (DeeperConfig.data.damageOutsideSections > 0.0
             && player.location.world !in DeeperConfig.data.damageExcludedWorlds
@@ -58,7 +59,7 @@ object MovementHandler {
         player: Player,
         sectionTransition: SectionTransition
     ): TeleportHandler {
-        if (sectionTransition.toSection == null || (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid)) {
+        if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
                 UndoMovementInvalidTeleportHandler(
                     player,

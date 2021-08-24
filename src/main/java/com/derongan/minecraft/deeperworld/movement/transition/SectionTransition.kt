@@ -10,8 +10,8 @@ import org.bukkit.entity.Player
 data class SectionTransition(
     val from: Location,
     val to: Location,
-    val fromSection: Section?,
-    val toSection: Section?,
+    val fromSection: Section,
+    val toSection: Section,
     val kind: TransitionKind
 )
 
@@ -22,8 +22,8 @@ enum class TransitionKind {
 
 internal fun SectionTransition.toEvent(player: Player): PlayerChangeSectionEvent {
     return if (this.kind == TransitionKind.ASCEND) {
-        PlayerAscendEvent(player, fromSection!!, toSection!!)
+        PlayerAscendEvent(player, fromSection, toSection)
     } else {
-        PlayerDescendEvent(player, fromSection!!, toSection!!)
+        PlayerDescendEvent(player, fromSection, toSection)
     }
 }

@@ -20,8 +20,8 @@ object ConfigSectionChecker : SectionChecker {
             SectionTransition(
                 from,
                 it,
-                from.section,
-                it.section,
+                from.section!!, // If inSectionTransition, must be non-null
+                it.section!!,
                 if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND
             )
         }
