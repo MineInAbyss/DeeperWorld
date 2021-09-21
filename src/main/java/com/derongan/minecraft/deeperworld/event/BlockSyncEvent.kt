@@ -7,7 +7,7 @@ import org.bukkit.event.block.BlockEvent
 
 class BlockSyncEvent(
     block: Block,
-    type: SyncType
+    val type: SyncType
 ) : BlockEvent(block), Cancellable {
     private var cancelled = false
 
