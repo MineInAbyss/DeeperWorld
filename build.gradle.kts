@@ -1,11 +1,15 @@
+import Com_mineinabyss_conventions_platform_gradle.Deps
+
 val idofrontVersion: String by project
 
 plugins {
     id("com.mineinabyss.conventions.kotlin")
-    kotlin("plugin.serialization")
     id("com.mineinabyss.conventions.papermc")
+    id("com.mineinabyss.conventions.slimjar")
+    id("com.mineinabyss.conventions.copyjar")
     id("com.mineinabyss.conventions.publication")
     id("com.mineinabyss.conventions.testing")
+    kotlin("plugin.serialization")
 }
 
 repositories {
@@ -29,9 +33,9 @@ dependencies {
 
     // Download at runtime
     slim(kotlin("stdlib-jdk8"))
-    slim("org.jetbrains.kotlinx:kotlinx-serialization-json")
-    slim("com.github.okkero:skedule")
-    slim("com.charleskorn.kaml:kaml")
+    slim(Deps.kotlinx.serialization.json)
+    slim(Deps.kotlinx.serialization.kaml)
+    slim(Deps.minecraft.skedule)
 
     // Shaded
     implementation("com.mineinabyss:idofront:$idofrontVersion")

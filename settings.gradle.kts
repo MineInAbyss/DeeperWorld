@@ -11,12 +11,12 @@ pluginManagement {
         id("io.github.0ffz.github-packages") version "1.2.0"
     }
 
-    val miaConventionsVersion: String by settings
+    val idofrontConventions: String by settings
 
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id.startsWith("com.mineinabyss.conventions"))
-                useVersion(miaConventionsVersion)
+                useVersion(idofrontConventions)
         }
     }
 }

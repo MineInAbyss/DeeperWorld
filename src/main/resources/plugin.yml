@@ -1,6 +1,6 @@
 name: DeeperWorld
 version: ${plugin_version}
-main: com.derongan.minecraft.deeperworld.DeeperWorld
+main: com.derongan.minecraft.deeperworld.DeeperWorldPlugin
 authors: [Derongan]
 api-version: '1.16'
 description: A plugin for letting you create a deeper world. Or at least fake it.
