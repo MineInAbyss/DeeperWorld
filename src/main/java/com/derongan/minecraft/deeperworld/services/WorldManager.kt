@@ -28,7 +28,7 @@ interface WorldManager {
      * @param world The world
      * @return The section or null if the location is not within a section.
      */
-    fun getSectionFor(x: Int, z: Int, world: World): Section?
+    fun getSectionFor(x: Int, y: Int, z: Int, world: World): Section?
 
     /**
      * Gets the section associated with the provided key
