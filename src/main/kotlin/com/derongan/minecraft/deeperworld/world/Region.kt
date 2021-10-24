@@ -11,7 +11,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Represents a region of the world. Contains all Y values.
+ * Represents a region of the world.
  */
 @Serializable(with = RegionSerializer::class)
 class Region(val a: CubePoint, val b: CubePoint) {
