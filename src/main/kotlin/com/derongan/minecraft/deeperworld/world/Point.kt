@@ -14,5 +14,5 @@ data class CubePoint(val x: Int, val y: Int, val z: Int) {
 
     operator fun div(o: Int) = CubePoint(x / o, y / o, z / o)
 
-    val volume get() = sqrt((x * x + y * y + z * z).toDouble())
+    val length get() = sqrt((x * x + z * z).toDouble())
 }

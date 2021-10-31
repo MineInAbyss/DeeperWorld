@@ -22,9 +22,10 @@ class Region(val a: CubePoint, val b: CubePoint) {
 
     val center: CubePoint get() = a.plus(b).div(2)
 
-    fun contains(x: Int, y: Int, z: Int): Boolean = x in min(a.x, b.x)..max(a.x, b.x) &&
-            y in min(a.y, b.y)..max(a.y, b.y) &&
-            z in min(a.z, b.z)..max(a.z, b.z)
+    fun contains(x: Int, y: Int, z: Int): Boolean =
+        x in min(a.x, b.x)..max(a.x, b.x) &&
+                y in min(a.y, b.y)..max(a.y, b.y) &&
+                z in min(a.z, b.z)..max(a.z, b.z)
 
     operator fun contains(p: CubePoint) = contains(p.x, p.y, p.z)
 }
