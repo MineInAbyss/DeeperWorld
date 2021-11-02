@@ -29,11 +29,11 @@ class WorldManagerImpl(config: FileConfiguration) : WorldManager {
     override fun unregisterSection(key: SectionKey) = TODO()
 
     override fun getSectionFor(location: Location): Section? {
-        return getSectionFor(location.blockX, location.blockZ, location.world!!)
+        return getSectionFor(location.blockX, location.blockY, location.blockZ, location.world!!)
     }
 
-    override fun getSectionFor(x: Int, z: Int, world: World): Section? = //TODO consider performance
-        sectionMap.values.firstOrNull { it.world == world && it.region.contains(x, z) }
+    override fun getSectionFor(x: Int, y: Int, z: Int, world: World): Section? = //TODO consider performance
+        sectionMap.values.firstOrNull { it.world == world && it.region.contains(x, y, z) }
 
     override fun getSectionFor(key: SectionKey) = sectionMap[key]
     override fun getSectionFor(key: String) = sectionMap[CustomSectionKey(key)]

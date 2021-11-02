@@ -1,7 +1,6 @@
 package com.derongan.minecraft.deeperworld.config
 
 import com.mineinabyss.idofront.time.TimeSpan
-import com.mineinabyss.idofront.time.TimeSpanSerializer
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.serialization.Serializable
 
