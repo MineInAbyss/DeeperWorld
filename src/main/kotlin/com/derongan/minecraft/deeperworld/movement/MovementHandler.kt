@@ -16,8 +16,7 @@ object MovementHandler {
     private val sectionCheckers = listOf(ConfigSectionChecker)
 
     fun handleMovement(player: Player, from: Location, to: Location) {
-
-        if (sectionCheckers.any { it.inSection(player) })
+        if (sectionCheckers.any { it.inSection(player) }) {
             sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
                 with(getTeleportHandler(player, it)) {
                     if (this.isValidTeleport()) {
@@ -28,7 +27,8 @@ object MovementHandler {
                         this.handleTeleport()
                     }
                 }
-            } else {
+            }
+        } else {
             applyOutOfBoundsDamage(player)
         }
     }
@@ -59,6 +59,11 @@ object MovementHandler {
         player: Player,
         sectionTransition: SectionTransition
     ): TeleportHandler {
+        if (sectionTransition.teleportUnnecessary) return object : TeleportHandler {
+            override fun handleTeleport() {}
+
+            override fun isValidTeleport() = true
+        }
         if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
                 UndoMovementInvalidTeleportHandler(

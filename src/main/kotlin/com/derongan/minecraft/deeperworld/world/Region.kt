@@ -15,6 +15,9 @@ import kotlin.math.min
  */
 @Serializable(with = RegionSerializer::class)
 class Region(val a: CubePoint, val b: CubePoint) {
+    val min = CubePoint(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z))
+    val max = CubePoint(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z))
+
     constructor(ax: Int, ay: Int, az: Int, bx: Int, by: Int, bz: Int) : this(
         CubePoint(ax, ay, az),
         CubePoint(bx, by, bz)

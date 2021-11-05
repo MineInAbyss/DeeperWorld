@@ -16,15 +16,21 @@ object ConfigSectionChecker : SectionChecker {
         from: Location,
         to: Location
     ): SectionTransition? {
-        return to.takeIf { to.inSectionTransition }?.correspondingLocation?.let {
-            SectionTransition(
-                from,
-                it,
-                from.section!!, // If inSectionTransition, must be non-null
-                it.section!!,
-                if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND
-            )
-        }
+        val fromSection = from.section ?: return null
+        val toSection = to.section ?: return null
+        val corrLoc = when {
+            to.inSectionTransition -> to.correspondingLocation
+            fromSection != toSection -> to
+            else -> null
+        } ?: return null
 
+        return SectionTransition(
+            from,
+            corrLoc,
+            fromSection,
+            corrLoc.section!!, // If inSectionTransition, must be non-null
+            if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND,
+            teleportUnnecessary = fromSection != toSection
+        )
     }
 }

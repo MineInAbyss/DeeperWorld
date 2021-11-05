@@ -12,7 +12,8 @@ data class SectionTransition(
     val to: Location,
     val fromSection: Section,
     val toSection: Section,
-    val kind: TransitionKind
+    val kind: TransitionKind,
+    val teleportUnnecessary: Boolean,
 )
 
 enum class TransitionKind {

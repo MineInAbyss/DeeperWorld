@@ -87,6 +87,7 @@ fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
 
 fun Section.overlapWith(other: Section): Int? {
     if (!isAdjacentTo(other)) return null
+    if(min(this.region.max.y, other.region.max.y) <= max(this.region.min.y, other.region.min.y)) return null
     // We decide which two points we are translating between.
     val (locA, locB) = when (isOnTopOf(other)) {
         true -> referenceBottom to other.referenceTop
@@ -94,7 +95,8 @@ fun Section.overlapWith(other: Section): Int? {
     }
     val yA = locA.blockY
     val yB = locB.blockY
-    return (world.maxHeight - max(yA, yB)) + (min(yA, yB) - world.minHeight)
+    return max(this.region.max.y, other.region.max.y) - max(yA, yB) +
+            (min(yA, yB) - min(this.region.min.y, other.region.min.y))
 }
 
 fun Section.isOnTopOf(other: Section) = key == other.aboveKey
