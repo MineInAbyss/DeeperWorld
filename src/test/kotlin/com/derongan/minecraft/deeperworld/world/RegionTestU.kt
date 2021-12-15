@@ -1,4 +1,4 @@
-package com.derongan.minecraft.deeperworld.world
+package com.mineinabyss.deeperworld.world
 
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
