@@ -5,7 +5,6 @@ val idofrontVersion: String by project
 plugins {
     id("com.mineinabyss.conventions.kotlin")
     id("com.mineinabyss.conventions.papermc")
-    id("com.mineinabyss.conventions.slimjar")
     id("com.mineinabyss.conventions.copyjar")
     id("com.mineinabyss.conventions.publication")
     id("com.mineinabyss.conventions.testing")
@@ -25,17 +24,17 @@ repositories {
 }
 
 dependencies {
+    // MineInAbyss platform
+    compileOnly(Deps.kotlin.stdlib)
+    compileOnly(Deps.kotlinx.serialization.json)
+    compileOnly(Deps.kotlinx.serialization.kaml)
+    compileOnly(Deps.minecraft.skedule)
+
     // Plugin APIs
     compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
-
-    // Download at runtime
-    slim(kotlin("stdlib-jdk8"))
-    slim(Deps.kotlinx.serialization.json)
-    slim(Deps.kotlinx.serialization.kaml)
-    slim(Deps.minecraft.skedule)
 
     // Shaded
     implementation("com.mineinabyss:idofront:$idofrontVersion")

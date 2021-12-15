@@ -14,10 +14,10 @@ import com.derongan.minecraft.deeperworld.synchronization.ContainerSyncListener
 import com.derongan.minecraft.deeperworld.synchronization.ExploitPreventionListener
 import com.derongan.minecraft.deeperworld.synchronization.SectionSyncListener
 import com.derongan.minecraft.deeperworld.world.WorldManagerImpl
-import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
+import com.mineinabyss.idofront.platforms.IdofrontPlatforms
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
-import com.mineinabyss.idofront.slimjar.IdofrontSlimjar
+import com.mineinabyss.idofront.time.inWholeTicks
 import com.okkero.skedule.schedule
 import org.bukkit.Material
 import org.bukkit.plugin.java.JavaPlugin
@@ -25,10 +25,10 @@ import org.bukkit.plugin.java.JavaPlugin
 val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
 class DeeperWorldPlugin : JavaPlugin() {
-    @ExperimentalCommandDSL
+    override fun onLoad() {
+        IdofrontPlatforms.load(this, "mineinabyss")
+    }
     override fun onEnable() {
-        IdofrontSlimjar.loadToLibraryLoader(this)
-
         saveDefaultConfig()
 
         registerService<WorldManager>(WorldManagerImpl(config))
@@ -50,7 +50,7 @@ class DeeperWorldPlugin : JavaPlugin() {
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
             schedule {
-                repeating(DeeperConfig.data.fall.hitDelay.inTicks.coerceAtLeast(1))
+                repeating(DeeperConfig.data.fall.hitDelay.inWholeTicks.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
@@ -64,7 +64,7 @@ class DeeperWorldPlugin : JavaPlugin() {
         if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
             DeeperConfig.data.time.mainWorld?.let { mainWorld ->
                 schedule {
-                    repeating(DeeperConfig.data.time.updateInterval.inTicks)
+                    repeating(DeeperConfig.data.time.updateInterval.inWholeTicks)
                     while (true) {
                         val mainWorldTime = mainWorld.time
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->

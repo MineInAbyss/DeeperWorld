@@ -1,3 +1,5 @@
+@file:UseSerializers(DurationSerializer::class)
+
 package com.derongan.minecraft.deeperworld.config
 
 import com.derongan.minecraft.deeperworld.deeperWorld
@@ -5,11 +7,13 @@ import com.derongan.minecraft.deeperworld.services.WorldManager
 import com.derongan.minecraft.deeperworld.world.section.Section
 import com.mineinabyss.idofront.config.IdofrontConfig
 import com.mineinabyss.idofront.config.ReloadScope
+import com.mineinabyss.idofront.serialization.DurationSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
-import com.mineinabyss.idofront.time.TimeSpan
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import org.bukkit.World
+import kotlin.time.Duration
 
 object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serializer()) {
     @Serializable
@@ -17,7 +21,7 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
         val sections: List<Section>,
         val damageOutsideSections: Double = 0.0,
         val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
-        val remountPacketDelay: TimeSpan = 40.ticks,
+        val remountPacketDelay: Duration = 40.ticks,
         val fall: FallDamageConfig = FallDamageConfig(),
         val time: TimeConfig = TimeConfig(),
     ) {
@@ -31,7 +35,10 @@ object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serial
                     section.aboveKey = prevSection.key
                     prevSection.belowKey = section.key
                 }
-                WorldManager.registerSection(section.key, section) //TODO do we need to pass both section key and section?
+                WorldManager.registerSection(
+                    section.key,
+                    section
+                ) //TODO do we need to pass both section key and section?
             }
         }
     }

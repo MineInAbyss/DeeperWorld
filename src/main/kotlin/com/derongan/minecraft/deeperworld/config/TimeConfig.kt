@@ -1,17 +1,18 @@
-@file:UseSerializers(WorldSerializer::class)
+@file:UseSerializers(WorldSerializer::class, DurationSerializer::class)
 
 package com.derongan.minecraft.deeperworld.config
 
+import com.mineinabyss.idofront.serialization.DurationSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
-import com.mineinabyss.idofront.time.TimeSpan
-import com.mineinabyss.idofront.time.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import org.bukkit.World
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 class TimeConfig(
-    val updateInterval: TimeSpan = 1800.seconds,
+    val updateInterval: Duration = 1800.seconds,
     val mainWorld: World? = null,
     val syncedWorlds: Map<World, Long> = emptyMap(),
 )

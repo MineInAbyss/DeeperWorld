@@ -13,7 +13,6 @@ import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
-import com.mineinabyss.idofront.commands.execution.ExperimentalCommandDSL
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
 import com.mineinabyss.idofront.commands.execution.stopCommand
 import com.mineinabyss.idofront.commands.extensions.actions.playerAction
@@ -30,17 +29,18 @@ import com.sk89q.worldedit.math.BlockVector3
 import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.session.ClipboardHolder
 import com.sk89q.worldedit.world.World
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
 
-
-@ExperimentalCommandDSL
-object DeeperCommandExecutor : IdofrontCommandExecutor() {
+object DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
     override val commands: CommandHolder = commands(deeperWorld) {
         ("deeperworld" / "dw") {
             "tp"(desc = "Enables or disables automatic teleports between sections for a player") {
                 val state by booleanArg()
                 playerAction {
                     player.canMoveSections = state
-                    sender.success("Automatic TP ${if(state) "enabled" else "disabled"} for ${player.name}")
+                    sender.success("Automatic TP ${if (state) "enabled" else "disabled"} for ${player.name}")
                 }
             }
             ("layerinfo" / "linfo" / "info")(desc = "Gets information about a players section") {
@@ -181,9 +181,32 @@ object DeeperCommandExecutor : IdofrontCommandExecutor() {
             }
         }
         "linfo"{
-            playerAction{
+            playerAction {
                 sender.error("Please use /dw linfo or /deeperworld layerinfo instead")
             }
+        }
+    }
+
+    override fun onTabComplete(
+        sender: CommandSender,
+        command: Command,
+        alias: String,
+        args: Array<out String>
+    ): List<String> {
+        return when (args.size) {
+            1 -> listOf(
+                "linfo",
+                "tp",
+                "time",
+                "sync"
+            ).filter { it.startsWith(args[0]) }
+            2 -> {
+                when (args[0]) {
+                    "tp" -> listOf("on", "off")
+                    else -> listOf()
+                }
+            }
+            else -> listOf()
         }
     }
 }

@@ -8,6 +8,7 @@ import com.derongan.minecraft.deeperworld.config.DeeperConfig
 import com.derongan.minecraft.deeperworld.datastructures.VehicleTree
 import com.derongan.minecraft.deeperworld.deeperWorld
 import com.derongan.minecraft.deeperworld.protocolManager
+import com.mineinabyss.idofront.time.inWholeTicks
 import com.okkero.skedule.schedule
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
@@ -62,7 +63,7 @@ class SectionTeleportPacketAdapter(
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
 
-                waitFor(DeeperConfig.data.remountPacketDelay.inTicks)
+                waitFor(DeeperConfig.data.remountPacketDelay.inWholeTicks)
 
                 player.vehicle?.let { vehicle ->
                     val playerVehicleID = vehicle.entityId
