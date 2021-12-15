@@ -45,7 +45,7 @@ class DeeperWorldPlugin : JavaPlugin() {
         )
 
         //register command executor
-        DeeperCommandExecutor
+        DeeperCommandExecutor()
 
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {

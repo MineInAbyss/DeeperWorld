@@ -33,7 +33,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 
-object DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
+class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
     override val commands: CommandHolder = commands(deeperWorld) {
         ("deeperworld" / "dw") {
             "tp"(desc = "Enables or disables automatic teleports between sections for a player") {
@@ -180,11 +180,6 @@ object DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 }
             }
         }
-        "linfo"{
-            playerAction {
-                sender.error("Please use /dw linfo or /deeperworld layerinfo instead")
-            }
-        }
     }
 
     override fun onTabComplete(
@@ -203,6 +198,7 @@ object DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
             2 -> {
                 when (args[0]) {
                     "tp" -> listOf("on", "off")
+                    "time" -> listOf("set", "add")
                     else -> listOf()
                 }
             }
