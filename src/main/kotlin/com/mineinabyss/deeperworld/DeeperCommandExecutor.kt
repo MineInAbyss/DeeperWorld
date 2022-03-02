@@ -1,34 +1,17 @@
 package com.mineinabyss.deeperworld
 
-import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
-import com.mineinabyss.deeperworld.synchronization.sync
-import com.mineinabyss.deeperworld.world.section.correspondingSection
-import com.mineinabyss.deeperworld.world.section.getCorrespondingLocation
-import com.mineinabyss.deeperworld.world.section.section
 import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
 import com.mineinabyss.idofront.commands.execution.stopCommand
 import com.mineinabyss.idofront.commands.extensions.actions.playerAction
-import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
-import com.sk89q.worldedit.EditSession
-import com.sk89q.worldedit.EditSessionBuilder
-import com.sk89q.worldedit.bukkit.WorldEditPlugin
-import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
-import com.sk89q.worldedit.function.operation.ForwardExtentCopy
-import com.sk89q.worldedit.function.operation.Operation
-import com.sk89q.worldedit.function.operation.Operations
-import com.sk89q.worldedit.math.BlockVector3
-import com.sk89q.worldedit.regions.CuboidRegion
-import com.sk89q.worldedit.session.ClipboardHolder
-import com.sk89q.worldedit.world.World
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
@@ -81,7 +64,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                     }
                 }
             }
-            "sync"(desc = "Sync blocks in range") {
+            /*"sync"(desc = "Sync blocks in range") {
                 val range by intArg()
                 playerAction {
                     val section =
@@ -178,7 +161,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                         }
                     }
                 }
-            }
+            }*/
         }
     }
 
@@ -192,8 +175,8 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
             1 -> listOf(
                 "linfo",
                 "tp",
-                "time",
-                "sync"
+                "time"
+                //"sync"
             ).filter { it.startsWith(args[0]) }
             2 -> {
                 when (args[0]) {
