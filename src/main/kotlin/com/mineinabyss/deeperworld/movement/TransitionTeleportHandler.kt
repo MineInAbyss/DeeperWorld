@@ -1,11 +1,9 @@
 package com.mineinabyss.deeperworld.movement
 
 import com.mineinabyss.deeperworld.datastructures.VehicleTree
-import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.extensions.getPassengersRecursive
 import com.mineinabyss.deeperworld.extensions.getRootVehicle
 import com.mineinabyss.deeperworld.protocolManager
-import com.okkero.skedule.schedule
 import org.bukkit.Location
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
@@ -49,7 +47,7 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
 
             // Delay the teleportation by 1 tick after passenger removal to avoid occasional
             // "Removing ticking entity!" exceptions.
-            deeperWorld.schedule {
+            /*deeperWorld.schedule {
                 waitFor(1)
 
                 player.teleportWithSpectatorsAsync(to) {
@@ -64,7 +62,7 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
                     )
                 }
 
-            }
+            }*/
         } else {
             val oldFallDistance = player.fallDistance
             val oldVelocity = player.velocity

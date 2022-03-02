@@ -8,6 +8,7 @@ plugins {
     id("com.mineinabyss.conventions.copyjar")
     id("com.mineinabyss.conventions.publication")
     id("com.mineinabyss.conventions.testing")
+    id("io.papermc.paperweight.userdev") version "1.3.4"
     kotlin("plugin.serialization")
 }
 
@@ -23,18 +24,24 @@ repositories {
     maven("https://jitpack.io")
 }
 
+java {
+    // Configure the java toolchain. This allows gradle to auto-provision JDK 17 on systems that only have JDK 8 installed for example.
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
 dependencies {
     // MineInAbyss platform
     compileOnly(Deps.kotlin.stdlib)
     compileOnly(Deps.kotlinx.serialization.json)
     compileOnly(Deps.kotlinx.serialization.kaml)
     compileOnly(Deps.minecraft.skedule)
+    paperDevBundle("1.18.1-R0.1-SNAPSHOT")
 
     // Plugin APIs
     compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
     compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
     compileOnly("nl.rutgerkok:blocklocker:1.9.2")
-    compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
+    compileOnly("com.comphenix.protocol:ProtocolLib:4.8.0-SNAPSHOT")
 
     // Shaded
     implementation("com.mineinabyss:idofront:$idofrontVersion")
