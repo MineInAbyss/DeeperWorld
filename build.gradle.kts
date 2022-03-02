@@ -20,7 +20,7 @@ repositories {
     maven("https://repo.mineinabyss.com/releases")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
-    maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
+    //maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
     maven("https://jitpack.io")
 }
 
@@ -38,9 +38,9 @@ dependencies {
     paperDevBundle("1.18.1-R0.1-SNAPSHOT")
 
     // Plugin APIs
-    compileOnly("com.fastasyncworldedit:FAWE-Bukkit:1.17-47") { isTransitive = false }
-    compileOnly("com.fastasyncworldedit:FAWE-Core:1.17-47")
-    compileOnly("nl.rutgerkok:blocklocker:1.9.2")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.0.1")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.0.1") { isTransitive = false }
+    compileOnly("nl.rutgerkok:blocklocker:1.10.4")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.8.0-SNAPSHOT")
 
     // Shaded

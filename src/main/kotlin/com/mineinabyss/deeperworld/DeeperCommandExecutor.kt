@@ -1,6 +1,5 @@
 package com.mineinabyss.deeperworld
 
-import com.fastasyncworldedit.core.util.EditSessionBuilder
 import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.config.DeeperConfig
@@ -20,6 +19,7 @@ import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
 import com.sk89q.worldedit.EditSession
+import com.sk89q.worldedit.EditSessionBuilder
 import com.sk89q.worldedit.bukkit.WorldEditPlugin
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy
