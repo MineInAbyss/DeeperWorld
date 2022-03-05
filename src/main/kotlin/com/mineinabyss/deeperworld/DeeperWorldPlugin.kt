@@ -2,9 +2,11 @@ package com.mineinabyss.deeperworld
 
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
+import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.listeners.MovementListener
 import com.mineinabyss.deeperworld.listeners.PlayerListener
+import com.mineinabyss.deeperworld.player.FallingDamageManager
 import com.mineinabyss.deeperworld.player.PlayerManagerImpl
 import com.mineinabyss.deeperworld.services.PlayerManager
 import com.mineinabyss.deeperworld.services.WorldManager
@@ -15,6 +17,8 @@ import com.mineinabyss.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.platforms.IdofrontPlatforms
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
+import com.mineinabyss.idofront.time.inWholeTicks
+import com.okkero.skedule.schedule
 import org.bukkit.Material
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -45,7 +49,7 @@ class DeeperWorldPlugin : JavaPlugin() {
 
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
-            /*deeperWorld.schedule {
+            deeperWorld.schedule {
                 repeating(DeeperConfig.data.fall.hitDelay.inWholeTicks.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
@@ -53,13 +57,13 @@ class DeeperWorldPlugin : JavaPlugin() {
                     }
                     yield()
                 }
-            }*/
+            }
         }
 
         // Initialize time synchronization task
         if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
             DeeperConfig.data.time.mainWorld?.let { mainWorld ->
-                /*deeperWorld.schedule {
+                deeperWorld.schedule {
                     repeating(DeeperConfig.data.time.updateInterval.inWholeTicks.coerceAtLeast(1))
                     while (true) {
                         val mainWorldTime = mainWorld.time
@@ -68,7 +72,7 @@ class DeeperWorldPlugin : JavaPlugin() {
                         }
                         yield()
                     }
-                }*/
+                }
             }
         }
     }

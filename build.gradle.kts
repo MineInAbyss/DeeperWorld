@@ -34,7 +34,7 @@ dependencies {
     compileOnly(Deps.kotlin.stdlib)
     compileOnly(Deps.kotlinx.serialization.json)
     compileOnly(Deps.kotlinx.serialization.kaml)
-    compileOnly("com.okkero:skedule:1.2.8")
+    compileOnly(Deps.minecraft.skedule)
     paperDevBundle("1.18.2-R0.1-SNAPSHOT")
 
     // Plugin APIs
