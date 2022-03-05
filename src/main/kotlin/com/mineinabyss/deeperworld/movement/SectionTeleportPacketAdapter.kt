@@ -2,10 +2,14 @@ package com.mineinabyss.deeperworld.movement
 
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.events.PacketAdapter
+import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
+import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.datastructures.VehicleTree
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.protocolManager
+import com.mineinabyss.idofront.time.inWholeTicks
+import com.okkero.skedule.schedule
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
@@ -33,7 +37,7 @@ class SectionTeleportPacketAdapter(
 
         protocolManager.removePacketListener(this)
 
-        /*deeperWorld.schedule {
+        deeperWorld.schedule {
             waitFor(1)
 
             oldLeashedEntities.toSet().forEach {
@@ -72,6 +76,6 @@ class SectionTeleportPacketAdapter(
                     })
                 }
             }
-        }*/
+        }
     }
 }

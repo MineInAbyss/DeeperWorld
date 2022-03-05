@@ -17,7 +17,7 @@ repositories {
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://www.rutgerkok.nl/repo")
     maven("https://repo.dmulloy2.net/nexus/repository/public/")
-    maven("https://repo.mineinabyss.com/releases")
+    maven("https://repo.mineinabyss.com/releases/")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
     //maven("https://mvn.intellectualsites.com/content/repositories/releases/") // FAWE
@@ -34,8 +34,8 @@ dependencies {
     compileOnly(Deps.kotlin.stdlib)
     compileOnly(Deps.kotlinx.serialization.json)
     compileOnly(Deps.kotlinx.serialization.kaml)
-    compileOnly(Deps.minecraft.skedule)
-    paperDevBundle("1.18.1-R0.1-SNAPSHOT")
+    compileOnly("com.okkero:skedule:1.2.8")
+    paperDevBundle("1.18.2-R0.1-SNAPSHOT")
 
     // Plugin APIs
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.0.1")
