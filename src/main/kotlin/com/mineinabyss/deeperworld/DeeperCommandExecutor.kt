@@ -1,6 +1,5 @@
 package com.mineinabyss.deeperworld
 
-import com.fastasyncworldedit.core.util.EditSessionBuilder
 import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.config.DeeperConfig
@@ -20,6 +19,7 @@ import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
 import com.sk89q.worldedit.EditSession
+import com.sk89q.worldedit.WorldEdit
 import com.sk89q.worldedit.bukkit.WorldEditPlugin
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy
@@ -108,9 +108,10 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                                 val clipboard = BlockArrayClipboard(region)
                                 val wep = WorldEditPlugin.getInstance().bukkitImplAdapter;
                                 val weWorld: World = wep.adapt(player.world)
-                                val editSession: EditSession = EditSessionBuilder(weWorld)
-                                    .limitUnlimited()
-                                    .build()
+                                val editSession: EditSession = WorldEdit.getInstance().newEditSessionBuilder()
+                                        .world(weWorld)
+                                        .limitUnlimited()
+                                        .build()
 
                                 val loc = player.location
                                 val linkedSection =

@@ -28,9 +28,9 @@ class DeeperWorldPlugin : JavaPlugin() {
     override fun onLoad() {
         IdofrontPlatforms.load(this, "mineinabyss")
     }
+
     override fun onEnable() {
         saveDefaultConfig()
-
         registerService<WorldManager>(WorldManagerImpl(config))
 
         DeeperConfig.load()
@@ -49,7 +49,7 @@ class DeeperWorldPlugin : JavaPlugin() {
 
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
-            schedule {
+            deeperWorld.schedule {
                 repeating(DeeperConfig.data.fall.hitDelay.inWholeTicks.coerceAtLeast(1))
                 while (true) {
                     server.onlinePlayers.forEach {
@@ -63,8 +63,8 @@ class DeeperWorldPlugin : JavaPlugin() {
         // Initialize time synchronization task
         if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
             DeeperConfig.data.time.mainWorld?.let { mainWorld ->
-                schedule {
-                    repeating(DeeperConfig.data.time.updateInterval.inWholeTicks)
+                deeperWorld.schedule {
+                    repeating(DeeperConfig.data.time.updateInterval.inWholeTicks.coerceAtLeast(1))
                     while (true) {
                         val mainWorldTime = mainWorld.time
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
@@ -78,7 +78,7 @@ class DeeperWorldPlugin : JavaPlugin() {
     }
 
     override fun onDisable() {
-        MovementListener.temporaryBedrock.forEach{
+        MovementListener.temporaryBedrock.forEach {
             it.type = Material.AIR
         }
     }
