@@ -28,9 +28,9 @@ class DeeperWorldPlugin : JavaPlugin() {
     override fun onLoad() {
         IdofrontPlatforms.load(this, "mineinabyss")
     }
+
     override fun onEnable() {
         saveDefaultConfig()
-
         registerService<WorldManager>(WorldManagerImpl(config))
 
         DeeperConfig.load()
@@ -78,7 +78,7 @@ class DeeperWorldPlugin : JavaPlugin() {
     }
 
     override fun onDisable() {
-        MovementListener.temporaryBedrock.forEach{
+        MovementListener.temporaryBedrock.forEach {
             it.type = Material.AIR
         }
     }

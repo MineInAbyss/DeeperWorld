@@ -1,14 +1,11 @@
-import Com_mineinabyss_conventions_platform_gradle.Deps
-
 val idofrontVersion: String by project
 
 plugins {
-    id("com.mineinabyss.conventions.kotlin")
-    id("com.mineinabyss.conventions.papermc")
-    id("com.mineinabyss.conventions.copyjar")
-    id("com.mineinabyss.conventions.publication")
-    id("com.mineinabyss.conventions.testing")
-    id("io.papermc.paperweight.userdev") version "1.3.4"
+    alias(libs.plugins.mia.kotlin)
+    alias(libs.plugins.mia.papermc)
+    alias(libs.plugins.mia.copyjar)
+    alias(libs.plugins.mia.publication)
+    alias(libs.plugins.mia.testing)
     kotlin("plugin.serialization")
 }
 
@@ -24,18 +21,12 @@ repositories {
     maven("https://jitpack.io")
 }
 
-java {
-    // Configure the java toolchain. This allows gradle to auto-provision JDK 17 on systems that only have JDK 8 installed for example.
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-}
-
 dependencies {
     // MineInAbyss platform
-    compileOnly(Deps.kotlin.stdlib)
-    compileOnly(Deps.kotlinx.serialization.json)
-    compileOnly(Deps.kotlinx.serialization.kaml)
-    compileOnly(Deps.minecraft.skedule)
-    paperDevBundle("1.18.2-R0.1-SNAPSHOT")
+    compileOnly(libs.kotlin.stdlib)
+    compileOnly(libs.kotlinx.serialization.json)
+    compileOnly(libs.kotlinx.serialization.kaml)
+    compileOnly(libs.minecraft.skedule)
 
     // Plugin APIs
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.0.1")
