@@ -6,11 +6,16 @@ import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
 import com.mineinabyss.deeperworld.movement.transition.toEvent
 import com.mineinabyss.idofront.events.call
-import com.mineinabyss.idofront.messaging.color
+import com.mineinabyss.idofront.messaging.miniMsg
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 object MovementHandler {
     private val sectionCheckers = listOf(ConfigSectionChecker)
@@ -46,10 +51,16 @@ object MovementHandler {
                     0.0,
                     player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value
                 ) //ignores armor
-            player.sendTitle(
-                "&cYou are not in a managed section".color(),
-                "&7You will take damage upon moving!".color(),
-                0, 20, 10
+            player.showTitle(
+                Title.title(
+                    "<red>You are not in a managed section".miniMsg(),
+                    "<gray>You will take damage upon moving!".miniMsg(),
+                    Title.Times.times(
+                        0.seconds.toJavaDuration(),
+                        1.seconds.toJavaDuration(),
+                        0.5.seconds.toJavaDuration()
+                    )
+                )
             )
         }
     }

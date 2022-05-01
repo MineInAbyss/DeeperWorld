@@ -1,9 +1,11 @@
 package com.mineinabyss.deeperworld.movement
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.listeners.MovementListener
 import com.mineinabyss.idofront.location.up
-import com.okkero.skedule.schedule
+import com.mineinabyss.idofront.time.ticks
+import kotlinx.coroutines.delay
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -18,11 +20,11 @@ class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: 
 
         // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
         // If no players are in this radius, destroy the bedrock.
-        deeperWorld.schedule {
-            this.repeating(1)
+        deeperWorld.launch {
             while (spawnedBedrock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()) {
-                yield()
+                delay(5.ticks)
             }
+        }.invokeOnCompletion { //Will also run if plugin is unloaded
             spawnedBedrock.type = Material.AIR
             MovementListener.temporaryBedrock.remove(spawnedBedrock)
         }

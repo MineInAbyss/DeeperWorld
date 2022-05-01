@@ -4,7 +4,6 @@ import com.mineinabyss.deeperworld.DeeperContext
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
-import com.mineinabyss.idofront.messaging.color
 import com.mineinabyss.idofront.messaging.info
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
@@ -58,7 +57,7 @@ object ContainerSyncListener : Listener {
                     return
             }
 
-            if(container is Lidded) {
+            if (container is Lidded) {
                 (linkedBlock.state as Lidded).open();
                 if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
             }
@@ -77,7 +76,7 @@ object ContainerSyncListener : Listener {
                     //try adding items to the chest above, if something doesn't fit, drop it
                     invItems.map { linkedInventory.addItem(it).values }.flatten().also {
                         if (it.isNotEmpty())
-                            player.info("&6This container had items in it, which have been ejected to synchronize it with the upper section.".color())
+                            player.info("<gold>This container had items in it, which have been ejected to synchronize it with the upper section.")
                     }.dropItems(loc, true)
                     container.inventory.clear()
                 }
@@ -95,7 +94,7 @@ object ContainerSyncListener : Listener {
     @EventHandler
     fun InventoryCloseEvent.onCloseInventory() {
         inventory.location?.block?.sync { original, corr ->
-            if(original.state is Lidded) {
+            if (original.state is Lidded) {
                 (original.state as Lidded).close()
                 (corr.state as Lidded).close()
             }

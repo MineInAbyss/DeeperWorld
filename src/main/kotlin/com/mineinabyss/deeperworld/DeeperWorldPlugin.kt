@@ -2,6 +2,7 @@ package com.mineinabyss.deeperworld
 
 import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.listeners.MovementListener
@@ -17,8 +18,8 @@ import com.mineinabyss.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.platforms.IdofrontPlatforms
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
-import com.mineinabyss.idofront.time.inWholeTicks
-import com.okkero.skedule.schedule
+import com.mineinabyss.idofront.time.ticks
+import kotlinx.coroutines.delay
 import org.bukkit.Material
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -49,13 +50,13 @@ class DeeperWorldPlugin : JavaPlugin() {
 
         // Initialize falling damage task
         if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
-            deeperWorld.schedule {
-                repeating(DeeperConfig.data.fall.hitDelay.inWholeTicks.coerceAtLeast(1))
+            val hitDellay = DeeperConfig.data.fall.hitDelay.coerceAtLeast(1.ticks)
+            deeperWorld.launch {
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
                     }
-                    yield()
+                    delay(hitDellay)
                 }
             }
         }
@@ -63,14 +64,14 @@ class DeeperWorldPlugin : JavaPlugin() {
         // Initialize time synchronization task
         if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
             DeeperConfig.data.time.mainWorld?.let { mainWorld ->
-                deeperWorld.schedule {
-                    repeating(DeeperConfig.data.time.updateInterval.inWholeTicks.coerceAtLeast(1))
+                val updateInterval = DeeperConfig.data.time.updateInterval.coerceAtLeast(1.ticks)
+                deeperWorld.launch {
                     while (true) {
                         val mainWorldTime = mainWorld.time
                         DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
                             world.time = (mainWorldTime + offset) % FULL_DAY_TIME
                         }
-                        yield()
+                        delay(updateInterval)
                     }
                 }
             }
