@@ -11,6 +11,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://www.rutgerkok.nl/repo")
     maven("https://repo.dmulloy2.net/nexus/repository/public/")
