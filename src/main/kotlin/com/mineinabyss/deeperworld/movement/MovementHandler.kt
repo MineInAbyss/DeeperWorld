@@ -7,8 +7,6 @@ import com.mineinabyss.deeperworld.movement.transition.TransitionKind
 import com.mineinabyss.deeperworld.movement.transition.toEvent
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.messaging.miniMsg
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -32,7 +30,7 @@ object MovementHandler {
                         this.handleTeleport()
                     }
                 }
-            }
+            } ?: return
         } else {
             applyOutOfBoundsDamage(player)
         }
@@ -91,6 +89,6 @@ object MovementHandler {
             }
         }
 
-        return TransitionTeleportHandler(player, sectionTransition.from, sectionTransition.to);
+        return TransitionTeleportHandler(player, sectionTransition.from, sectionTransition.to)
     }
 }

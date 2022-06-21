@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven("https://repo.mineinabyss.com/releases")
-        maven("https://papermc.io/repo/repository/maven-public/") //Paper
+        maven("https://repo.papermc.io/repository/maven-public/") //Paper
     }
 
     plugins {
