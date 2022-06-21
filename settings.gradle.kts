@@ -1,9 +1,8 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        mavenLocal()
         maven("https://repo.mineinabyss.com/releases")
-        maven("https://papermc.io/repo/repository/maven-public/") //Paper
+        maven("https://repo.papermc.io/repository/maven-public/") //Paper
     }
 
     plugins {
@@ -22,7 +21,6 @@ dependencyResolutionManagement {
     val idofrontVersion: String by settings
 
     repositories {
-        mavenLocal()
         maven("https://repo.mineinabyss.com/releases")
     }
     versionCatalogs{
