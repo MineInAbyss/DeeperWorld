@@ -32,24 +32,21 @@ object MovementHandler {
                 }
             } ?: return
         } else {
-            applyOutOfBoundsDamage(player)
+            player.applyOutOfBoundsDamage()
         }
     }
 
     //TODO abstract this away. Should instead do out of bounds action if out of bounds.
-    private fun applyOutOfBoundsDamage(player: Player) {
+    private fun Player.applyOutOfBoundsDamage() {
         if (DeeperConfig.data.damageOutsideSections > 0.0
-            && player.location.world !in DeeperConfig.data.damageExcludedWorlds
-            && (player.gameMode == GameMode.SURVIVAL || player.gameMode == GameMode.ADVENTURE)
-            && player.location.world in (DeeperConfig.data.worlds)
+            && location.world !in DeeperConfig.data.damageExcludedWorlds
+            && (gameMode == GameMode.SURVIVAL || gameMode == GameMode.ADVENTURE)
+            && location.world in (DeeperConfig.data.worlds)
         ) {
-            player.damage(0.01) //give a damage effect
-            player.health = (player.health - DeeperConfig.data.damageOutsideSections / 10)
-                .coerceIn(
-                    0.0,
-                    player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value
-                ) //ignores armor
-            player.showTitle(
+            damage(0.01) //give a damage effect
+            health = (health - DeeperConfig.data.damageOutsideSections / 10)
+                .coerceIn(0.0, getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
+            showTitle(
                 Title.title(
                     "<red>You are not in a managed section".miniMsg(),
                     "<gray>You will take damage upon moving!".miniMsg(),
