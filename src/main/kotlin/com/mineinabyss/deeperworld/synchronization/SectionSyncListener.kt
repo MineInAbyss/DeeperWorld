@@ -107,6 +107,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun BlockGrowEvent.syncBlockGrow() {
+        if (!block.location.inSectionOverlap) return
         newState.location.sync()
     }
 
