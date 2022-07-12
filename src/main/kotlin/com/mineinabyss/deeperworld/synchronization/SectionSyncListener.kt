@@ -1,11 +1,15 @@
 package com.mineinabyss.deeperworld.synchronization
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.DeeperContext
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
 import com.mineinabyss.deeperworld.event.SyncType
 import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.events.call
+import com.mineinabyss.idofront.time.ticks
+import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
@@ -64,14 +68,12 @@ object SectionSyncListener : Listener {
                 }
 
                 //sync any changes to BlockLocker's signs`
-                if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines()
-                        .first() == Component.text("[Private]")
-                ) {
+                if (DeeperContext.isBlockLockerLoaded && state is Sign &&
+                    state.lines().first() == Component.text("[Private]")) {
                     syncBlockLocker(corr)
                 }
 
                 val blockData = block.blockData
-
                 if (blockData is Bed) {
                     corr.setType(Material.STONE, false)
                     when (blockData.part) {
@@ -99,28 +101,34 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockPlaceEvent.syncBlockPlace() {
         BlockSyncEvent(block, SyncType.PLACE).call {
-            block.sync { original, corr ->
-                corr.blockData = original.blockData.clone()
-            }
+            block.sync(updateBlockData(block.blockData))
         }
     }
 
     @EventHandler
     fun BlockGrowEvent.syncBlockGrow() {
         if (!block.location.inSectionOverlap) return
-        newState.location.sync()
+        deeperWorld.launch {
+            delay(1.ticks)
+            block.sync(updateBlockData(block.blockData))
+        }
     }
 
     // Since [BlockGrowEvent] doesn't get called for bonemeal-growth
     @EventHandler
     fun PlayerInteractEvent.syncBlockGrowFromBoneMeal() {
         val block = clickedBlock ?: return
-        val corrBlock = block.location.correspondingLocation?.block
+        val corrBlock = block.location.correspondingLocation?.block ?: return
+
         if (action != Action.RIGHT_CLICK_BLOCK || hand != EquipmentSlot.HAND) return
         if (player.inventory.getItem(EquipmentSlot.HAND).type != Material.BONE_MEAL) return
         if (block.blockData !is Ageable || block is Sapling) return
-        if (!block.location.inSectionOverlap || corrBlock?.type != block.type) return
-        block.sync(updateBlockData(block.blockData))
+        if (!block.location.inSectionOverlap || corrBlock.type != block.type) return
+
+        deeperWorld.launch {
+            delay(1.ticks)
+            block.sync(updateBlockData(block.blockData))
+        }
     }
 
     // Copies structure onto another section
@@ -133,10 +141,11 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
+        val data = block.blockData
         if (
-            (block.blockData is Bisected || block.blockData is Bed)
-            && block.blockData !is TrapDoor
-            && block.blockData !is Stairs
+            (data is Bisected || data is Bed)
+            && data !is TrapDoor
+            && data !is Stairs
         ) replacedBlockStates.forEach { it.block.sync() }
     }
 
@@ -148,7 +157,7 @@ object SectionSyncListener : Listener {
             if (data is Waterlogged) {
                 data.isWaterlogged = true
                 // Trigger block update for water
-                if(corr.state !is Container) corr.type = material
+                if (corr.state !is Container) corr.type = material
                 corr.type = orig.type
                 corr.blockData = data
             } else
@@ -167,12 +176,11 @@ object SectionSyncListener : Listener {
         }
 
     /** Synchronize explosions */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     fun EntityExplodeEvent.syncExplosions() {
-        if (!isCancelled)
-            blockList().forEach { explodedBlock ->
-                explodedBlock.location.sync(updateMaterial(Material.AIR))
-            }
+        blockList().forEach { explodedBlock ->
+            explodedBlock.location.sync(updateMaterial(Material.AIR))
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
