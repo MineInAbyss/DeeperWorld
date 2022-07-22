@@ -1,23 +1,27 @@
 package com.mineinabyss.deeperworld.synchronization
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.DeeperContext
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
 import com.mineinabyss.deeperworld.event.SyncType
-import com.mineinabyss.deeperworld.world.section.correspondingSection
+import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
-import com.mineinabyss.deeperworld.world.section.section
 import com.mineinabyss.idofront.events.call
-import com.mineinabyss.idofront.messaging.error
+import com.mineinabyss.idofront.time.ticks
+import kotlinx.coroutines.delay
+import net.kyori.adventure.text.Component
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.Container
 import org.bukkit.block.ShulkerBox
 import org.bukkit.block.Sign
+import org.bukkit.block.data.Ageable
 import org.bukkit.block.data.Bisected
-import org.bukkit.block.data.Levelled
 import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.type.Bed
+import org.bukkit.block.data.type.Sapling
 import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.entity.EntityType
@@ -29,6 +33,9 @@ import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.EntitySpawnEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerBucketFillEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.world.StructureGrowEvent
+import org.bukkit.inventory.EquipmentSlot
 
 private fun syncBlockLocker(corr: Block) {
     blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
@@ -61,12 +68,12 @@ object SectionSyncListener : Listener {
                 }
 
                 //sync any changes to BlockLocker's signs`
-                if (DeeperContext.isBlockLockerLoaded && state is Sign && state.lines[0] == "[Private]") {
+                if (DeeperContext.isBlockLockerLoaded && state is Sign &&
+                    state.lines().first() == Component.text("[Private]")) {
                     syncBlockLocker(corr)
                 }
 
                 val blockData = block.blockData
-
                 if (blockData is Bed) {
                     corr.setType(Material.STONE, false)
                     when (blockData.part) {
@@ -94,52 +101,52 @@ object SectionSyncListener : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockPlaceEvent.syncBlockPlace() {
         BlockSyncEvent(block, SyncType.PLACE).call {
-            block.sync { original, corr ->
-                if (original.type.name.contains("SHULKER")) {
-                    isCancelled = true
-                    player.error("Shulkers are disabled near section changes due to item loss bugs.")
-                    return@sync
-                }
-                corr.blockData = original.blockData.clone()
-            }
+            block.sync(updateBlockData(block.blockData))
         }
     }
 
-    //handles fertilized crops as well
-    //disabled for now as it causes significant lag.
-    /*@EventHandler
-    fun syncBlockGrow(blockEvent: BlockGrowEvent) {
-        blockEvent.newState.location.sync()
-    }*/
-
-
     @EventHandler
-    fun BlockPhysicsEvent.sync() {
-        val section = block.location.section ?: return
-        val section2 = block.location.correspondingSection ?: return
+    fun BlockGrowEvent.syncBlockGrow() {
+        if (!block.location.inSectionOverlap) return
+        deeperWorld.launch {
+            delay(1.ticks)
+            block.sync(updateBlockData(block.blockData))
+        }
+    }
 
-        if (
-            block.location.inSectionOverlap
-//            && section.isOnTopOf(section2)
-            && block.blockData !is Levelled // Water / Lava
-        ) isCancelled = true
+    // Since [BlockGrowEvent] doesn't get called for bonemeal-growth
+    @EventHandler
+    fun PlayerInteractEvent.syncBlockGrowFromBoneMeal() {
+        val block = clickedBlock ?: return
+        val corrBlock = block.location.correspondingLocation?.block ?: return
 
-//        if(!section.isOnTopOf(section2)) {
-//            block.sync()
-//        }
+        if (action != Action.RIGHT_CLICK_BLOCK || hand != EquipmentSlot.HAND) return
+        if (player.inventory.getItem(EquipmentSlot.HAND).type != Material.BONE_MEAL) return
+        if (block.blockData !is Ageable || block is Sapling) return
+        if (!block.location.inSectionOverlap || corrBlock.type != block.type) return
+
+        deeperWorld.launch {
+            delay(1.ticks)
+            block.sync(updateBlockData(block.blockData))
+        }
+    }
+
+    // Copies structure onto another section
+    @EventHandler
+    fun StructureGrowEvent.syncStructureGrowth() {
+        if (blocks.all { (it.block.type == it.block.location.correspondingLocation?.block?.type) })
+            blocks.forEach { it.block.sync(updateBlockData(it.blockData)) }
+        else isCancelled = true
     }
 
     @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
-        if(
-            (block.blockData is Bisected || block.blockData is Bed)
-            && block.blockData !is TrapDoor
-            && block.blockData !is Stairs
-        ) {
-            for (blockState in replacedBlockStates) {
-                blockState.block.sync()
-            }
-        }
+        val data = block.blockData
+        if (
+            (data is Bisected || data is Bed)
+            && data !is TrapDoor
+            && data !is Stairs
+        ) replacedBlockStates.forEach { it.block.sync() }
     }
 
     @EventHandler
@@ -150,7 +157,7 @@ object SectionSyncListener : Listener {
             if (data is Waterlogged) {
                 data.isWaterlogged = true
                 // Trigger block update for water
-                if(corr.state !is Container) corr.type = material
+                if (corr.state !is Container) corr.type = material
                 corr.type = orig.type
                 corr.blockData = data
             } else
@@ -169,28 +176,30 @@ object SectionSyncListener : Listener {
         }
 
     /** Synchronize explosions */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     fun EntityExplodeEvent.syncExplosions() {
-        if (!isCancelled)
-            blockList().forEach { explodedBlock ->
-                explodedBlock.location.sync(updateMaterial(Material.AIR))
-            }
+        blockList().forEach { explodedBlock ->
+            explodedBlock.location.sync(updateMaterial(Material.AIR))
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun SignChangeEvent.syncSignText() {
-        block.sync(signUpdater(lines))
+        block.sync(signUpdater(lines()))
     }
 
-    /** Disables Iron Golem and Wither summons in section transitions due to duping **/
+    /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/
     @EventHandler
     fun EntitySpawnEvent.onEntitySummon() {
         if (entity.location.inSectionOverlap &&
-           (entityType == EntityType.WITHER || entityType == EntityType.IRON_GOLEM)) {
-            isCancelled = true
-            entity.location.getNearbyPlayers(5.0).forEach {
-                it.error("Spawning of $entityType is disabled in section overlaps.")
-            }
+            (entityType == EntityType.WITHER || entityType == EntityType.IRON_GOLEM)
+        ) {
+            entity.world.getNearbyEntitiesByType(
+                entityType.entityClass,
+                entity.location.correspondingLocation ?: return,
+                1.0
+            ).firstOrNull()?.remove() ?: return
         }
+
     }
 }

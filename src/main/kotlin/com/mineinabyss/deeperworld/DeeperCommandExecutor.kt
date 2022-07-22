@@ -6,6 +6,7 @@ import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
 import com.mineinabyss.deeperworld.synchronization.sync
+import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.correspondingSection
 import com.mineinabyss.deeperworld.world.section.getCorrespondingLocation
 import com.mineinabyss.deeperworld.world.section.section
@@ -41,6 +42,11 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 playerAction {
                     player.canMoveSections = state
                     sender.success("Automatic TP ${if (state) "enabled" else "disabled"} for ${player.name}")
+                }
+            }
+            "tpcorr" {
+                playerAction {
+                    player.teleport(player.location.correspondingLocation ?: return@playerAction)
                 }
             }
             ("layerinfo" / "linfo" / "info")(desc = "Gets information about a players section") {
@@ -106,7 +112,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
 
                                 val region = CuboidRegion(pos1, pos2)
                                 val clipboard = BlockArrayClipboard(region)
-                                val wep = WorldEditPlugin.getInstance().bukkitImplAdapter;
+                                val wep = WorldEditPlugin.getInstance().bukkitImplAdapter
                                 val weWorld: World = wep.adapt(player.world)
                                 val editSession: EditSession = WorldEdit.getInstance().newEditSessionBuilder()
                                         .world(weWorld)
@@ -121,7 +127,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                                     ?: error("Corresponding Location not found")
 
                                 val offset = if (pos2.y < 0) pos2.y else 0
-                                TaskManager.IMP.taskNowAsync {
+                                TaskManager.taskManager().taskNowAsync {
                                     player.success("Blocks syncing...")
                                     editSession.use { editSession ->
                                         // Copy

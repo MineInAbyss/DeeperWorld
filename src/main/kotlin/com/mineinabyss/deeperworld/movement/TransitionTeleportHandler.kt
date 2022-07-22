@@ -95,14 +95,13 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
 
     private fun Player.getLeashedEntities(): List<LivingEntity> {
         // Max leashed entity range is 10 blocks, therefore these parameter values
-        return getNearbyEntities(20.0, 20.0, 20.0)
-            .filterIsInstance<LivingEntity>()
+        return location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
             .filter { it.isLeashed && it.leashHolder == this }
     }
 
     private fun Player.teleportWithSpectatorsAsync(loc: Location, thenRun: (Boolean) -> Unit) {
-        val nearbySpectators = getNearbyEntities(5.0, 5.0, 5.0)
-            .filterIsInstance<Player>()
+        val nearbySpectators =
+            location.getNearbyEntitiesByType(Player::class.java, 5.0)
             .filter { it.spectatorTarget == this }
 
         nearbySpectators.forEach {
