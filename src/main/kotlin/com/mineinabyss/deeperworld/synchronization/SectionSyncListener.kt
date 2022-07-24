@@ -50,6 +50,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
+        if (!block.location.inSectionOverlap) return
         BlockSyncEvent(block, SyncType.BREAK).call {
             block.location.sync { original, corr ->
                 val state = corr.state
@@ -100,6 +101,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockPlaceEvent.syncBlockPlace() {
+        if (!block.location.inSectionOverlap) return
         BlockSyncEvent(block, SyncType.PLACE).call {
             block.sync(updateBlockData(block.blockData))
         }
@@ -107,6 +109,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun BlockGrowEvent.syncBlockGrow() {
+        if (!block.location.inSectionOverlap) return
         if (!block.location.inSectionOverlap) return
         deeperWorld.launch {
             delay(1.ticks)
@@ -120,6 +123,7 @@ object SectionSyncListener : Listener {
         val block = clickedBlock ?: return
         val corrBlock = block.location.correspondingLocation?.block ?: return
 
+        if (!block.location.inSectionOverlap) return
         if (action != Action.RIGHT_CLICK_BLOCK || hand != EquipmentSlot.HAND) return
         if (player.inventory.getItem(EquipmentSlot.HAND).type != Material.BONE_MEAL) return
         if (block.blockData !is Ageable || block is Sapling) return
@@ -134,6 +138,7 @@ object SectionSyncListener : Listener {
     // Copies structure onto another section
     @EventHandler
     fun StructureGrowEvent.syncStructureGrowth() {
+        if (!location.inSectionOverlap) return
         if (blocks.all { (it.block.type == it.block.location.correspondingLocation?.block?.type) })
             blocks.forEach { it.block.sync(updateBlockData(it.blockData)) }
         else isCancelled = true
@@ -141,6 +146,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
+        if (!block.location.inSectionOverlap) return
         val data = block.blockData
         if (
             (data is Bisected || data is Bed)
@@ -150,7 +156,8 @@ object SectionSyncListener : Listener {
     }
 
     @EventHandler
-    fun PlayerBucketEmptyEvent.syncWaterEmpty() =
+    fun PlayerBucketEmptyEvent.syncWaterEmpty() {
+        if (!block.location.inSectionOverlap) return
         block.sync { orig, corr ->
             val data = corr.blockData
             val material = if (bucket === Material.LAVA_BUCKET) Material.LAVA else Material.WATER
@@ -163,9 +170,12 @@ object SectionSyncListener : Listener {
             } else
                 updateMaterial(material)(orig, corr)
         }
+    }
+
 
     @EventHandler
-    fun PlayerBucketFillEvent.syncWaterFill() =
+    fun PlayerBucketFillEvent.syncWaterFill() {
+        if (!block.location.inSectionOverlap) return
         block.sync { orig, corr ->
             val data = corr.blockData
             if (data is Waterlogged) {
@@ -174,6 +184,8 @@ object SectionSyncListener : Listener {
             } else
                 updateMaterial(Material.AIR)(orig, corr)
         }
+    }
+
 
     /** Synchronize explosions */
     @EventHandler(ignoreCancelled = true)
@@ -185,6 +197,7 @@ object SectionSyncListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun SignChangeEvent.syncSignText() {
+        if (!block.location.inSectionOverlap) return
         block.sync(signUpdater(lines()))
     }
 
