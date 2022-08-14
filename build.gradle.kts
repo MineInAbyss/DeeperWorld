@@ -32,7 +32,7 @@ dependencies {
     compileOnly(libs.minecraft.plugin.fawe.core)
     compileOnly(libs.minecraft.plugin.fawe.bukkit) { isTransitive = false }
     compileOnly(libs.minecraft.plugin.protocollib)
-    compileOnly(deeperlibs.minecraft.plugin.blocklocker)
+    compileOnly(deeperLibs.minecraft.plugin.blocklocker)
 
     // Shaded
     implementation(libs.idofront.core)

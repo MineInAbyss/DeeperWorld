@@ -25,7 +25,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs{
         create("libs").from("com.mineinabyss:catalog:$idofrontVersion")
-        create("deeperlibs").from(files("gradle/deeperlibs.versions.toml"))
+        create("deeperLibs").from(files("gradle/deeperLibs.versions.toml"))
     }
 }
 
