@@ -1,2 +1,7 @@
+[versions]
+geary = "0.19.109"
+
 [libraries]
+geary = { module = "com.mineinabyss:geary-papermc-core", version.ref = "geary" }
+
 minecraft-plugin-blocklocker = "nl.rutgerkok:blocklocker:1.10.4"

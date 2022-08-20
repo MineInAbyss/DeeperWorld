@@ -1,7 +1,8 @@
 package com.mineinabyss.deeperworld.player
 
-import com.mineinabyss.deeperworld.config.DeeperConfig
+import com.mineinabyss.deeperworld.config.deeperConfig
 import com.mineinabyss.deeperworld.extensions.getRootVehicle
+import com.mineinabyss.idofront.location.up
 import org.bukkit.GameMode.ADVENTURE
 import org.bukkit.GameMode.SURVIVAL
 import org.bukkit.Particle
@@ -10,7 +11,7 @@ import org.bukkit.entity.Player
 internal object FallingDamageManager {
     fun updateFallingDamage(player: Player) {
         val actualFallDistance = player.getRootVehicle()?.fallDistance ?: player.fallDistance
-        val fallConfig = DeeperConfig.data.fall
+        val fallConfig = deeperConfig.fall
 
         if (actualFallDistance > fallConfig.maxSafeDist
             && !player.isGliding
@@ -28,7 +29,7 @@ internal object FallingDamageManager {
             if (fallConfig.spawnParticles)
                 player.world.spawnParticle(
                     Particle.CLOUD,
-                    player.location.apply { y += player.velocity.y * 2 },
+                    player.location.up(player.velocity.y * 2),
                     10, 0.5, 0.75, 0.5, .1
                 )
         }

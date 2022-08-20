@@ -14,15 +14,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
 object PlayerListener : Listener {
     @EventHandler
     fun PlayerTeleportEvent.onPlayerTeleport() {
-        if (player.gameMode == CREATIVE) return
-        if (cause != ENDER_PEARL && cause != CHORUS_FRUIT) return
-        if (!player.canMoveSections) return
+        if (player.gameMode == CREATIVE || !player.canMoveSections || cause == ENDER_PEARL || cause == CHORUS_FRUIT) return
 
-        if (
-            to.section == null ||
-            to.section != player.location.section ||
-            to.inSectionTransition
-        ) {
+        if (to.section == null || to.section != player.location.section || to.inSectionTransition) {
             player.error("Teleportation is disabled between Layers and Sections.")
             isCancelled = true
         }

@@ -2,7 +2,7 @@ package com.mineinabyss.deeperworld
 
 import com.fastasyncworldedit.core.util.TaskManager
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
-import com.mineinabyss.deeperworld.config.DeeperConfig
+import com.mineinabyss.deeperworld.config.deeperConfig
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
 import com.mineinabyss.deeperworld.synchronization.sync
@@ -62,11 +62,11 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 val time by intArg()
                 "set"(desc = "Set the time of the main synchronization world and the other worlds with their respective offsets") {
                     playerAction {
-                        DeeperConfig.data.time.mainWorld?.let { world ->
+                        deeperConfig.time.mainWorld?.let { world ->
                             world.time = time.toLong()
                         } ?: command.stopCommand("No main world specified for time synchronization. Check the config!")
 
-                        DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                        deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
                             world.time = (time.toLong() + offset) % FULL_DAY_TIME
                         }
 
@@ -75,10 +75,10 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 }
                 "add"(desc = "Add to the main synchronization world time and the other worlds with their respective offsets") {
                     playerAction {
-                        DeeperConfig.data.time.mainWorld?.let { mainWorld ->
+                        deeperConfig.time.mainWorld?.let { mainWorld ->
                             mainWorld.time += time.toLong()
 
-                            DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                            deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
                                 world.time = (mainWorld.time + offset) % FULL_DAY_TIME
                             }
 

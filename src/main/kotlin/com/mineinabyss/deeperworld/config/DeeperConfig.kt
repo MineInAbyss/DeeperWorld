@@ -15,6 +15,7 @@ import kotlinx.serialization.UseSerializers
 import org.bukkit.World
 import kotlin.time.Duration
 
+val deeperConfig = DeeperConfig.data
 object DeeperConfig : IdofrontConfig<DeeperConfig.Data>(deeperWorld, Data.serializer()) {
     @Serializable
     data class Data(

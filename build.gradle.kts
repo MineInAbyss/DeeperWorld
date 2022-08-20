@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     // MineInAbyss platform
+    compileOnly(deeperLibs.geary)
     compileOnly(libs.kotlin.stdlib)
     compileOnly(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlinx.serialization.kaml)
