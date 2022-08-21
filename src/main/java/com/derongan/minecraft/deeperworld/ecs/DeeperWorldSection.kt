@@ -8,4 +8,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("deeperworld:section")
 //TODO add other features of a section.
-data class DeeperWorldSection(val name: SectionKey)
+data class Section(val name: SectionKey)
+typealias DeeperWorldSection = Section

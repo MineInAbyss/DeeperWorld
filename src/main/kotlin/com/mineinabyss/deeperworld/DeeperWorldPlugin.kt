@@ -17,6 +17,7 @@ import com.mineinabyss.deeperworld.synchronization.ContainerSyncListener
 import com.mineinabyss.deeperworld.synchronization.ExploitPreventionListener
 import com.mineinabyss.deeperworld.synchronization.SectionSyncListener
 import com.mineinabyss.deeperworld.world.WorldManagerImpl
+import com.mineinabyss.geary.papermc.dsl.gearyAddon
 import com.mineinabyss.idofront.platforms.IdofrontPlatforms
 import com.mineinabyss.idofront.plugin.registerEvents
 import com.mineinabyss.idofront.plugin.registerService
@@ -48,7 +49,9 @@ class DeeperWorldPlugin : JavaPlugin() {
         )
 
         if (DeeperContext.isGearyLoaded)
-            registerEvents(SectionChangeListener)
+            gearyAddon {
+                system(SectionChangeListener)
+            }
 
         //register command executor
         DeeperCommandExecutor()

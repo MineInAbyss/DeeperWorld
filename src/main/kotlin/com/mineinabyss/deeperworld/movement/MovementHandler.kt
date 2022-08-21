@@ -1,11 +1,11 @@
 package com.mineinabyss.deeperworld.movement
 
+import com.derongan.minecraft.deeperworld.ecs.DeeperWorldSection
 import com.mineinabyss.deeperworld.config.deeperConfig
 import com.mineinabyss.deeperworld.movement.transition.ConfigSectionChecker
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
-import com.mineinabyss.deeperworld.movement.transition.toEvent
-import com.mineinabyss.idofront.events.call
+import com.mineinabyss.geary.papermc.access.toGeary
 import com.mineinabyss.idofront.messaging.miniMsg
 import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
@@ -23,9 +23,8 @@ object MovementHandler {
             sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
                 with(getTeleportHandler(player, it)) {
                     if (this.isValidTeleport()) {
-                        it.toEvent(player).call {
-                            this@with.handleTeleport()
-                        }
+                        player.toGeary().set(DeeperWorldSection(it.fromSection.key))
+                        this@with.handleTeleport()
                     } else {
                         this.handleTeleport()
                     }
