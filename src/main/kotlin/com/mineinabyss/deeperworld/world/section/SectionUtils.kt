@@ -103,3 +103,6 @@ fun Section.isOnTopOf(other: Section) = key == other.aboveKey
 
 /** Whether a section is adjacent to another */
 fun Section.isAdjacentTo(other: Section) = this.isOnTopOf(other) || other.isOnTopOf(this)
+
+val Section.centerLocation: Location
+    get() = Location(world, region.center.x.toDouble(), region.center.y.toDouble(), region.center.z.toDouble())
