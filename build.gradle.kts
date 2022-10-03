@@ -35,5 +35,5 @@ dependencies {
     compileOnly(deeperLibs.minecraft.plugin.blocklocker)
 
     // Shaded
-    implementation(libs.idofront.core)
+    implementation(libs.bundles.idofront.core)
 }

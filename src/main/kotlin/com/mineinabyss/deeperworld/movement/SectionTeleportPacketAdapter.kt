@@ -5,11 +5,10 @@ import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.github.shynixn.mccoroutine.bukkit.launch
-import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.datastructures.VehicleTree
+import com.mineinabyss.deeperworld.deeperConfig
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.protocolManager
-import com.mineinabyss.idofront.time.inWholeTicks
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.entity.LivingEntity
@@ -65,7 +64,7 @@ class SectionTeleportPacketAdapter(
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
 
-                delay(DeeperConfig.data.remountPacketDelay)
+                delay(deeperConfig.remountPacketDelay)
 
                 player.vehicle?.let { vehicle ->
                     val playerVehicleID = vehicle.entityId

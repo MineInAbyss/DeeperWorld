@@ -2,7 +2,7 @@ package com.mineinabyss.deeperworld.services
 
 import com.mineinabyss.deeperworld.world.section.Section
 import com.mineinabyss.deeperworld.world.section.SectionKey
-import com.mineinabyss.idofront.plugin.getService
+import com.mineinabyss.idofront.plugin.Services
 import org.bukkit.Location
 import org.bukkit.World
 
@@ -10,7 +10,7 @@ import org.bukkit.World
  * Manages sections within the world.
  */
 interface WorldManager {
-    companion object : WorldManager by getService()
+    companion object : WorldManager by Services.get()
 
     /**
      * Given a location, return the Section it is within

@@ -6,9 +6,8 @@ import com.mineinabyss.deeperworld.world.section.Section
 import com.mineinabyss.deeperworld.world.section.SectionKey
 import org.bukkit.Location
 import org.bukkit.World
-import org.bukkit.configuration.file.FileConfiguration
 
-class WorldManagerImpl(config: FileConfiguration) : WorldManager {
+class WorldManagerImpl : WorldManager {
     override val sections get() = sectionMap.values.toSet()
 
     private val sectionMap: MutableMap<SectionKey, Section> = HashMap()
