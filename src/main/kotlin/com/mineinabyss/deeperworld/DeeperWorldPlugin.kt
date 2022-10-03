@@ -4,7 +4,6 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
-import com.mineinabyss.deeperworld.config.DeeperConfig
 import com.mineinabyss.deeperworld.listeners.MovementListener
 import com.mineinabyss.deeperworld.listeners.PlayerListener
 import com.mineinabyss.deeperworld.player.FallingDamageManager
@@ -15,9 +14,11 @@ import com.mineinabyss.deeperworld.synchronization.ContainerSyncListener
 import com.mineinabyss.deeperworld.synchronization.ExploitPreventionListener
 import com.mineinabyss.deeperworld.synchronization.SectionSyncListener
 import com.mineinabyss.deeperworld.world.WorldManagerImpl
-import com.mineinabyss.idofront.platforms.IdofrontPlatforms
-import com.mineinabyss.idofront.plugin.registerEvents
-import com.mineinabyss.idofront.plugin.registerService
+import com.mineinabyss.idofront.config.IdofrontConfig
+import com.mineinabyss.idofront.config.config
+import com.mineinabyss.idofront.platforms.Platforms
+import com.mineinabyss.idofront.plugin.listeners
+import com.mineinabyss.idofront.plugin.service
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.Material
@@ -26,18 +27,18 @@ import org.bukkit.plugin.java.JavaPlugin
 val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
 class DeeperWorldPlugin : JavaPlugin() {
+    lateinit var config: IdofrontConfig<DeeperWorldConfig>
     override fun onLoad() {
-        IdofrontPlatforms.load(this, "mineinabyss")
+        Platforms.load(this, "mineinabyss")
     }
 
     override fun onEnable() {
-        saveDefaultConfig()
-        registerService<WorldManager>(WorldManagerImpl(config))
+        config = config("config.yml") { fromPluginPath(loadDefault = true)}
 
-        DeeperConfig.load()
+        service<WorldManager>(WorldManagerImpl())
+        service<PlayerManager>(PlayerManagerImpl())
 
-        registerService<PlayerManager>(PlayerManagerImpl())
-        registerEvents(
+        listeners(
             MovementListener,
             PlayerListener,
             SectionSyncListener,
@@ -49,8 +50,8 @@ class DeeperWorldPlugin : JavaPlugin() {
         DeeperCommandExecutor()
 
         // Initialize falling damage task
-        if (DeeperConfig.data.fall.maxSafeDist >= 0f && DeeperConfig.data.fall.fallDistanceDamageScaler >= 0.0) {
-            val hitDellay = DeeperConfig.data.fall.hitDelay.coerceAtLeast(1.ticks)
+        if (deeperConfig.fall.maxSafeDist >= 0f && deeperConfig.fall.fallDistanceDamageScaler >= 0.0) {
+            val hitDellay = deeperConfig.fall.hitDelay.coerceAtLeast(1.ticks)
             deeperWorld.launch {
                 while (true) {
                     server.onlinePlayers.forEach {
@@ -62,13 +63,13 @@ class DeeperWorldPlugin : JavaPlugin() {
         }
 
         // Initialize time synchronization task
-        if (DeeperConfig.data.time.syncedWorlds.isNotEmpty()) {
-            DeeperConfig.data.time.mainWorld?.let { mainWorld ->
-                val updateInterval = DeeperConfig.data.time.updateInterval.coerceAtLeast(1.ticks)
+        if (deeperConfig.time.syncedWorlds.isNotEmpty()) {
+            deeperConfig.time.mainWorld?.let { mainWorld ->
+                val updateInterval = deeperConfig.time.updateInterval.coerceAtLeast(1.ticks)
                 deeperWorld.launch {
                     while (true) {
                         val mainWorldTime = mainWorld.time
-                        DeeperConfig.data.time.syncedWorlds.forEach { (world, offset) ->
+                        deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
                             world.time = (mainWorldTime + offset) % FULL_DAY_TIME
                         }
                         delay(updateInterval)
