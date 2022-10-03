@@ -39,7 +39,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
         ("deeperworld" / "dw") {
             "reload" {
                 action {
-                    deeperWorld.config = config("config.yml") { deeperWorld.fromPluginPath(loadDefault = true)}
+                    deeperWorld.config = config("config") { deeperWorld.fromPluginPath(loadDefault = true)}
                 }
             }
             "tp"(desc = "Enables or disables automatic teleports between sections for a player") {

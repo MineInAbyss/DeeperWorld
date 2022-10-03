@@ -33,7 +33,7 @@ class DeeperWorldPlugin : JavaPlugin() {
     }
 
     override fun onEnable() {
-        config = config("config.yml") { fromPluginPath(loadDefault = true)}
+        config = config("config") { fromPluginPath(loadDefault = true)}
 
         service<WorldManager>(WorldManagerImpl())
         service<PlayerManager>(PlayerManagerImpl())
