@@ -27,9 +27,9 @@ import org.bukkit.util.Vector
 data class Section(
     val name: String? = null,
     val region: Region,
-    val world: World,
-    @SerialName("refTop") private val _refTop: Vector,
-    @SerialName("refBottom") private val _refBottom: Vector
+    val world: @Serializable(WorldSerializer::class) World,
+    @SerialName("refTop") private val _refTop: @Serializable(VectorSerializer::class) Vector,
+    @SerialName("refBottom") private val _refBottom: @Serializable(VectorSerializer::class) Vector
 ) {
     @Transient
     val referenceTop = _refTop.toLocation(world)
