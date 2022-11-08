@@ -38,6 +38,18 @@ class DeeperWorldPlugin : JavaPlugin() {
         service<WorldManager>(WorldManagerImpl())
         service<PlayerManager>(PlayerManagerImpl())
 
+        // Register aboveKey / belowKey as new config breaks this
+        for (section in deeperConfig.sections) {
+            when (section) {
+                deeperConfig.sections.first() -> section.belowKey = deeperConfig.sections[1].key
+                deeperConfig.sections.last() -> section.aboveKey = deeperConfig.sections[deeperConfig.sections.size - 2].key
+                else -> {
+                    section.aboveKey = deeperConfig.sections[deeperConfig.sections.indexOf(section) - 1].key
+                    section.belowKey = deeperConfig.sections[deeperConfig.sections.indexOf(section) + 1].key
+                }
+            }
+        }
+
         listeners(
             MovementListener,
             PlayerListener,

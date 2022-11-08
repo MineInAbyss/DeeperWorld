@@ -2,8 +2,6 @@ package com.mineinabyss.deeperworld.world
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -33,14 +31,17 @@ class Region(val a: CubePoint, val b: CubePoint) {
     operator fun contains(p: CubePoint) = contains(p.x, p.y, p.z)
 }
 
+@Serializable
+data class RegionPoints(val x1: Int, val y1: Int, val z1: Int, val x2: Int, val y2: Int, val z2: Int)
+
 object RegionSerializer : KSerializer<Region> {
-    private val serializer = ListSerializer(Int.serializer())
+    private val serializer = RegionPoints.serializer()
     override val descriptor: SerialDescriptor = serializer.descriptor
 
     override fun serialize(encoder: Encoder, value: Region) {
         val (x, y, z) = value.a
         val (x2, y2, z2) = value.b
-        encoder.encodeSerializableValue(serializer, listOf(x, y, z, x2, y2, z2))
+        encoder.encodeSerializableValue(serializer, RegionPoints(x, y, z, x2, y2, z2))
     }
 
     override fun deserialize(decoder: Decoder): Region {

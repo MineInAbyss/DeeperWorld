@@ -3,14 +3,15 @@
 package com.mineinabyss.deeperworld.world.section
 
 import com.mineinabyss.deeperworld.world.Region
+import com.mineinabyss.idofront.serialization.LocationSerializer
 import com.mineinabyss.idofront.serialization.VectorSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
+import org.bukkit.Location
 import org.bukkit.World
-import org.bukkit.util.Vector
 
 /**
  * @property region the region within which this section is active
@@ -28,16 +29,15 @@ data class Section(
     val name: String? = null,
     val region: Region,
     val world: @Serializable(WorldSerializer::class) World,
-    @SerialName("refTop") private val _refTop: @Serializable(VectorSerializer::class) Vector,
-    @SerialName("refBottom") private val _refBottom: @Serializable(VectorSerializer::class) Vector
+    @SerialName("refTop") private val _refTop: ReferenceLocation,
+    @SerialName("refBottom") private val _refBottom: ReferenceLocation
 ) {
-    @Transient
+    @Serializable(LocationSerializer::class)
     val referenceTop = _refTop.toLocation(world)
 
-    @Transient
+    @Serializable(LocationSerializer::class)
     val referenceBottom = _refBottom.toLocation(world)
 
-    @Transient
     val key: SectionKey = name?.let { AbstractSectionKey.CustomSectionKey(name) }
         ?: AbstractSectionKey.InternalSectionKey()
 
@@ -48,4 +48,9 @@ data class Section(
     internal var belowKey: SectionKey = SectionKey.TERMINAL
 
     override fun toString() = key.toString()
+}
+
+@Serializable
+data class ReferenceLocation(val x: Int, val y: Int, val z: Int) {
+    fun toLocation(world: World) = Location(world, x.toDouble(), y.toDouble(), z.toDouble())
 }
