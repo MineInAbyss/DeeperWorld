@@ -18,6 +18,7 @@ object MovementListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun PlayerMoveEvent.move() {
+        if (!hasExplicitlyChangedPosition()) return
         if (player.hasPermission(Permissions.ADMIN_PERMISSION) && player.canMoveSections) {
             MovementHandler.handleMovement(player, from, to)
         }
@@ -34,6 +35,7 @@ object MovementListener : Listener {
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
+        if (!hasExplicitlyChangedPosition()) return
         if (entity.getPassengersRecursive().isEmpty()) return
         entity.getPassengersRecursive().filterIsInstance<Player>()
             .filter { rider -> rider.hasPermission(Permissions.ADMIN_PERMISSION) && rider.canMoveSections }

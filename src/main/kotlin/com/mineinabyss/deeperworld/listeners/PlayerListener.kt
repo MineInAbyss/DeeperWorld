@@ -14,9 +14,8 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
 object PlayerListener : Listener {
     @EventHandler
     fun PlayerTeleportEvent.onPlayerTeleport() {
-        if (player.gameMode == CREATIVE) return
+        if (player.gameMode == CREATIVE || !player.canMoveSections) return
         if (cause != ENDER_PEARL && cause != CHORUS_FRUIT) return
-        if (!player.canMoveSections) return
 
         if (
             to.section == null ||
