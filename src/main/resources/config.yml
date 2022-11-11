@@ -1,16 +1,40 @@
 ### Example config:
 sections:
   - name: section1
-    refTop: [ 0, 0, 0 ]
+    refTop:
+      x: 0
+      y: 0
+      z: 0
     # refBottom should connect to the refTop of the next section.
-    refBottom: [ 0, 16, 0 ]
+    refBottom:
+      x: 0
+      y: 16
+      z: 0
     #x1, y1, z1, x2, y2, z2
-    region: [ 0, 0, 0, 1000, 256, 1000 ]
+    region:
+      x1: 0
+      y1: 0
+      z1: 0
+      x2: 1000
+      y2: 256
+      z2: 1000
     world: world
   - name: section2
-    refTop: [ 1000, 240, 0 ]
-    refBottom: [ 2000, 16, 0 ]
-    region: [ 1000, 0, 0, 2000, 256, 1000 ]
+    refTop:
+      x: 1000
+      y: 240
+      z: 0
+    refBottom:
+      x: 2000
+      y: 16
+      z: 0
+    region:
+      x1: 1000
+      y1: 0
+      z1: 0
+      x2: 2000
+      y2: 256
+      z2: 1000
     world: world
 # The damage players will take when outside a managed section.
 damageOutsideSections: 1.0
