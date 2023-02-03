@@ -24,13 +24,15 @@ object ConfigSectionChecker : SectionChecker {
             else -> null
         } ?: return null
 
-        return SectionTransition(
-            from,
-            corrLoc,
-            fromSection,
-            corrLoc.section!!, // If inSectionTransition, must be non-null
-            if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND,
-            teleportUnnecessary = fromSection != toSection
-        )
+        return corrLoc.section?.let {
+            SectionTransition(
+                from,
+                corrLoc,
+                fromSection,
+                it,
+                if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND,
+                teleportUnnecessary = fromSection != toSection
+            )
+        }
     }
 }
