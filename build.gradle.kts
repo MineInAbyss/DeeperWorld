@@ -1,5 +1,3 @@
-val idofrontVersion: String by project
-
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlinx.serialization)

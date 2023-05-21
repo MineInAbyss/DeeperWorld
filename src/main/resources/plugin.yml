@@ -2,10 +2,10 @@ name: DeeperWorld
 version: ${plugin_version}
 main: com.mineinabyss.deeperworld.DeeperWorldPlugin
 authors: [Derongan, Offz, Boy000, Norazan, Scyu]
-api-version: '1.17'
+api-version: '1.19'
 description: A plugin for letting you create a deeper world. Or at least fake it.
 
-softdepend: [Multiverse-Core, BlockLocker, KotlinSpice, ProtocolLib, FastAsyncWorldEdit]
+softdepend: [Multiverse-Core, BlockLocker, ProtocolLib, FastAsyncWorldEdit]
 
 commands:
   deeperworld:
