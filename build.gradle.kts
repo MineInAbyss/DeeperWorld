@@ -1,13 +1,14 @@
 val idofrontVersion: String by project
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("com.mineinabyss.conventions.kotlin")
+    alias(libs.plugins.kotlinx.serialization)
+    id("com.mineinabyss.conventions.kotlin.jvm")
     id("com.mineinabyss.conventions.papermc")
     id("com.mineinabyss.conventions.copyjar")
     id("com.mineinabyss.conventions.publication")
     id("com.mineinabyss.conventions.testing")
     id("com.mineinabyss.conventions.autoversion")
-    kotlin("plugin.serialization")
 }
 
 repositories {
