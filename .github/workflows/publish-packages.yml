@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - develop
     paths-ignore:
       - '**.md'
 
@@ -14,34 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - uses: MineInAbyss/publish-action@master
         with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Set env variable from latest maven version
-        run: >
-          echo "RELEASE_VERSION=$( \
-            curl https://repo.mineinabyss.com/releases/com/mineinabyss/deeperworld/maven-metadata.xml | \
-            grep -oP '(?!<latest>)[\d\.]*(?=</latest>)' \
-          )" >> $GITHUB_ENV
-
-      - name: Run gradle build and publish
-        run: gradle build publish -PmineinabyssMavenUsername=${{ secrets.MAVEN_PUBLISH_USERNAME }} -PmineinabyssMavenPassword=${{ secrets.MAVEN_PUBLISH_PASSWORD }}
-
-      - name: Get version from gradle
-        shell: bash
-        id: extract_version
-        run: |
-          version=`gradle properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}'`
-          echo "::set-output name=version::$version"
-
-      - name: Create GitHub Release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag: v${{ steps.extract_version.outputs.version }}
-          files: |
-            build/libs/*-all.jar
+          maven-metadata-url: https://repo.mineinabyss.com/releases/com/mineinabyss/deeperworld/maven-metadata.xml
+          maven-username: ${{ secrets.MAVEN_PUBLISH_USERNAME }}
+          maven-password: ${{ secrets.MAVEN_PUBLISH_PASSWORD }}
+          release-files: |
+            ${{ github.workspace }}/publish/*.jar
