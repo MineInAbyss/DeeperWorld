@@ -24,6 +24,7 @@ import org.bukkit.block.data.type.Bed
 import org.bukkit.block.data.type.Sapling
 import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.TrapDoor
+import org.bukkit.block.sign.Side
 import org.bukkit.entity.EntityType
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -70,7 +71,8 @@ object SectionSyncListener : Listener {
 
                 //sync any changes to BlockLocker's signs`
                 if (DeeperContext.isBlockLockerLoaded && state is Sign &&
-                    state.lines().first() == Component.text("[Private]")) {
+                    (state.getSide(Side.FRONT).lines().first() == Component.text("[Private]")
+                            || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))) {
                     syncBlockLocker(corr)
                 }
 

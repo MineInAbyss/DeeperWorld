@@ -9,6 +9,7 @@ import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.Sign
 import org.bukkit.block.data.BlockData
+import org.bukkit.block.sign.Side
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
@@ -41,11 +42,11 @@ internal inline fun Location.sync(updater: (original: Block, corresponding: Bloc
 internal fun signUpdater(lines: MutableList<Component>? = null) = { original: Block, corresponding: Block ->
     copyBlockData(original, corresponding)
     val sign = original.state
-    if (sign is Sign) {
-        val readLines = lines ?: sign.lines()
+    if (sign is Sign) for (side in Side.values()) {
+        val readLines = lines ?: sign.getSide(side).lines()
         val corrSign = corresponding.state
-        if (corrSign is Sign && !corrSign.lines().containsAll(readLines)) {
-            readLines.forEachIndexed { i, line -> corrSign.line(i, line) }
+        if (corrSign is Sign && !corrSign.getSide(side).lines().containsAll(readLines)) {
+            readLines.forEachIndexed { i, line -> corrSign.getSide(side).line(i, line) }
             corrSign.update()
         }
     }
