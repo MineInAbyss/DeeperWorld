@@ -9,7 +9,6 @@ import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.correspondingSection
 import com.mineinabyss.deeperworld.world.section.getCorrespondingLocation
 import com.mineinabyss.deeperworld.world.section.section
-import com.mineinabyss.idofront.commands.CommandHolder
 import com.mineinabyss.idofront.commands.arguments.booleanArg
 import com.mineinabyss.idofront.commands.arguments.intArg
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
@@ -35,7 +34,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 
 class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
-    override val commands: CommandHolder = commands(deeperWorld) {
+    override val commands = commands(deeperWorld) {
         ("deeperworld" / "dw") {
             "reload" {
                 action {
