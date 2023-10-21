@@ -1,10 +1,10 @@
 package com.mineinabyss.deeperworld.synchronization
 
-import com.mineinabyss.deeperworld.DeeperContext
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.world.section.*
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.info
+import com.mineinabyss.idofront.plugin.Plugins
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
@@ -45,7 +45,7 @@ object ContainerSyncListener : Listener {
             val linkedSection = loc.correspondingSection ?: return
             val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: return
 
-            if (DeeperContext.isBlockLockerLoaded) {
+            if (Plugins.isEnabled("BlockLocker")) {
                 updateProtection(linkedBlock)
                 updateProtection(clicked)
 
@@ -58,7 +58,7 @@ object ContainerSyncListener : Listener {
             }
 
             if (container is Lidded) {
-                (linkedBlock.state as Lidded).open();
+                (linkedBlock.state as Lidded).open()
                 if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
             }
 
@@ -82,10 +82,10 @@ object ContainerSyncListener : Listener {
                 }
 
                 //keep chunk loaded
-                linkedBlock.chunk.addPluginChunkTicket(deeperWorld)
+                linkedBlock.chunk.addPluginChunkTicket(deeperWorld.plugin)
 
                 //keep track of players opening inventory in this chunk
-                keepLoadedInventories.getOrPut(linkedBlock.chunk, { mutableListOf() }) += player
+                keepLoadedInventories.getOrPut(linkedBlock.chunk) { mutableListOf() } += player
             }
         }
     }
@@ -104,7 +104,7 @@ object ContainerSyncListener : Listener {
         if (keepLoadedInventories[chunk]?.remove(player) != null) {
             if (keepLoadedInventories[chunk]?.isEmpty() == true) {
                 keepLoadedInventories -= chunk
-                chunk.removePluginChunkTicket(deeperWorld)
+                chunk.removePluginChunkTicket(deeperWorld.plugin)
             }
         }
     }

@@ -1,12 +1,12 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.kotlinx.serialization)
-    id("com.mineinabyss.conventions.kotlin.jvm")
-    id("com.mineinabyss.conventions.papermc")
-    id("com.mineinabyss.conventions.copyjar")
-    id("com.mineinabyss.conventions.publication")
-    id("com.mineinabyss.conventions.testing")
-    id("com.mineinabyss.conventions.autoversion")
+    alias(libs.plugins.mia.kotlin.jvm)
+    alias(libs.plugins.mia.papermc)
+    alias(libs.plugins.mia.copyjar)
+    alias(libs.plugins.mia.testing)
+    alias(libs.plugins.mia.publication)
+    alias(libs.plugins.mia.autoversion)
 }
 
 repositories {

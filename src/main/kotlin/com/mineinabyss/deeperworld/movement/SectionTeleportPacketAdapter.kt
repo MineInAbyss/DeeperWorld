@@ -6,7 +6,6 @@ import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.datastructures.VehicleTree
-import com.mineinabyss.deeperworld.deeperConfig
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.protocolManager
 import com.mineinabyss.idofront.time.ticks
@@ -29,7 +28,7 @@ class SectionTeleportPacketAdapter(
     private val oldVelocity: Vector,
     private val vehicleTree: VehicleTree? = null
 ) : PacketAdapter(
-    deeperWorld,
+    deeperWorld.plugin,
     PacketType.Play.Client.POSITION,
     PacketType.Play.Client.POSITION_LOOK
 ) {
@@ -38,7 +37,7 @@ class SectionTeleportPacketAdapter(
 
         protocolManager.removePacketListener(this)
 
-        deeperWorld.launch {
+        deeperWorld.plugin.launch {
             delay(1.ticks)
 
             oldLeashedEntities.toSet().forEach {
@@ -64,7 +63,7 @@ class SectionTeleportPacketAdapter(
                 vehicleTree.root.value.fallDistance = oldFallDistance
                 vehicleTree.root.value.velocity = oldVelocity
 
-                delay(deeperConfig.remountPacketDelay)
+                delay(deeperWorld.config.remountPacketDelay)
 
                 player.vehicle?.let { vehicle ->
                     val playerVehicleID = vehicle.entityId

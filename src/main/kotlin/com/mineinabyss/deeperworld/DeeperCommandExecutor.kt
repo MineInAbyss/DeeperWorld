@@ -14,10 +14,10 @@ import com.mineinabyss.idofront.commands.arguments.intArg
 import com.mineinabyss.idofront.commands.execution.IdofrontCommandExecutor
 import com.mineinabyss.idofront.commands.execution.stopCommand
 import com.mineinabyss.idofront.commands.extensions.actions.playerAction
-import com.mineinabyss.idofront.config.config
 import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
+import com.mineinabyss.idofront.plugin.Plugins
 import com.sk89q.worldedit.EditSession
 import com.sk89q.worldedit.WorldEdit
 import com.sk89q.worldedit.bukkit.WorldEditPlugin
@@ -34,11 +34,12 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 
 class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
-    override val commands = commands(deeperWorld) {
+    override val commands = commands(deeperWorld.plugin) {
         ("deeperworld" / "dw") {
             "reload" {
                 action {
-                    deeperWorld.config = config("config") { deeperWorld.fromPluginPath(loadDefault = true)}
+                    deeperWorld.plugin.createDeeperWorldContext()
+                    sender.success("Reloaded DeeperWorld")
                 }
             }
             "tp"(desc = "Enables or disables automatic teleports between sections for a player") {
@@ -66,11 +67,11 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 val time by intArg()
                 "set"(desc = "Set the time of the main synchronization world and the other worlds with their respective offsets") {
                     playerAction {
-                        deeperConfig.time.mainWorld?.let { world ->
+                        deeperWorld.config.time.mainWorld?.let { world ->
                             world.time = time.toLong()
                         } ?: command.stopCommand("No main world specified for time synchronization. Check the config!")
 
-                        deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
+                        deeperWorld.config.time.syncedWorlds.forEach { (world, offset) ->
                             world.time = (time.toLong() + offset) % FULL_DAY_TIME
                         }
 
@@ -79,10 +80,10 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                 }
                 "add"(desc = "Add to the main synchronization world time and the other worlds with their respective offsets") {
                     playerAction {
-                        deeperConfig.time.mainWorld?.let { mainWorld ->
+                        deeperWorld.config.time.mainWorld?.let { mainWorld ->
                             mainWorld.time += time.toLong()
 
-                            deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
+                            deeperWorld.config.time.syncedWorlds.forEach { (world, offset) ->
                                 world.time = (mainWorld.time + offset) % FULL_DAY_TIME
                             }
 
@@ -101,7 +102,7 @@ class DeeperCommandExecutor : IdofrontCommandExecutor(), TabCompleter {
                         }
 
                     when {
-                        DeeperContext.isFAWELoaded -> {
+                        Plugins.isEnabled("FastAsyncWorldEdit") -> {
                             try {
                                 val pos1 = BlockVector3.at(
                                     (player.location.x + range),

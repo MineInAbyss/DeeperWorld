@@ -2,15 +2,14 @@
 
 package com.mineinabyss.deeperworld.world.section
 
+import com.charleskorn.kaml.YamlComment
 import com.mineinabyss.deeperworld.world.Region
 import com.mineinabyss.deeperworld.world.getCoordinates
 import com.mineinabyss.idofront.serialization.LocationSerializer
 import com.mineinabyss.idofront.serialization.VectorSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
-import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.*
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.World
 
@@ -28,15 +27,18 @@ import org.bukkit.World
 @Serializable
 data class Section(
     val name: String? = null,
-    val region: Region,
-    val world: @Serializable(WorldSerializer::class) World,
+    val region: Region = Region(0,0,0,1,1,1),
+    val world: @Serializable(WorldSerializer::class) World = Bukkit.getWorld("world")!!,
     @SerialName("refTop") private val _refTop: String,
+    @YamlComment("refBottom should connect to the refTop of the next section.")
     @SerialName("refBottom") private val _refBottom: String
 ) {
     @Serializable(LocationSerializer::class)
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     val referenceTop = _refTop.toLocation(world)
 
     @Serializable(LocationSerializer::class)
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     val referenceBottom = _refBottom.toLocation(world)
 
     fun String.toLocation(world: World): Location {
@@ -44,6 +46,7 @@ data class Section(
         return Location(world, x, y, z)
     }
 
+    @Transient
     val key: SectionKey = name?.let { AbstractSectionKey.CustomSectionKey(name) }
         ?: AbstractSectionKey.InternalSectionKey()
 

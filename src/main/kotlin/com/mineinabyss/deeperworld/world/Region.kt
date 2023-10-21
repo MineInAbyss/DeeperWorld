@@ -12,7 +12,7 @@ import kotlin.math.min
  * Represents a region of the world.
  */
 @Serializable(with = RegionSerializer::class)
-class Region(val start: CubePoint, val end: CubePoint) {
+data class Region(val start: CubePoint, val end: CubePoint) {
     val min = CubePoint(min(start.x, end.x), min(start.y, end.y), min(start.z, end.z))
     val max = CubePoint(max(start.x, end.x), max(start.y, end.y), max(start.z, end.z))
 

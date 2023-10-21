@@ -1,6 +1,6 @@
 package com.mineinabyss.deeperworld.world
 
-import com.mineinabyss.deeperworld.deeperConfig
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
 import com.mineinabyss.deeperworld.world.section.Section
@@ -11,7 +11,7 @@ import org.bukkit.World
 class WorldManagerImpl : WorldManager {
     override val sections get() = sectionMap.values.toSet()
 
-    private val sectionMap = deeperConfig.sections.associateBy { it.key }.toMutableMap()
+    private val sectionMap = deeperWorld.config.sections.associateBy { it.key }.toMutableMap()
 
 
     override fun registerSection(name: String, section: Section): SectionKey =

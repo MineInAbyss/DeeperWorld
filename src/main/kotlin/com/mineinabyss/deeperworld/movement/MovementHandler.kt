@@ -1,6 +1,6 @@
 package com.mineinabyss.deeperworld.movement
 
-import com.mineinabyss.deeperworld.deeperConfig
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.movement.transition.ConfigSectionChecker
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
@@ -39,13 +39,13 @@ object MovementHandler {
 
     //TODO abstract this away. Should instead do out of bounds action if out of bounds.
     private fun Player.applyOutOfBoundsDamage() {
-        if (deeperConfig.damageOutsideSections > 0.0
-            && location.world !in deeperConfig.damageExcludedWorlds
+        if (deeperWorld.config.damageOutsideSections > 0.0
+            && location.world !in deeperWorld.config.damageExcludedWorlds
             && (gameMode == GameMode.SURVIVAL || gameMode == GameMode.ADVENTURE)
-            && location.world in deeperConfig.worlds
+            && location.world in deeperWorld.config.worlds
         ) {
             damage(0.01) //give a damage effect
-            health = (health - deeperConfig.damageOutsideSections / 10)
+            health = (health - deeperWorld.config.damageOutsideSections / 10)
                 .coerceIn(0.0, getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
             showTitle(
                 Title.title(

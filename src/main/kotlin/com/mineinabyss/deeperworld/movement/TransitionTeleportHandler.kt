@@ -51,7 +51,7 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
 
             // Delay the teleportation by 1 tick after passenger removal to avoid occasional
             // "Removing ticking entity!" exceptions.
-            deeperWorld.launch {
+            deeperWorld.plugin.launch {
                 delay(1.ticks)
 
                 player.teleportWithSpectatorsAsync(to) {

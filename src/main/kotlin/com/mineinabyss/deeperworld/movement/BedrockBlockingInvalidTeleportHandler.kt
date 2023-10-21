@@ -20,7 +20,7 @@ class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: 
 
         // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
         // If no players are in this radius, destroy the bedrock.
-        deeperWorld.launch {
+        deeperWorld.plugin.launch {
             while (spawnedBedrock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()) {
                 delay(5.ticks)
             }

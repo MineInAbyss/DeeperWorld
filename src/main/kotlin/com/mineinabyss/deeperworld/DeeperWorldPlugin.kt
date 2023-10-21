@@ -14,8 +14,8 @@ import com.mineinabyss.deeperworld.synchronization.ContainerSyncListener
 import com.mineinabyss.deeperworld.synchronization.ExploitPreventionListener
 import com.mineinabyss.deeperworld.synchronization.SectionSyncListener
 import com.mineinabyss.deeperworld.world.WorldManagerImpl
-import com.mineinabyss.idofront.config.IdofrontConfig
 import com.mineinabyss.idofront.config.config
+import com.mineinabyss.idofront.di.DI
 import com.mineinabyss.idofront.platforms.Platforms
 import com.mineinabyss.idofront.plugin.listeners
 import com.mineinabyss.idofront.plugin.service
@@ -27,25 +27,23 @@ import org.bukkit.plugin.java.JavaPlugin
 val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
 class DeeperWorldPlugin : JavaPlugin() {
-    lateinit var config: IdofrontConfig<DeeperWorldConfig>
     override fun onLoad() {
         Platforms.load(this, "mineinabyss")
     }
 
     override fun onEnable() {
-        config = config("config") { fromPluginPath(loadDefault = true)}
-
+        createDeeperWorldContext()
         service<WorldManager>(WorldManagerImpl())
         service<PlayerManager>(PlayerManagerImpl())
 
         // Register aboveKey / belowKey as new config breaks this
-        for (section in deeperConfig.sections) {
+        for (section in deeperWorld.config.sections) {
             when (section) {
-                deeperConfig.sections.first() -> section.belowKey = deeperConfig.sections[1].key
-                deeperConfig.sections.last() -> section.aboveKey = deeperConfig.sections[deeperConfig.sections.size - 2].key
+                deeperWorld.config.sections.first() -> section.belowKey = deeperWorld.config.sections[1].key
+                deeperWorld.config.sections.last() -> section.aboveKey = deeperWorld.config.sections[deeperWorld.config.sections.size - 2].key
                 else -> {
-                    section.aboveKey = deeperConfig.sections[deeperConfig.sections.indexOf(section) - 1].key
-                    section.belowKey = deeperConfig.sections[deeperConfig.sections.indexOf(section) + 1].key
+                    section.aboveKey = deeperWorld.config.sections[deeperWorld.config.sections.indexOf(section) - 1].key
+                    section.belowKey = deeperWorld.config.sections[deeperWorld.config.sections.indexOf(section) + 1].key
                 }
             }
         }
@@ -62,9 +60,9 @@ class DeeperWorldPlugin : JavaPlugin() {
         DeeperCommandExecutor()
 
         // Initialize falling damage task
-        if (deeperConfig.fall.maxSafeDist >= 0f && deeperConfig.fall.fallDistanceDamageScaler >= 0.0) {
-            val hitDellay = deeperConfig.fall.hitDelay.coerceAtLeast(1.ticks)
-            deeperWorld.launch {
+        if (deeperWorld.config.fall.maxSafeDist >= 0f && deeperWorld.config.fall.fallDistanceDamageScaler >= 0.0) {
+            val hitDellay = deeperWorld.config.fall.hitDelay.coerceAtLeast(1.ticks)
+            deeperWorld.plugin.launch {
                 while (true) {
                     server.onlinePlayers.forEach {
                         FallingDamageManager.updateFallingDamage(it)
@@ -75,13 +73,13 @@ class DeeperWorldPlugin : JavaPlugin() {
         }
 
         // Initialize time synchronization task
-        if (deeperConfig.time.syncedWorlds.isNotEmpty()) {
-            deeperConfig.time.mainWorld?.let { mainWorld ->
-                val updateInterval = deeperConfig.time.updateInterval.coerceAtLeast(1.ticks)
-                deeperWorld.launch {
+        if (deeperWorld.config.time.syncedWorlds.isNotEmpty()) {
+            deeperWorld.config.time.mainWorld?.let { mainWorld ->
+                val updateInterval = deeperWorld.config.time.updateInterval.coerceAtLeast(1.ticks)
+                deeperWorld.plugin.launch {
                     while (true) {
                         val mainWorldTime = mainWorld.time
-                        deeperConfig.time.syncedWorlds.forEach { (world, offset) ->
+                        deeperWorld.config.time.syncedWorlds.forEach { (world, offset) ->
                             world.time = (mainWorldTime + offset) % FULL_DAY_TIME
                         }
                         delay(updateInterval)
@@ -89,6 +87,14 @@ class DeeperWorldPlugin : JavaPlugin() {
                 }
             }
         }
+    }
+
+    fun createDeeperWorldContext() {
+        DI.remove<DeeperContext>()
+        DI.add<DeeperContext>(object : DeeperContext {
+            override val plugin = this@DeeperWorldPlugin
+            override val config: DeeperWorldConfig by config("config", dataFolder.toPath(), DeeperWorldConfig())
+        })
     }
 
     override fun onDisable() {

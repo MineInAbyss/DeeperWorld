@@ -1,13 +1,13 @@
 package com.mineinabyss.deeperworld.synchronization
 
 import com.github.shynixn.mccoroutine.bukkit.launch
-import com.mineinabyss.deeperworld.DeeperContext
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
 import com.mineinabyss.deeperworld.event.SyncType
 import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.events.call
+import com.mineinabyss.idofront.plugin.Plugins
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
@@ -70,7 +70,7 @@ object SectionSyncListener : Listener {
                 }
 
                 //sync any changes to BlockLocker's signs`
-                if (DeeperContext.isBlockLockerLoaded && state is Sign &&
+                if (Plugins.isEnabled("BlockLocker") && state is Sign &&
                     (state.getSide(Side.FRONT).lines().first() == Component.text("[Private]")
                             || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))) {
                     syncBlockLocker(corr)
@@ -113,7 +113,7 @@ object SectionSyncListener : Listener {
     fun BlockGrowEvent.syncBlockGrow() {
         if (!block.location.inSectionOverlap) return
         if (!block.location.inSectionOverlap) return
-        deeperWorld.launch {
+        deeperWorld.plugin.launch {
             delay(1.ticks)
             block.sync(updateBlockData(block.blockData))
         }
@@ -131,7 +131,7 @@ object SectionSyncListener : Listener {
         if (block.blockData !is Ageable || block is Sapling) return
         if (!block.location.inSectionOverlap || corrBlock.type != block.type) return
 
-        deeperWorld.launch {
+        deeperWorld.plugin.launch {
             delay(1.ticks)
             block.sync(updateBlockData(block.blockData))
         }
