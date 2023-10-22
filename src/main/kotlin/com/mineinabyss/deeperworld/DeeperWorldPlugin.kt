@@ -16,7 +16,6 @@ import com.mineinabyss.deeperworld.synchronization.SectionSyncListener
 import com.mineinabyss.deeperworld.world.WorldManagerImpl
 import com.mineinabyss.idofront.config.config
 import com.mineinabyss.idofront.di.DI
-import com.mineinabyss.idofront.platforms.Platforms
 import com.mineinabyss.idofront.plugin.listeners
 import com.mineinabyss.idofront.plugin.service
 import com.mineinabyss.idofront.time.ticks
@@ -27,10 +26,6 @@ import org.bukkit.plugin.java.JavaPlugin
 val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
 class DeeperWorldPlugin : JavaPlugin() {
-    override fun onLoad() {
-        Platforms.load(this, "mineinabyss")
-    }
-
     override fun onEnable() {
         createDeeperWorldContext()
         service<WorldManager>(WorldManagerImpl())

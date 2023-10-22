@@ -7,10 +7,6 @@ description: A plugin for letting you create a deeper world. Or at least fake it
 
 softdepend: [Multiverse-Core, BlockLocker, ProtocolLib, FastAsyncWorldEdit]
 
-commands:
-  deeperworld:
-    aliases: [ dw ]
-
 permissions:
   deeperworld.*:
     description: Gives access to all commands
@@ -19,3 +15,26 @@ permissions:
   deeperworld.admin:
     description: Have power to use admin comands
     default: op
+
+dependencies:
+  server:
+    Idofront:
+      required: true
+      load: BEFORE
+      join-classpath: true
+    BlockLocker:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    ProtocolLib:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    FastAsyncWorldEdit:
+      required: false
+      load: BEFORE
+      join-classpath: true
+    Multiverse-Core:
+      required: false
+      load: BEFORE
+      join-classpath: false
