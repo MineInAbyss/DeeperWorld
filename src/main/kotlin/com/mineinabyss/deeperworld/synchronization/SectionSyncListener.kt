@@ -47,7 +47,7 @@ private fun syncBlockLocker(corr: Block) {
  */
 object SectionSyncListener : Listener {
 
-    private val attachedBlocks = Tag.REPLACEABLE.values.apply { addAll(setOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM)) }.toSet()
+    private val attachedBlocks = mutableSetOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM).also { it.addAll(Tag.REPLACEABLE.values) }.toSet()
     private val attachedFaces = setOf(BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
