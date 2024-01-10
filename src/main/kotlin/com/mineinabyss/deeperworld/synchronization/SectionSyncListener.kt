@@ -13,10 +13,8 @@ import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
-import org.bukkit.block.Block
-import org.bukkit.block.Container
-import org.bukkit.block.ShulkerBox
-import org.bukkit.block.Sign
+import org.bukkit.Tag
+import org.bukkit.block.*
 import org.bukkit.block.data.Ageable
 import org.bukkit.block.data.Bisected
 import org.bukkit.block.data.Waterlogged
@@ -49,6 +47,9 @@ private fun syncBlockLocker(corr: Block) {
  */
 object SectionSyncListener : Listener {
 
+    private val attachedBlocks = Tag.REPLACEABLE.values.apply { addAll(setOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM)) }.toSet()
+    private val attachedFaces = setOf(BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
         if (!block.location.inSectionOverlap) return
@@ -76,23 +77,31 @@ object SectionSyncListener : Listener {
                     syncBlockLocker(corr)
                 }
 
+                // Breaking a block triggering attached block to break
+                attachedFaces.filter { block.getRelative(it).type in attachedBlocks }.forEach {
+                    if (corr.getRelative(it).type == block.getRelative(it).type) {
+                        corr.getRelative(it).type = Material.AIR
+                    }
+                }
+
                 val blockData = block.blockData
-                if (blockData is Bed) {
-                    corr.setType(Material.STONE, false)
-                    when (blockData.part) {
-                        Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
-                        Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
-                    }.block.type = Material.AIR
-                } else if (
+                when {
+                    blockData is Bed -> {
+                        corr.setType(Material.STONE, false)
+                        when (blockData.part) {
+                            Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
+                            Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
+                        }.block.type = Material.AIR
+                    }
                     blockData is Bisected
-                    && blockData !is TrapDoor
-                    && blockData !is Stairs
-                ) {
-                    corr.setType(Material.STONE, false)
-                    when (blockData.half) {
-                        Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
-                        Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
-                    }.block.type = Material.AIR
+                            && blockData !is TrapDoor
+                            && blockData !is Stairs -> {
+                        corr.setType(Material.STONE, false)
+                        when (blockData.half) {
+                            Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
+                            Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
+                        }.block.type = Material.AIR
+                    }
                 }
 
                 corr.type = Material.AIR
