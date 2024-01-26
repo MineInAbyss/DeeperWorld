@@ -2,7 +2,6 @@ package com.mineinabyss.deeperworld.synchronization
 
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.world.section.*
-import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.plugin.Plugins
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
@@ -34,59 +33,55 @@ object ContainerSyncListener : Listener {
 
     /** Synchronize container interactions between sections */
     @EventHandler(priority = EventPriority.HIGHEST)
-    fun onInteractWithContainer(event: PlayerInteractEvent) {
-        val clicked = event.clickedBlock ?: return
-        val loc = clicked.location
-        val container = clicked.state
-        val (player) = event
+    fun PlayerInteractEvent.onInteractWithContainer() {
+        val (block, container) = (clickedBlock ?: return) to (clickedBlock?.state as? Container ?: return)
+        if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
 
-        if (container is Container && event.action == Action.RIGHT_CLICK_BLOCK && !player.isSneaking) {
-            val section = loc.section ?: return
-            val linkedSection = loc.correspondingSection ?: return
-            val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block ?: return
+        val section = block.location.section ?: return
+        val linkedSection = block.location.correspondingSection ?: return
+        val linkedBlock = block.location.getCorrespondingLocation(section, linkedSection)?.block ?: return
 
-            if (Plugins.isEnabled("BlockLocker")) {
-                updateProtection(linkedBlock)
-                updateProtection(clicked)
+        if (Plugins.isEnabled("BlockLocker")) {
+            updateProtection(linkedBlock)
+            updateProtection(block)
 
-                //allow chest protection signs to be placed
-                if (player.inventory.itemInMainHand.type.name.contains("SIGN")
-                    || !BlockLockerAPIv2.isAllowed(player, clicked, true)
-                    || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
-                )
-                    return
+            //allow chest protection signs to be placed
+            if (player.inventory.itemInMainHand.type.name.contains("SIGN")
+                || !BlockLockerAPIv2.isAllowed(player, block, true)
+                || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
+            )
+                return
+        }
+
+        if (container is Lidded) {
+            (linkedBlock.state as Lidded).open()
+            if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
+        }
+
+        if (section.isOnTopOf(linkedSection)) return
+
+        isCancelled = true
+
+        val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
+
+        //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
+        if (player.openInventory(linkedInventory) != null) {
+            //synchronize chests and drop anything that doesn't fit
+            val invItems: List<ItemStack> = container.inventory.toList().filterNotNull()
+            if (invItems.isNotEmpty()) {
+                //try adding items to the chest above, if something doesn't fit, drop it
+                invItems.map { linkedInventory.addItem(it).values }.flatten().also {
+                    if (it.isNotEmpty())
+                        player.info("<gold>This container had items in it, which have been ejected to synchronize it with the upper section.")
+                }.dropItems(block.location, true)
+                container.inventory.clear()
             }
 
-            if (container is Lidded) {
-                (linkedBlock.state as Lidded).open()
-                if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
-            }
+            //keep chunk loaded
+            linkedBlock.chunk.addPluginChunkTicket(deeperWorld.plugin)
 
-            if (section.isOnTopOf(linkedSection)) return
-
-            event.isCancelled = true
-
-            val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
-
-            //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
-            if (player.openInventory(linkedInventory) != null) {
-                //synchronize chests and drop anything that doesn't fit
-                val invItems: List<ItemStack> = container.inventory.toList().filterNotNull()
-                if (invItems.isNotEmpty()) {
-                    //try adding items to the chest above, if something doesn't fit, drop it
-                    invItems.map { linkedInventory.addItem(it).values }.flatten().also {
-                        if (it.isNotEmpty())
-                            player.info("<gold>This container had items in it, which have been ejected to synchronize it with the upper section.")
-                    }.dropItems(loc, true)
-                    container.inventory.clear()
-                }
-
-                //keep chunk loaded
-                linkedBlock.chunk.addPluginChunkTicket(deeperWorld.plugin)
-
-                //keep track of players opening inventory in this chunk
-                keepLoadedInventories.getOrPut(linkedBlock.chunk) { mutableListOf() } += player
-            }
+            //keep track of players opening inventory in this chunk
+            keepLoadedInventories.getOrPut(linkedBlock.chunk) { mutableListOf() } += player
         }
     }
 
@@ -111,13 +106,13 @@ object ContainerSyncListener : Listener {
 
     /** Synchronize hopper pickups between sections */
     @EventHandler
-    fun hopperGrabEvent(e: InventoryPickupItemEvent) {
-        (e.inventory.location ?: return).sync { _, corresponding, section, corrSection ->
+    fun InventoryPickupItemEvent.hopperGrabEvent() {
+        inventory.location?.sync { _, corresponding, section, corrSection ->
             if (corrSection.isOnTopOf(section)) {
                 //if there are no leftover items, remove the itemstack
-                if ((corresponding.state as? Container)?.inventory?.addItem(e.item.itemStack)?.isEmpty() != false)
-                    e.item.remove()
-                e.isCancelled = true
+                if ((corresponding.state as? Container)?.inventory?.addItem(item.itemStack)?.isEmpty() != false)
+                    item.remove()
+                isCancelled = true
             }
         }
     }
