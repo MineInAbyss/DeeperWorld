@@ -21,8 +21,7 @@ dependencyResolutionManagement {
         maven("https://repo.mineinabyss.com/releases")
     }
     versionCatalogs{
-        create("libs").from("com.mineinabyss:catalog:$idofrontVersion")
-        create("deeperLibs").from(files("gradle/deeperLibs.versions.toml"))
+        create("idofrontLibs").from("com.mineinabyss:catalog:$idofrontVersion")
     }
 }
 

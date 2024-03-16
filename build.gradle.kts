@@ -1,12 +1,12 @@
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.mia.kotlin.jvm)
-    alias(libs.plugins.mia.papermc)
-    alias(libs.plugins.mia.copyjar)
-    alias(libs.plugins.mia.testing)
-    alias(libs.plugins.mia.publication)
-    alias(libs.plugins.mia.autoversion)
+    alias(idofrontLibs.plugins.kotlinx.serialization)
+    alias(idofrontLibs.plugins.mia.kotlin.jvm)
+    alias(idofrontLibs.plugins.mia.papermc)
+    alias(idofrontLibs.plugins.mia.copyjar)
+    alias(idofrontLibs.plugins.mia.testing)
+    alias(idofrontLibs.plugins.mia.publication)
+    alias(idofrontLibs.plugins.mia.autoversion)
 }
 
 repositories {
@@ -22,18 +22,18 @@ repositories {
 
 dependencies {
     // MineInAbyss platform
-    compileOnly(libs.kotlin.stdlib)
-    compileOnly(libs.kotlinx.serialization.json)
-    compileOnly(libs.kotlinx.serialization.kaml)
-    compileOnly(libs.kotlinx.coroutines)
-    compileOnly(libs.minecraft.mccoroutine)
+    compileOnly(idofrontLibs.kotlin.stdlib)
+    compileOnly(idofrontLibs.kotlinx.serialization.json)
+    compileOnly(idofrontLibs.kotlinx.serialization.kaml)
+    compileOnly(idofrontLibs.kotlinx.coroutines)
+    compileOnly(idofrontLibs.minecraft.mccoroutine)
 
     // Plugin APIs
-    compileOnly(libs.minecraft.plugin.fawe.core)
-    compileOnly(libs.minecraft.plugin.fawe.bukkit) { isTransitive = false }
-    compileOnly(libs.minecraft.plugin.protocollib)
-    compileOnly(deeperLibs.minecraft.plugin.blocklocker)
+    compileOnly(idofrontLibs.minecraft.plugin.fawe.core)
+    compileOnly(idofrontLibs.minecraft.plugin.fawe.bukkit) { isTransitive = false }
+    compileOnly(idofrontLibs.minecraft.plugin.protocollib)
+    compileOnly(libs.minecraft.plugin.blocklocker)
 
     // Shaded
-    implementation(libs.bundles.idofront.core)
+    implementation(idofrontLibs.bundles.idofront.core)
 }
