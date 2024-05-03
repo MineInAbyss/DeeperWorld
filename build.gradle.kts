@@ -15,6 +15,7 @@ repositories {
     maven("https://www.rutgerkok.nl/repo")
     maven("https://repo.dmulloy2.net/nexus/repository/public/")
     maven("https://repo.mineinabyss.com/releases/")
+    maven("https://repo.mineinabyss.com/snapshots")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
     maven("https://jitpack.io")
