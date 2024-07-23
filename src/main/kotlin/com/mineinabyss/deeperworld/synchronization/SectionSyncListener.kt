@@ -227,6 +227,15 @@ object SectionSyncListener : Listener {
         block.sync(updateBlockData(blockData))
     }
 
+    @EventHandler
+    fun InventoryBlockStartEvent.onFurnaceStart() {
+        if (!block.location.inSectionOverlap) return
+        deeperWorld.plugin.launch {
+            delay(1.ticks)
+            block.sync(updateBlockData(block.blockData))
+        }
+    }
+
     /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/
     @EventHandler
     fun EntitySpawnEvent.onEntitySummon() {

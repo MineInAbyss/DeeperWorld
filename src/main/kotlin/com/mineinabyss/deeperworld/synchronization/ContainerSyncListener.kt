@@ -124,7 +124,7 @@ object ContainerSyncListener : Listener {
     }
 
     /** Synchronize hopper pickups between sections */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     fun InventoryPickupItemEvent.hopperGrabEvent() {
         inventory.location?.sync { _, corresponding, section, corrSection ->
             if (corrSection.isOnTopOf(section)) {
