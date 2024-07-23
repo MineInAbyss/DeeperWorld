@@ -28,6 +28,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.*
+import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.EntitySpawnEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
@@ -218,6 +219,12 @@ object SectionSyncListener : Listener {
     fun SignChangeEvent.syncSignText() {
         if (!block.location.inSectionOverlap) return
         block.sync(signUpdater(lines()))
+    }
+
+    @EventHandler
+    fun EntityChangeBlockEvent.syncBlockChange() {
+        if (!block.location.inSectionOverlap) return
+        block.sync(updateBlockData(blockData))
     }
 
     /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/

@@ -1,14 +1,18 @@
 package com.mineinabyss.deeperworld.synchronization
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.world.section.*
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.plugin.Plugins
+import com.mineinabyss.idofront.time.ticks
+import kotlinx.coroutines.delay
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
 import org.bukkit.block.Block
 import org.bukkit.block.Container
+import org.bukkit.block.DecoratedPot
 import org.bukkit.block.Lidded
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -82,6 +86,21 @@ object ContainerSyncListener : Listener {
 
             //keep track of players opening inventory in this chunk
             keepLoadedInventories.getOrPut(linkedBlock.chunk) { mutableListOf() } += player
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    fun PlayerInteractEvent.onDecoratedPotFill() {
+        val (block, pot) = (clickedBlock ?: return) to (clickedBlock?.state as? DecoratedPot ?: return)
+        if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
+
+        val section = block.location.section ?: return
+        val linkedSection = block.location.correspondingSection ?: return
+        val linkedBlock = block.location.getCorrespondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
+
+        deeperWorld.plugin.launch {
+            delay(1.ticks)
+            linkedBlock.inventory.contents = pot.inventory.contents
         }
     }
 
