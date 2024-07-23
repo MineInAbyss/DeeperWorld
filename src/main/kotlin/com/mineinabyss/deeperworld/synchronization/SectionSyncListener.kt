@@ -206,6 +206,14 @@ object SectionSyncListener : Listener {
         }
     }
 
+    /** Synchronize explosions */
+    @EventHandler(ignoreCancelled = true)
+    fun BlockExplodeEvent.syncExplosions() {
+        blockList().forEach { explodedBlock ->
+            explodedBlock.location.sync(updateMaterial(Material.AIR))
+        }
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun SignChangeEvent.syncSignText() {
         if (!block.location.inSectionOverlap) return
@@ -215,15 +223,9 @@ object SectionSyncListener : Listener {
     /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/
     @EventHandler
     fun EntitySpawnEvent.onEntitySummon() {
-        if (entity.location.inSectionOverlap &&
-            (entityType == EntityType.WITHER || entityType == EntityType.IRON_GOLEM)
-        ) {
-            entity.world.getNearbyEntitiesByType(
-                entityType.entityClass,
-                entity.location.correspondingLocation ?: return,
-                1.0
-            ).firstOrNull()?.remove() ?: return
-        }
+        val corrLocation = entity.location.correspondingLocation ?: return
+        if (entityType != EntityType.WITHER && entityType != EntityType.IRON_GOLEM) return
 
+        entity.world.getNearbyEntitiesByType(entityType.entityClass, corrLocation, 1.0).firstOrNull()?.remove()
     }
 }
