@@ -26,7 +26,7 @@ import org.bukkit.inventory.ItemStack
 
 
 private fun updateProtection(block: Block) =
-    blockLocker.protectionFinder.findProtection(block, SearchMode.ALL).ifPresent {
+    blockLocker?.protectionFinder?.findProtection(block, SearchMode.ALL)?.ifPresent {
         it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
     }
 

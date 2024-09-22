@@ -38,7 +38,7 @@ import org.bukkit.event.world.StructureGrowEvent
 import org.bukkit.inventory.EquipmentSlot
 
 private fun syncBlockLocker(corr: Block) {
-    blockLocker.protectionFinder.findProtection(corr, SearchMode.ALL).ifPresent {
+    blockLocker?.protectionFinder?.findProtection(corr, SearchMode.ALL)?.ifPresent {
         it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
     }
 }
