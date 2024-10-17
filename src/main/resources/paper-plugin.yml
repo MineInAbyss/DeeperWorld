@@ -5,7 +5,7 @@ authors: [Derongan, Offz, Boy000, Norazan, Scyu]
 api-version: '1.21'
 description: A plugin for letting you create a deeper world. Or at least fake it.
 
-softdepend: [Multiverse-Core, BlockLocker, ProtocolLib, FastAsyncWorldEdit]
+softdepend: [BlockLocker, FastAsyncWorldEdit]
 
 permissions:
   deeperworld.*:

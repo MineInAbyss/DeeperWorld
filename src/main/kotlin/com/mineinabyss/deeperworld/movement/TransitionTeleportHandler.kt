@@ -5,7 +5,6 @@ import com.mineinabyss.deeperworld.datastructures.VehicleTree
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.extensions.getPassengersRecursive
 import com.mineinabyss.deeperworld.extensions.getRootVehicle
-import com.mineinabyss.deeperworld.protocolManager
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.Location
@@ -55,15 +54,13 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
                 delay(1.ticks)
 
                 player.teleportWithSpectatorsAsync(to) {
-                    protocolManager.addPacketListener(
-                        SectionTeleportPacketAdapter(
-                            player,
-                            oldLeashedEntities,
-                            oldFallDistance,
-                            oldVelocity,
-                            vehicleTree
-                        )
-                    )
+                    SectionTeleportPacketAdapter(
+                        player,
+                        oldLeashedEntities,
+                        oldFallDistance,
+                        oldVelocity,
+                        vehicleTree
+                    ).addPacketListener()
                 }
 
             }
@@ -76,14 +73,12 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
                 player.velocity = oldVelocity
 
                 if (oldLeashedEntities.isNotEmpty()) {
-                    protocolManager.addPacketListener(
-                        SectionTeleportPacketAdapter(
-                            player,
-                            oldLeashedEntities,
-                            oldFallDistance,
-                            oldVelocity
-                        )
-                    )
+                    SectionTeleportPacketAdapter(
+                        player,
+                        oldLeashedEntities,
+                        oldFallDistance,
+                        oldVelocity
+                    ).addPacketListener()
                 }
             }
         }
