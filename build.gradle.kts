@@ -5,6 +5,7 @@ plugins {
     alias(idofrontLibs.plugins.mia.papermc)
     alias(idofrontLibs.plugins.mia.copyjar)
     alias(idofrontLibs.plugins.mia.testing)
+    alias(idofrontLibs.plugins.mia.nms)
     alias(idofrontLibs.plugins.mia.publication)
     alias(idofrontLibs.plugins.mia.autoversion)
 }
@@ -32,9 +33,9 @@ dependencies {
     // Plugin APIs
     compileOnly(idofrontLibs.minecraft.plugin.fawe.core)
     compileOnly(idofrontLibs.minecraft.plugin.fawe.bukkit) { isTransitive = false }
-    compileOnly(idofrontLibs.minecraft.plugin.protocollib)
     compileOnly(libs.minecraft.plugin.blocklocker)
 
     // Shaded
     implementation(idofrontLibs.bundles.idofront.core)
+    implementation(idofrontLibs.idofront.nms)
 }

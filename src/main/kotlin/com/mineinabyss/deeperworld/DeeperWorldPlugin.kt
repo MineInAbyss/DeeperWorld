@@ -1,7 +1,5 @@
 package com.mineinabyss.deeperworld
 
-import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.ProtocolManager
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.listeners.MovementListener
@@ -22,8 +20,6 @@ import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.Material
 import org.bukkit.plugin.java.JavaPlugin
-
-val protocolManager: ProtocolManager = ProtocolLibrary.getProtocolManager()
 
 class DeeperWorldPlugin : JavaPlugin() {
     override fun onEnable() {

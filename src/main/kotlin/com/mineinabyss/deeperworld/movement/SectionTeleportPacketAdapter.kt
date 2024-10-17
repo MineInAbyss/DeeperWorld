@@ -1,15 +1,15 @@
 package com.mineinabyss.deeperworld.movement
 
-import com.comphenix.protocol.PacketType
-import com.comphenix.protocol.events.PacketAdapter
-import com.comphenix.protocol.events.PacketContainer
-import com.comphenix.protocol.events.PacketEvent
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.datastructures.VehicleTree
 import com.mineinabyss.deeperworld.deeperWorld
-import com.mineinabyss.deeperworld.protocolManager
+import com.mineinabyss.idofront.nms.PacketListener
+import com.mineinabyss.idofront.nms.aliases.toNMS
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
+import net.kyori.adventure.key.Key
+import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
@@ -27,55 +27,50 @@ class SectionTeleportPacketAdapter(
     private val oldFallDistance: Float,
     private val oldVelocity: Vector,
     private val vehicleTree: VehicleTree? = null
-) : PacketAdapter(
-    deeperWorld.plugin,
-    PacketType.Play.Client.POSITION,
-    PacketType.Play.Client.POSITION_LOOK
 ) {
-    override fun onPacketReceiving(event: PacketEvent) {
-        if (event.player != player) return
 
-        protocolManager.removePacketListener(this)
+    private val PACKET_KEY = Key.key("deeperworld", "section_teleport_handler_${player.name}")
 
-        deeperWorld.plugin.launch {
-            delay(1.ticks)
+    fun addPacketListener() {
+        PacketListener.interceptClientbound(deeperWorld.plugin, PACKET_KEY.value()) { packet, player: Player? ->
+            if (this.player.uniqueId != player?.uniqueId) return@interceptClientbound packet
 
-            oldLeashedEntities.toSet().forEach {
-                if (it == player) return@forEach
+            PacketListener.unregisterListener(PACKET_KEY)
 
-                it.teleport(player)
-                it.setLeashHolder(player)
-            }
+            deeperWorld.plugin.launch {
+                delay(1.ticks)
 
-            if (vehicleTree != null) {
-                vehicleTree.root.values().toSet().forEach {
+                oldLeashedEntities.asSequence().forEach {
                     if (it == player) return@forEach
 
                     it.teleport(player)
+                    it.setLeashHolder(player)
                 }
 
-                vehicleTree.root.applyAll { vehicleNode ->
-                    vehicleNode.children.forEach {
-                        vehicleNode.value.addPassenger(it.value)
+                if (vehicleTree != null) {
+                    vehicleTree.root.values().asSequence().forEach {
+                        if (it != player) it.teleport(player)
                     }
-                }
 
-                vehicleTree.root.value.fallDistance = oldFallDistance
-                vehicleTree.root.value.velocity = oldVelocity
+                    vehicleTree.root.applyAll { vehicleNode ->
+                        vehicleNode.children.forEach {
+                            vehicleNode.value.addPassenger(it.value)
+                        }
+                    }
 
-                delay(deeperWorld.config.remountPacketDelay)
+                    vehicleTree.root.value.fallDistance = oldFallDistance
+                    vehicleTree.root.value.velocity = oldVelocity
 
-                player.vehicle?.let { vehicle ->
-                    val playerVehicleID = vehicle.entityId
-                    val passengerIDs = vehicle.passengers.map { it.entityId }.toIntArray()
+                    delay(deeperWorld.config.remountPacketDelay)
 
                     // Resends a mount packet to clients to prevent potential visual glitches where the client thinks it's dismounted.
-                    protocolManager.sendServerPacket(player, PacketContainer(PacketType.Play.Server.MOUNT).apply {
-                        integers.write(0, playerVehicleID)
-                        integerArrays.write(0, passengerIDs)
-                    })
+                    player.vehicle?.toNMS()?.let { vehicle ->
+                        player.toNMS().connection.send(ClientboundSetPassengersPacket(vehicle))
+                    }
                 }
             }
+
+            return@interceptClientbound packet
         }
     }
 }
