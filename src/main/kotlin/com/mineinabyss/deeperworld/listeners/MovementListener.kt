@@ -18,10 +18,8 @@ object MovementListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun PlayerMoveEvent.move() {
-        if (!hasExplicitlyChangedPosition()) return
-        if (player.hasPermission(Permissions.ADMIN_PERMISSION) && player.canMoveSections) {
-            MovementHandler.handleMovement(player, from, to)
-        }
+        if (!hasExplicitlyChangedBlock() || !player.hasPermission(Permissions.ADMIN_PERMISSION) || !player.canMoveSections) return
+        MovementHandler.handleMovement(player, from, to)
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)

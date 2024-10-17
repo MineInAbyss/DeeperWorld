@@ -1,86 +1,41 @@
 package com.mineinabyss.deeperworld.movement
 
 import com.github.shynixn.mccoroutine.bukkit.launch
-import com.mineinabyss.deeperworld.datastructures.VehicleTree
 import com.mineinabyss.deeperworld.deeperWorld
-import com.mineinabyss.deeperworld.extensions.getPassengersRecursive
-import com.mineinabyss.deeperworld.extensions.getRootVehicle
 import com.mineinabyss.idofront.time.ticks
+import io.papermc.paper.entity.TeleportFlag
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.asDeferred
 import org.bukkit.Location
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerTeleportEvent
 
-class TransitionTeleportHandler(val player: Player, val from: Location, val to: Location) :
-    TeleportHandler {
+class TransitionTeleportHandler(val player: Player, val from: Location, val to: Location) : TeleportHandler {
 
     override fun handleTeleport() {
         val oldLeashedEntities = player.getLeashedEntities()
+        val spectators = player.world.players.filter { it.spectatorTarget?.uniqueId == player.uniqueId }
+        val teleportFlags: Array<TeleportFlag> = listOf(TeleportFlag.Relative.YAW, TeleportFlag.Relative.PITCH, TeleportFlag.Relative.X, TeleportFlag.Relative.Y, TeleportFlag.Relative.Z, TeleportFlag.EntityState.RETAIN_PASSENGERS, TeleportFlag.EntityState.RETAIN_VEHICLE).toTypedArray()
 
         // Unleash all the leashed entities before teleporting them, to prevent leads from dropping.
         // The leashes are restored after teleportation.
-        oldLeashedEntities.forEach {
-            it.setLeashHolder(null)
-        }
+        for (it in oldLeashedEntities) it.setLeashHolder(null)
+        for (it in spectators) it.spectatorTarget = null
 
-        val rootVehicle = player.getRootVehicle()
-        if (rootVehicle != null) {
-            to.yaw = player.location.yaw
-            to.pitch = player.location.pitch
-
-            // Prevent teleportation of other players in the vehicle-passenger structure.
-            rootVehicle.getPassengersRecursive().filterIsInstance<Player>().forEach {
-                if (it != player) {
-                    it.vehicle?.removePassenger(it)
-                }
+        deeperWorld.plugin.launch {
+            player.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).asDeferred().await()
+            oldLeashedEntities.forEach { leashEntity ->
+                leashEntity.teleportAsync(player.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).asDeferred().await()
+                leashEntity.setLeashHolder(player)
+            }
+            spectators.forEach { spectator ->
+                spectator.teleportAsync(player.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).asDeferred().await()
+                spectator.spectatorTarget = player
             }
 
-            val oldFallDistance = rootVehicle.fallDistance
-            val oldVelocity = rootVehicle.velocity
-
-            val vehicleTree = VehicleTree(rootVehicle)
-
-            // Dismount every passenger in the vehicleTree in order to teleport them separately with a delay.
-            // This avoids the bug of entities not rendering if they are teleported within 1 tick of the player.
-            vehicleTree.root.applyAll {
-                it.value.passengers.forEach { passenger ->
-                    it.value.removePassenger(passenger)
-                }
-            }
-
-            // Delay the teleportation by 1 tick after passenger removal to avoid occasional
-            // "Removing ticking entity!" exceptions.
-            deeperWorld.plugin.launch {
-                delay(1.ticks)
-
-                player.teleportWithSpectatorsAsync(to) {
-                    SectionTeleportPacketAdapter(
-                        player,
-                        oldLeashedEntities,
-                        oldFallDistance,
-                        oldVelocity,
-                        vehicleTree
-                    ).addPacketListener()
-                }
-
-            }
-        } else {
-            val oldFallDistance = player.fallDistance
-            val oldVelocity = player.velocity
-
-            player.teleportWithSpectatorsAsync(to) {
-                player.fallDistance = oldFallDistance
-                player.velocity = oldVelocity
-
-                if (oldLeashedEntities.isNotEmpty()) {
-                    SectionTeleportPacketAdapter(
-                        player,
-                        oldLeashedEntities,
-                        oldFallDistance,
-                        oldVelocity
-                    ).addPacketListener()
-                }
-            }
+            delay(10.ticks)
+            MovementHandler.teleportCooldown -= player.uniqueId
         }
     }
 
@@ -91,26 +46,6 @@ class TransitionTeleportHandler(val player: Player, val from: Location, val to: 
     private fun Player.getLeashedEntities(): List<LivingEntity> {
         // Max leashed entity range is 10 blocks, therefore these parameter values
         return location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-            .filter { it.isLeashed && it.leashHolder == this }
+            .filter { it.isLeashed && it.leashHolder.uniqueId == this.uniqueId }
     }
-
-    private fun Player.teleportWithSpectatorsAsync(loc: Location, thenRun: (Boolean) -> Unit) {
-        val nearbySpectators =
-            location.getNearbyEntitiesByType(Player::class.java, 5.0)
-            .filter { it.spectatorTarget == this }
-
-        nearbySpectators.forEach {
-            it.spectatorTarget = null
-        }
-
-        teleportAsync(loc).thenAccept { success ->
-            if (!success) return@thenAccept
-            nearbySpectators.forEach {
-                it.teleport(loc)
-                it.spectatorTarget = this
-            }
-            thenRun(success)
-        }
-    }
-
 }

@@ -13,28 +13,23 @@ import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 object MovementHandler {
     private val sectionCheckers = listOf(ConfigSectionChecker)
 
+    val teleportCooldown = mutableSetOf<UUID>()
     fun handleMovement(player: Player, from: Location, to: Location) {
         if (sectionCheckers.any { it.inSection(player) }) {
             sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
                 with(getTeleportHandler(player, it)) {
-                    if (this.isValidTeleport()) {
-                        it.toEvent(player).call {
-                            this@with.handleTeleport()
-                        }
-                    } else {
-                        this.handleTeleport()
-                    }
+                    if (this.isValidTeleport()) it.toEvent(player).call { this@with.handleTeleport() }
+                    else this.handleTeleport()
                 }
-            } ?: return
-        } else {
-            player.applyOutOfBoundsDamage()
-        }
+            }
+        } else player.applyOutOfBoundsDamage()
     }
 
     //TODO abstract this away. Should instead do out of bounds action if out of bounds.
@@ -66,11 +61,14 @@ object MovementHandler {
         player: Player,
         sectionTransition: SectionTransition
     ): TeleportHandler {
-        if (sectionTransition.teleportUnnecessary) return object : TeleportHandler {
+        if (sectionTransition.teleportUnnecessary || player.uniqueId in teleportCooldown) return object : TeleportHandler {
             override fun handleTeleport() {}
 
             override fun isValidTeleport() = true
         }
+
+        teleportCooldown += player.uniqueId
+
         if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
                 UndoMovementInvalidTeleportHandler(

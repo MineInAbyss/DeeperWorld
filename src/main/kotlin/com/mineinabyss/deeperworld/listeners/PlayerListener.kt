@@ -19,15 +19,10 @@ object PlayerListener : Listener {
     fun PlayerTeleportEvent.onPlayerTeleport() {
         if (player.gameMode == CREATIVE || !player.canMoveSections) return
         if (cause != ENDER_PEARL && cause != CHORUS_FRUIT) return
+        if (to.section != null && to.section == player.location.section && !to.inSectionTransition) return
 
-        if (
-            to.section == null ||
-            to.section != player.location.section ||
-            to.inSectionTransition
-        ) {
-            player.error("Teleportation is disabled between Layers and Sections.")
-            isCancelled = true
-        }
+        player.error("Teleportation is disabled between Layers and Sections.")
+        isCancelled = true
     }
 
     @EventHandler
