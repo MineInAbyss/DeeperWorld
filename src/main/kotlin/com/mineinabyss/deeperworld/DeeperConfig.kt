@@ -27,8 +27,6 @@ data class DeeperWorldConfig(
     val damageOutsideSections: Double = 1.0,
     @YamlComment("Worlds which shouldn't damage players when outside of a section.")
     val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
-    @YamlComment("Sends an additional remount packet after this delay to prevent client-side mount bugs when moving between sections.\n")
-    val remountPacketDelay: Duration = 40.ticks,
     val fall: FallDamageConfig = FallDamageConfig(),
     val time: TimeConfig = TimeConfig(),
 ) {

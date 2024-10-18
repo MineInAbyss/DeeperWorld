@@ -1,5 +1,6 @@
 package com.mineinabyss.deeperworld.synchronization
 
+import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
@@ -8,6 +9,7 @@ import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.plugin.Plugins
+import com.mineinabyss.idofront.spawning.spawn
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
@@ -24,6 +26,7 @@ import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.block.sign.Side
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.Item
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -243,5 +246,18 @@ object SectionSyncListener : Listener {
         if (entityType != EntityType.WITHER && entityType != EntityType.IRON_GOLEM) return
 
         entity.world.getNearbyEntitiesByType(entityType.entityClass, corrLocation, 1.0).firstOrNull()?.remove()
+    }
+
+    /** Sync items removed by void to corresponding section */
+    @EventHandler
+    fun EntityRemoveFromWorldEvent.onVoidRemoval() {
+        val item = (entity as? Item)?.takeIf { it.y < it.world.minHeight } ?: return
+        val corrLoc = item.location.apply { y = -240.0 }.correspondingLocation ?: return
+        corrLoc.spawn<Item> {
+            itemStack = item.itemStack
+            thrower = item.thrower
+            owner = item.owner
+            velocity = velocity
+        }
     }
 }

@@ -40,4 +40,3 @@ object MovementListener : Listener {
             .forEach { MovementHandler.handleMovement(it, from, to) }
     }
 }
-
