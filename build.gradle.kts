@@ -3,6 +3,7 @@ plugins {
     alias(idofrontLibs.plugins.kotlinx.serialization)
     alias(idofrontLibs.plugins.mia.kotlin.jvm)
     alias(idofrontLibs.plugins.mia.papermc)
+    alias(idofrontLibs.plugins.mia.nms)
     alias(idofrontLibs.plugins.mia.copyjar)
     alias(idofrontLibs.plugins.mia.testing)
     alias(idofrontLibs.plugins.mia.publication)
@@ -37,4 +38,5 @@ dependencies {
 
     // Shaded
     implementation(idofrontLibs.bundles.idofront.core)
+    implementation(idofrontLibs.idofront.nms)
 }

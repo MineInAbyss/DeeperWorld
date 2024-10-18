@@ -6,6 +6,7 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.listeners.MovementListener
 import com.mineinabyss.deeperworld.listeners.PlayerListener
+import com.mineinabyss.deeperworld.nms.coordinate.CoordinateFixer
 import com.mineinabyss.deeperworld.player.FallingDamageManager
 import com.mineinabyss.deeperworld.player.PlayerManagerImpl
 import com.mineinabyss.deeperworld.services.PlayerManager
@@ -53,6 +54,9 @@ class DeeperWorldPlugin : JavaPlugin() {
 
         //register command executor
         DeeperCommandExecutor()
+
+        // Register packet interceptors
+        CoordinateFixer.handleIntercept()
 
         // Initialize falling damage task
         if (deeperWorld.config.fall.maxSafeDist >= 0f && deeperWorld.config.fall.fallDistanceDamageScaler >= 0.0) {
