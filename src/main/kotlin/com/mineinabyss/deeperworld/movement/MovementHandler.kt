@@ -5,6 +5,7 @@ import com.mineinabyss.deeperworld.movement.transition.ConfigSectionChecker
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
 import com.mineinabyss.deeperworld.movement.transition.toEvent
+import com.mineinabyss.deeperworld.world.section.section
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.textcomponents.miniMsg
 import net.kyori.adventure.text.format.NamedTextColor
@@ -12,6 +13,8 @@ import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Entity
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -21,15 +24,25 @@ object MovementHandler {
     private val sectionCheckers = listOf(ConfigSectionChecker)
 
     val teleportCooldown = mutableSetOf<UUID>()
-    fun handleMovement(player: Player, from: Location, to: Location) {
-        if (sectionCheckers.any { it.inSection(player) }) {
-            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
-                with(getTeleportHandler(player, it)) {
-                    if (this.isValidTeleport()) it.toEvent(player).call { this@with.handleTeleport() }
-                    else this.handleTeleport()
+    fun handleMovement(entity: Entity, from: Location, to: Location) {
+        if (sectionCheckers.any { it.inSection(entity) }) {
+            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(entity, from, to) }?.let {
+                val handler = getTeleportHandler(entity, it)
+                val entity = handler.entity
+                when {
+                    entity is Player -> when {
+                        handler.isValidTeleport() -> it.toEvent(entity).call { handler.handleTeleport() }
+                        else -> handler.handleTeleport()
+                    }
+                    else -> {
+                        if (handler.isValidTeleport()) entity.passengers.filterIsInstance<Player>().forEach { p ->
+                            if (!it.toEvent(p).callEvent()) p.leaveVehicle()
+                        }.also { handler.handleTeleport() }
+                        else handler.handleTeleport()
+                    }
                 }
             }
-        } else player.applyOutOfBoundsDamage()
+        } else (entity as? Player)?.applyOutOfBoundsDamage()
     }
 
     //TODO abstract this away. Should instead do out of bounds action if out of bounds.
@@ -58,34 +71,25 @@ object MovementHandler {
 
 
     private fun getTeleportHandler(
-        player: Player,
+        entity: Entity,
         sectionTransition: SectionTransition
     ): TeleportHandler {
-        if (sectionTransition.teleportUnnecessary || player.uniqueId in teleportCooldown) return object : TeleportHandler {
+        val entity = entity.vehicle ?: entity
+        if (sectionTransition.teleportUnnecessary || entity.uniqueId in teleportCooldown) return object : TeleportHandler {
+            override val entity: Entity = entity
             override fun handleTeleport() {}
 
-            override fun isValidTeleport() = true
+            override fun isValidTeleport() = false
         }
+        teleportCooldown += entity.uniqueId
+        teleportCooldown += entity.passengers.map { it.uniqueId }
 
-        val teleportEntity = player.vehicle ?: player
-        teleportCooldown += teleportEntity.uniqueId
-
-        if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
+        if (entity is LivingEntity && (entity !is Player || entity.gameMode != GameMode.SPECTATOR) && sectionTransition.to.block.isSolid) {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
-                UndoMovementInvalidTeleportHandler(
-                    player,
-                    sectionTransition.from,
-                    sectionTransition.to
-                )
-            } else {
-                BedrockBlockingInvalidTeleportHandler(
-                    player,
-                    sectionTransition.from,
-                    sectionTransition.to
-                )
-            }
+                UndoMovementInvalidTeleportHandler(entity, sectionTransition.from, sectionTransition.to)
+            } else BedrockBlockingInvalidTeleportHandler(entity, sectionTransition.from, sectionTransition.to)
         }
 
-        return TransitionTeleportHandler(teleportEntity, sectionTransition.from, sectionTransition.to)
+        return TransitionTeleportHandler(entity, sectionTransition.from, sectionTransition.to)
     }
 }

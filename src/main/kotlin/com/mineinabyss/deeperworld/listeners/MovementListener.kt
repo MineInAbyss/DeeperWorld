@@ -24,19 +24,19 @@ object MovementListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun VehicleMoveEvent.move() {
-        val players = vehicle.getPassengersRecursive().filterIsInstance<Player>()
+        vehicle.getPassengersRecursive().filterIsInstance<Player>()
+            .filterNot { it.hasPermission(Permissions.ADMIN_PERMISSION) && it.canMoveSections }
+            .forEach { it.leaveVehicle() }
 
-        players.firstOrNull { it.hasPermission(Permissions.ADMIN_PERMISSION) && it.canMoveSections }?.let {
-            MovementHandler.handleMovement(it, from, to)
-        }
+        MovementHandler.handleMovement(vehicle, from, to)
     }
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
-        if (!hasExplicitlyChangedPosition()) return
-        if (entity.getPassengersRecursive().isEmpty()) return
-        entity.getPassengersRecursive().filterIsInstance<Player>()
-            .filter { rider -> rider.hasPermission(Permissions.ADMIN_PERMISSION) && rider.canMoveSections }
-            .forEach { MovementHandler.handleMovement(it, from, to) }
+        //if (!hasExplicitlyChangedPosition()) return
+        //if (entity.getPassengersRecursive().isEmpty()) return
+        //entity.getPassengersRecursive().filterIsInstance<Player>()
+        //    .filter { rider -> rider.hasPermission(Permissions.ADMIN_PERMISSION) && rider.canMoveSections }
+        //    .forEach { MovementHandler.handleMovement(it, from, to) }
     }
 }
