@@ -67,7 +67,8 @@ object MovementHandler {
             override fun isValidTeleport() = true
         }
 
-        teleportCooldown += player.uniqueId
+        val teleportEntity = player.vehicle ?: player
+        teleportCooldown += teleportEntity.uniqueId
 
         if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
             return if (sectionTransition.kind == TransitionKind.ASCEND) {
@@ -85,6 +86,6 @@ object MovementHandler {
             }
         }
 
-        return TransitionTeleportHandler(player, sectionTransition.from, sectionTransition.to)
+        return TransitionTeleportHandler(teleportEntity, sectionTransition.from, sectionTransition.to)
     }
 }
