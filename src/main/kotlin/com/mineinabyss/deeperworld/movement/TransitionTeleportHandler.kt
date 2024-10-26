@@ -7,11 +7,13 @@ import com.mineinabyss.idofront.time.ticks
 import io.papermc.paper.entity.TeleportFlag
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.yield
 import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerTeleportEvent
+import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, val to: Location) : TeleportHandler {
@@ -33,33 +35,46 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
     ).toTypedArray()
 
     override fun handleTeleport() {
-        val oldLeashedEntities = leashedEntities()
-        val spectators = spectatorEntities()
+        val (leashedEntities, leashUuids) = leashedEntities().let { it to it.values.flatten().map { it.uniqueId }.toSet() }
+        val (spectators, specUuids) = spectatorEntities().let { it to it.values.flatten().map { it.uniqueId }.toSet() }
         val oldVelocity = teleportEntity.velocity
 
         // Unleash all the leashed entities before teleporting them, to prevent leads from dropping.
         // The leashes are restored after teleportation.
-        oldLeashedEntities.values.flatten().forEach { it.setLeashHolder(null) }
+        leashedEntities.values.flatten().forEach { it.setLeashHolder(null) }
         spectators.values.flatten().forEach { it.spectatorTarget = null }
+        MovementHandler.teleportCooldown += leashUuids
+        MovementHandler.teleportCooldown += specUuids
 
         deeperWorld.plugin.launch {
             val chunk = to.world.getChunkAtAsync(to).await()
             val addedTicket = chunk.addPluginChunkTicket(deeperWorld.plugin)
-            teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
-            teleportEntity.velocity = oldVelocity
-            oldLeashedEntities.forEach { (leashHolder, leashEntities) ->
-                leashEntities.forEach {
-                    it.teleportAsync(teleportEntity.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
-                    it.setLeashHolder(leashHolder)
+
+            if (teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()) {
+                teleportEntity.velocity = oldVelocity
+                leashedEntities.forEach { (leashHolder, leashEntities) ->
+                    leashEntities.forEach {
+                        it.teleportAsync(leashHolder.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
+                        delay(2.ticks)
+                        it.setLeashHolder(leashHolder)
+                    }
                 }
-            }
-            spectators.forEach { (spectatorTarget, spectators) ->
-                spectators.forEach {
-                    it.teleportAsync(teleportEntity.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
-                    it.spectatorTarget = spectatorTarget
+
+                spectators.forEach { (spectatorTarget, spectators) ->
+                    spectators.forEach {
+                        it.teleportAsync(spectatorTarget.location).await()
+                        delay(2.ticks)
+                        it.spectatorTarget = spectatorTarget
+                        delay(2.ticks)
+                        it.spectatorTarget = null
+                        delay(2.ticks)
+                        it.spectatorTarget = spectatorTarget
+                    }
                 }
             }
 
+            MovementHandler.teleportCooldown -= leashUuids
+            MovementHandler.teleportCooldown -= specUuids
             MovementHandler.teleportCooldown -= teleportEntity.uniqueId
             if (addedTicket) {
                 delay(10.seconds)
@@ -72,32 +87,27 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
         return true
     }
 
-    private fun spectatorEntities(): Map<Entity, List<Player>> {
+    private fun spectatorEntities(): Map<Entity, Set<Player>> {
         return when (teleportEntity) {
-            is Player -> mapOf(teleportEntity to teleportEntity.world.players.filter { it.spectatorTarget?.uniqueId == teleportEntity.uniqueId })
+            is Player -> mapOf(teleportEntity to teleportEntity.world.players.filter { it.spectatorTarget?.uniqueId == teleportEntity.uniqueId }.toSet())
             else -> teleportEntity.passengers.associateWith { p ->
-                p.world.players.filter { it.spectatorTarget?.uniqueId == p.uniqueId }
+                p.world.players.filter { it.spectatorTarget?.uniqueId == p.uniqueId }.toSet()
             }
         }
     }
 
-    private fun leashedEntities(): Map<LivingEntity, List<LivingEntity>> {
+    private fun leashedEntities(): Map<LivingEntity, Set<LivingEntity>> {
         // Max leashed entity range is 10 blocks, therefore these parameter values
         return when (teleportEntity) {
             is Player -> mapOf(
                 teleportEntity to teleportEntity.location
                     .getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-                    .filter { it.isLeashed && it.leashHolder.uniqueId == teleportEntity.uniqueId })
+                    .filter { it.isLeashed && it.leashHolder.uniqueId == teleportEntity.uniqueId }.toSet())
 
-            else -> teleportEntity.passengers.filterIsInstance<LivingEntity>().associateWith {
-                it.location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-                    .filter { it.isLeashed && it.leashHolder.uniqueId == teleportEntity.uniqueId }
+            else -> teleportEntity.passengers.filterIsInstance<Player>().associateWith { player ->
+                player.location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
+                    .filter { it.isLeashed && it.leashHolder.uniqueId == player.uniqueId }.toSet()
             }
         }
-    }
-
-    private fun Entity.recursiveLeashEntities(): List<LivingEntity> {
-        return location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-            .filter { it.isLeashed && it.leashHolder.uniqueId == this.uniqueId }
     }
 }
