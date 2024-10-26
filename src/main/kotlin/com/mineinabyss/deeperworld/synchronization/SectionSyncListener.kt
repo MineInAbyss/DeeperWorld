@@ -12,6 +12,7 @@ import com.mineinabyss.idofront.plugin.Plugins
 import com.mineinabyss.idofront.spawning.spawn
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import net.kyori.adventure.text.Component
 import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
@@ -39,6 +40,7 @@ import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.world.StructureGrowEvent
 import org.bukkit.inventory.EquipmentSlot
+import kotlin.time.Duration.Companion.seconds
 
 private fun syncBlockLocker(corr: Block) {
     blockLocker?.protectionFinder?.findProtection(corr, SearchMode.ALL)?.ifPresent {
@@ -253,11 +255,19 @@ object SectionSyncListener : Listener {
     fun EntityRemoveFromWorldEvent.onVoidRemoval() {
         val item = (entity as? Item)?.takeIf { it.y < it.world.minHeight } ?: return
         val corrLoc = item.location.apply { y = -240.0 }.correspondingLocation ?: return
-        corrLoc.spawn<Item> {
-            itemStack = item.itemStack
-            thrower = item.thrower
-            owner = item.owner
-            velocity = velocity
+        deeperWorld.plugin.launch {
+            val chunk = corrLoc.world.getChunkAtAsync(corrLoc).await()
+            val addedTicket = chunk.addPluginChunkTicket(deeperWorld.plugin)
+            corrLoc.spawn<Item> {
+                itemStack = item.itemStack
+                thrower = item.thrower
+                owner = item.owner
+                velocity = item.velocity
+            }
+            if (addedTicket) {
+                delay(10.seconds)
+                chunk.removePluginChunkTicket(deeperWorld.plugin)
+            }
         }
     }
 }

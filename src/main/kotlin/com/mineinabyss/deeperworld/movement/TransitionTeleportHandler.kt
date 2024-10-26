@@ -6,13 +6,13 @@ import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.idofront.time.ticks
 import io.papermc.paper.entity.TeleportFlag
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerTeleportEvent
+import kotlin.time.Duration.Companion.seconds
 
 class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, val to: Location) : TeleportHandler {
 
@@ -43,7 +43,8 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
         spectators.values.flatten().forEach { it.spectatorTarget = null }
 
         deeperWorld.plugin.launch {
-            to.world.getChunkAtAsync(to).await().addPluginChunkTicket(deeperWorld.plugin)
+            val chunk = to.world.getChunkAtAsync(to).await()
+            val addedTicket = chunk.addPluginChunkTicket(deeperWorld.plugin)
             teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
             teleportEntity.velocity = oldVelocity
             oldLeashedEntities.forEach { (leashHolder, leashEntities) ->
@@ -59,9 +60,11 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
                 }
             }
 
-            delay(10.ticks)
-            to.chunk.removePluginChunkTicket(deeperWorld.plugin)
             MovementHandler.teleportCooldown -= teleportEntity.uniqueId
+            if (addedTicket) {
+                delay(10.seconds)
+                to.chunk.removePluginChunkTicket(deeperWorld.plugin)
+            }
         }
     }
 

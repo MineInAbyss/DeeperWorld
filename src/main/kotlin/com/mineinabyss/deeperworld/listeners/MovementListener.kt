@@ -33,9 +33,6 @@ object MovementListener : Listener {
     @EventHandler
     fun EntityMoveEvent.entityMove() {
         if (!hasExplicitlyChangedPosition()) return
-        if (entity.getPassengersRecursive().isEmpty()) return
-        entity.getPassengersRecursive().filterIsInstance<Player>()
-            .filter { rider -> rider.hasPermission(Permissions.ADMIN_PERMISSION) && rider.canMoveSections }
-            .forEach { MovementHandler.handleMovement(it, from, to) }
+        MovementHandler.handleMovement(entity, from, to)
     }
 }
