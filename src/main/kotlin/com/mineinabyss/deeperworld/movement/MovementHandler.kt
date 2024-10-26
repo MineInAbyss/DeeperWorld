@@ -12,6 +12,7 @@ import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -21,15 +22,15 @@ object MovementHandler {
     private val sectionCheckers = listOf(ConfigSectionChecker)
 
     val teleportCooldown = mutableSetOf<UUID>()
-    fun handleMovement(player: Player, from: Location, to: Location) {
-        if (sectionCheckers.any { it.inSection(player) }) {
-            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(player, from, to) }?.let {
-                with(getTeleportHandler(player, it)) {
-                    if (this.isValidTeleport()) it.toEvent(player).call { this@with.handleTeleport() }
+    fun handleMovement(entity: Entity, from: Location, to: Location) {
+        if (sectionCheckers.any { it.inSection(entity) }) {
+            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(entity, from, to) }?.let {
+                with(getTeleportHandler(entity, it)) {
+                    if (this.isValidTeleport() && entity is Player) it.toEvent(entity).call { this@with.handleTeleport() }
                     else this.handleTeleport()
                 }
             }
-        } else player.applyOutOfBoundsDamage()
+        } else (entity as? Player)?.applyOutOfBoundsDamage()
     }
 
     //TODO abstract this away. Should instead do out of bounds action if out of bounds.
@@ -56,14 +57,14 @@ object MovementHandler {
         }
     }
 
-    private fun getTeleportHandler(player: Player, sectionTransition: SectionTransition): TeleportHandler {
+    private fun getTeleportHandler(entity: Entity, sectionTransition: SectionTransition): TeleportHandler {
         return when {
-            sectionTransition.teleportUnnecessary || player.uniqueId in teleportCooldown -> EmptyTeleportHandler
-            player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
-                TransitionKind.ASCEND -> UndoMovementInvalidTeleportHandler(player, sectionTransition)
-                else -> BedrockBlockingInvalidTeleportHandler(player, sectionTransition)
+            sectionTransition.teleportUnnecessary || entity.uniqueId in teleportCooldown -> EmptyTeleportHandler
+            entity is Player && entity.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
+                TransitionKind.ASCEND -> UndoMovementInvalidTeleportHandler(entity, sectionTransition)
+                else -> BedrockBlockingInvalidTeleportHandler(entity, sectionTransition)
             }
-            else -> TransitionTeleportHandler(player.vehicle ?: player, sectionTransition)
+            else -> TransitionTeleportHandler(entity.vehicle ?: entity, sectionTransition)
         }
     }
 }

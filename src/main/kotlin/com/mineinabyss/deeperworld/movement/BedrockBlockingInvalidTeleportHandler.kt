@@ -12,7 +12,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 
-class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: Location) : InvalidTeleportHandler(player, from, to) {
+class BedrockBlockingInvalidTeleportHandler(entity: Entity, from: Location, to: Location) : InvalidTeleportHandler(entity, from, to) {
 
     constructor(player: Player, transition: SectionTransition) : this(player, transition.from, transition.to)
     override fun handleInvalidTeleport() {
@@ -32,12 +32,12 @@ class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: 
             MovementListener.temporaryBedrock.remove(spawnedBedrock)
         }
 
-        val oldFallDistance = player.fallDistance
-        val oldVelocity = player.velocity
+        val oldFallDistance = entity.fallDistance
+        val oldVelocity = entity.velocity
 
-        player.teleport(from.up(1))
+        entity.teleport(from.up(1))
 
-        player.fallDistance = oldFallDistance
-        player.velocity = oldVelocity
+        entity.fallDistance = oldFallDistance
+        entity.velocity = oldVelocity
     }
 }

@@ -26,9 +26,8 @@ object MovementListener : Listener {
     fun VehicleMoveEvent.move() {
         val players = vehicle.getPassengersRecursive().filterIsInstance<Player>()
 
-        players.firstOrNull { it.hasPermission(Permissions.ADMIN_PERMISSION) && it.canMoveSections }?.let {
-            MovementHandler.handleMovement(it, from, to)
-        }
+        val teleportEntity = players.firstOrNull { it.hasPermission(Permissions.ADMIN_PERMISSION) && it.canMoveSections } ?: vehicle
+        MovementHandler.handleMovement(teleportEntity, from, to)
     }
 
     @EventHandler

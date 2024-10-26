@@ -4,15 +4,16 @@ import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionTransition
 import com.mineinabyss.deeperworld.world.section.section
 import org.bukkit.Location
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 
 object ConfigSectionChecker : SectionChecker {
-    override fun inSection(player: Player): Boolean {
-        return player.location.section != null
+    override fun inSection(entity: Entity): Boolean {
+        return entity.location.section != null
     }
 
     override fun checkForTransition(
-        player: Player,
+        entity: Entity,
         from: Location,
         to: Location
     ): SectionTransition? {
