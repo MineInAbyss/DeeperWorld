@@ -56,36 +56,14 @@ object MovementHandler {
         }
     }
 
-
-    private fun getTeleportHandler(
-        player: Player,
-        sectionTransition: SectionTransition
-    ): TeleportHandler {
-        if (sectionTransition.teleportUnnecessary || player.uniqueId in teleportCooldown) return object : TeleportHandler {
-            override fun handleTeleport() {}
-
-            override fun isValidTeleport() = true
-        }
-
-        val teleportEntity = player.vehicle ?: player
-        teleportCooldown += teleportEntity.uniqueId
-
-        if (player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid) {
-            return if (sectionTransition.kind == TransitionKind.ASCEND) {
-                UndoMovementInvalidTeleportHandler(
-                    player,
-                    sectionTransition.from,
-                    sectionTransition.to
-                )
-            } else {
-                BedrockBlockingInvalidTeleportHandler(
-                    player,
-                    sectionTransition.from,
-                    sectionTransition.to
-                )
+    private fun getTeleportHandler(player: Player, sectionTransition: SectionTransition): TeleportHandler {
+        return when {
+            sectionTransition.teleportUnnecessary || player.uniqueId in teleportCooldown -> EmptyTeleportHandler
+            player.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
+                TransitionKind.ASCEND -> UndoMovementInvalidTeleportHandler(player, sectionTransition)
+                else -> BedrockBlockingInvalidTeleportHandler(player, sectionTransition)
             }
+            else -> TransitionTeleportHandler(player.vehicle ?: player, sectionTransition)
         }
-
-        return TransitionTeleportHandler(teleportEntity, sectionTransition.from, sectionTransition.to)
     }
 }

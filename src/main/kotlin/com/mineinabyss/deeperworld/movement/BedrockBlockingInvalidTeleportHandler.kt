@@ -3,15 +3,18 @@ package com.mineinabyss.deeperworld.movement
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.listeners.MovementListener
+import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.idofront.location.up
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 
-class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: Location) :
-    InvalidTeleportHandler(player, from, to) {
+class BedrockBlockingInvalidTeleportHandler(player: Player, from: Location, to: Location) : InvalidTeleportHandler(player, from, to) {
+
+    constructor(player: Player, transition: SectionTransition) : this(player, transition.from, transition.to)
     override fun handleInvalidTeleport() {
         from.block.type = Material.BEDROCK
 
