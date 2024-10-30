@@ -1,6 +1,7 @@
 package com.mineinabyss.deeperworld
 
 import com.github.shynixn.mccoroutine.bukkit.launch
+import com.mineinabyss.deeperworld.DeeperCommands.registerCommands
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.listeners.MovementListener
 import com.mineinabyss.deeperworld.listeners.PlayerListener
@@ -48,7 +49,7 @@ class DeeperWorldPlugin : JavaPlugin() {
         )
 
         //register command executor
-        DeeperCommandExecutor()
+        DeeperCommands.registerCommands()
 
         // Initialize falling damage task
         if (deeperWorld.config.fall.maxSafeDist >= 0f && deeperWorld.config.fall.fallDistanceDamageScaler >= 0.0) {
