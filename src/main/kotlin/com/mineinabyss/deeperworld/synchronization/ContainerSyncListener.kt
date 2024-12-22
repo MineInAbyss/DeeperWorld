@@ -25,11 +25,6 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
 
-private fun updateProtection(block: Block) =
-    blockLocker?.protectionFinder?.findProtection(block, SearchMode.ALL)?.ifPresent {
-        it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
-    }
-
 object ContainerSyncListener : Listener {
 
     /** Tells a chunk what players are accessing inventories on its [Section] border */

@@ -42,12 +42,6 @@ import org.bukkit.event.world.StructureGrowEvent
 import org.bukkit.inventory.EquipmentSlot
 import kotlin.time.Duration.Companion.seconds
 
-private fun syncBlockLocker(corr: Block) {
-    blockLocker?.protectionFinder?.findProtection(corr, SearchMode.ALL)?.ifPresent {
-        it.signs.forEach { linkedSign -> linkedSign.location.block.type = Material.AIR }
-    }
-}
-
 /**
  * Synchronizes the overlap between sections
  */
@@ -77,10 +71,11 @@ object SectionSyncListener : Listener {
                 }
 
                 //sync any changes to BlockLocker's signs`
-                if (Plugins.isEnabled("BlockLocker") && state is Sign &&
+
+                if (blockLocker != null && state is Sign &&
                     (state.getSide(Side.FRONT).lines().first() == Component.text("[Private]")
                             || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))) {
-                    syncBlockLocker(corr)
+                    blockLocker?.syncBlockLocker(corr)
                 }
 
                 // Breaking a block triggering attached block to break

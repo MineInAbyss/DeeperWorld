@@ -2,9 +2,6 @@ package com.mineinabyss.deeperworld.synchronization
 
 import com.mineinabyss.deeperworld.world.section.*
 import net.kyori.adventure.text.Component
-import nl.rutgerkok.blocklocker.BlockLockerAPIv2
-import nl.rutgerkok.blocklocker.BlockLockerPlugin
-import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -13,8 +10,6 @@ import org.bukkit.block.data.BlockData
 import org.bukkit.block.sign.Side
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
-
-internal val blockLocker: BlockLockerPlugin? by lazy { Bukkit.getPluginManager().getPlugin("BlockLocker") as? BlockLockerPlugin }
 
 internal fun copyBlockData(original: Block, corresponding: Block) {
     corresponding.blockData = original.blockData.clone()
