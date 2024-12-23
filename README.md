@@ -1,10 +1,9 @@
 <div align="center">
 
 # DeeperWorld
-[![Java CI](https://github.com/MineInAbyss/DeeperWorld/actions/workflows/main.yml/badge.svg)](https://github.com/MineInAbyss/DeeperWorld/actions/workflows/main.yml)
 [![Package](https://img.shields.io/maven-metadata/v?metadataUrl=https://repo.mineinabyss.com/releases/com/mineinabyss/deeperworld/maven-metadata.xml)](https://repo.mineinabyss.com/#/releases/com/mineinabyss/deeperworld)
-[![Wiki](https://img.shields.io/badge/-Project%20Wiki-blueviolet?logo=Wikipedia&labelColor=gray)](https://wiki.mineinabyss.com/deeperworld)
-[![Contribute](https://shields.io/badge/Contribute-e57be5?logo=github%20sponsors&style=flat&logoColor=white)](https://wiki.mineinabyss.com/contribute)
+[![Docs](https://img.shields.io/badge/-Project%20Docs-blueviolet?logo=Wikipedia&labelColor=gray)](https://docs.mineinabyss.com/deeperworld)
+[![Contribute](https://shields.io/badge/Contribute-e57be5?logo=github%20sponsors&style=flat&logoColor=white)](https://docs.mineinabyss.com)
 </div>
 
 DeeperWorld is a plugin used on the Mine in Abyss server to create the illusion of a world taller than Minecraft's 256

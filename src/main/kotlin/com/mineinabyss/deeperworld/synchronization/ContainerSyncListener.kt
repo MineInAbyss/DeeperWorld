@@ -40,7 +40,7 @@ object ContainerSyncListener : Listener {
         val linkedSection = block.location.correspondingSection ?: return
         val linkedBlock = block.location.getCorrespondingLocation(section, linkedSection)?.block ?: return
 
-        if (Plugins.isEnabled("BlockLocker")) {
+        blockLocker?.apply {
             updateProtection(linkedBlock)
             updateProtection(block)
 
@@ -48,8 +48,7 @@ object ContainerSyncListener : Listener {
             if (player.inventory.itemInMainHand.type.name.contains("SIGN")
                 || !BlockLockerAPIv2.isAllowed(player, block, true)
                 || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
-            )
-                return
+            ) return
         }
 
         if (container is Lidded) {
@@ -91,7 +90,8 @@ object ContainerSyncListener : Listener {
 
         val section = block.location.section ?: return
         val linkedSection = block.location.correspondingSection ?: return
-        val linkedBlock = block.location.getCorrespondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
+        val linkedBlock =
+            block.location.getCorrespondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
 
         deeperWorld.plugin.launch {
             delay(1.ticks)

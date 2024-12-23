@@ -31,7 +31,6 @@ import com.sk89q.worldedit.world.World
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
 
 object DeeperCommands {
-
     fun registerCommands() {
         deeperWorld.plugin.commands {
             ("deeperworld" / "dw") {
@@ -52,7 +51,7 @@ object DeeperCommands {
                     }
                 }
                 ("layerinfo" / "linfo" / "info" / "layers" / "layers") {
-                    executes(ArgumentTypes.player().resolve().map { it.single() }) { player ->
+                    playerExecutes {
                         val section = WorldManager.getSectionFor(player.location)
                         if (section == null) sender.info("${player.name} is not in a managed section")
                         else sender.info("${player.name} is in section ${section.key}")
