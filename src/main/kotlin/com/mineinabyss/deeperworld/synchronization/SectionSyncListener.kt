@@ -1,6 +1,5 @@
 package com.mineinabyss.deeperworld.synchronization
 
-import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
@@ -8,16 +7,15 @@ import com.mineinabyss.deeperworld.event.SyncType
 import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.events.call
-import com.mineinabyss.idofront.plugin.Plugins
-import com.mineinabyss.idofront.spawning.spawn
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.future.await
 import net.kyori.adventure.text.Component
-import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Material
 import org.bukkit.Tag
-import org.bukkit.block.*
+import org.bukkit.block.BlockFace
+import org.bukkit.block.Container
+import org.bukkit.block.ShulkerBox
+import org.bukkit.block.Sign
 import org.bukkit.block.data.Ageable
 import org.bukkit.block.data.Bisected
 import org.bukkit.block.data.Waterlogged
@@ -27,7 +25,6 @@ import org.bukkit.block.data.type.Stairs
 import org.bukkit.block.data.type.TrapDoor
 import org.bukkit.block.sign.Side
 import org.bukkit.entity.EntityType
-import org.bukkit.entity.Item
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -40,7 +37,6 @@ import org.bukkit.event.player.PlayerBucketFillEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.world.StructureGrowEvent
 import org.bukkit.inventory.EquipmentSlot
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Synchronizes the overlap between sections
@@ -245,6 +241,7 @@ object SectionSyncListener : Listener {
         entity.world.getNearbyEntitiesByType(entityType.entityClass, corrLocation, 1.0).firstOrNull()?.remove()
     }
 
+    /*
     /** Sync items removed by void to corresponding section */
     @EventHandler
     fun EntityRemoveFromWorldEvent.onVoidRemoval() {
@@ -264,5 +261,5 @@ object SectionSyncListener : Listener {
                 chunk.removePluginChunkTicket(deeperWorld.plugin)
             }
         }
-    }
+    }*/
 }
