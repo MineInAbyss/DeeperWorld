@@ -19,7 +19,7 @@ repositories {
     maven("https://repo.mineinabyss.com/snapshots")
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
-    maven("https://jitpack.io")
+    maven("https://maven.enginehub.org/repo/") // WorldGuard
 }
 
 dependencies {
