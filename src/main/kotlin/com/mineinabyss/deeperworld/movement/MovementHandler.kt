@@ -42,7 +42,7 @@ object MovementHandler {
         ) {
             damage(0.01) //give a damage effect
             health = (health - deeperWorld.config.damageOutsideSections / 10)
-                .coerceIn(0.0, getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value) //ignores armor
+                .coerceIn(0.0, getAttribute(Attribute.MAX_HEALTH)?.value) //ignores armor
             showTitle(
                 Title.title(
                     "You are not in a managed section".miniMsg().color(NamedTextColor.RED),
