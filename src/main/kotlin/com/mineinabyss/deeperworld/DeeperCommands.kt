@@ -5,9 +5,7 @@ import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
 import com.mineinabyss.deeperworld.synchronization.sync
-import com.mineinabyss.deeperworld.world.section.correspondingSection
-import com.mineinabyss.deeperworld.world.section.getCorrespondingLocation
-import com.mineinabyss.deeperworld.world.section.section
+import com.mineinabyss.deeperworld.world.section.*
 import com.mineinabyss.idofront.commands.brigadier.Args
 import com.mineinabyss.idofront.commands.brigadier.commands
 import com.mineinabyss.idofront.commands.brigadier.executes
@@ -29,6 +27,7 @@ import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.session.ClipboardHolder
 import com.sk89q.worldedit.world.World
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
+import kotlin.math.floor
 
 object DeeperCommands {
     fun registerCommands() {
@@ -166,7 +165,8 @@ object DeeperCommands {
                                             )
 
                                             block.sync { original, corr ->
-                                                if (original.type != corr.type) corr.blockData = original.blockData.clone()
+                                                if (original.type != corr.type) corr.blockData =
+                                                    original.blockData.clone()
                                             }
                                         }
                                     }
@@ -177,6 +177,34 @@ object DeeperCommands {
 
                             else -> sender.error("Please use a range smaller than 100 blocks, or install FAWE to use a larger range")
                         }
+                    }
+                }
+                "depth" {
+                    playerExecutes() {
+                        val section = WorldManager.getSectionFor(player.location)
+                        if (section == null) {
+                            sender.info("${player.name} is not in a managed section")
+                            return@playerExecutes
+                        }
+
+                        var depth = (section.region.max.y - floor(player.location.y)).toInt()
+
+                        var currentSection: Section = section
+                        var aboveSection = section.aboveKey.section
+
+                        if (aboveSection != null) {
+                            depth += 1 // Account for one unit of depth missing when calculating depth with multiple sections
+                        }
+
+                        while (aboveSection != null) {
+                            depth += aboveSection.height
+                            depth += aboveSection.overlapWith(currentSection) ?: 0
+
+                            currentSection = aboveSection
+                            aboveSection = currentSection.aboveKey.section
+                        }
+
+                        player.success("Your depth is: $depth")
                     }
                 }
             }
