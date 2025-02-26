@@ -6,11 +6,7 @@ import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
 import com.mineinabyss.deeperworld.synchronization.sync
 import com.mineinabyss.deeperworld.world.section.*
-import com.mineinabyss.idofront.commands.brigadier.Args
-import com.mineinabyss.idofront.commands.brigadier.commands
-import com.mineinabyss.idofront.commands.brigadier.executes
-import com.mineinabyss.idofront.commands.brigadier.playerExecutes
-import com.mineinabyss.idofront.commands.execution.stopCommand
+import com.mineinabyss.idofront.commands.brigadier.*
 import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
@@ -27,7 +23,7 @@ import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.session.ClipboardHolder
 import com.sk89q.worldedit.world.World
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
-import kotlin.math.floor
+import org.bukkit.entity.Player
 
 object DeeperCommands {
     fun registerCommands() {
@@ -180,31 +176,22 @@ object DeeperCommands {
                     }
                 }
                 "depth" {
-                    playerExecutes() {
-                        val section = WorldManager.getSectionFor(player.location)
-                        if (section == null) {
-                            sender.info("${player.name} is not in a managed section")
-                            return@playerExecutes
-                        }
+                    val playerArg = ArgumentTypes.player()
+                        .resolve()
+                        .default { listOf(executor as? Player ?: fail("Receiver must be a player or pass a player as argument")) }
 
-                        var depth = (section.region.max.y - floor(player.location.y)).toInt()
+                    executes(playerArg) { players ->
+                        val player = players.single()
 
-                        var currentSection: Section = section
-                        var aboveSection = section.aboveKey.section
+                        WorldManager.getDepthFor(player.location)?.let{
+                            if (sender is Player){
+                                sender.success("Your depth is $it blocks")
+                            }
+                            else{
+                                sender.success("Depth of player ${player.name} is $it blocks")
+                            }
 
-                        if (aboveSection != null) {
-                            depth += 1 // Account for one unit of depth missing when calculating depth with multiple sections
-                        }
-
-                        while (aboveSection != null) {
-                            depth += aboveSection.height
-                            depth += aboveSection.overlapWith(currentSection) ?: 0
-
-                            currentSection = aboveSection
-                            aboveSection = currentSection.aboveKey.section
-                        }
-
-                        player.success("Your depth is: $depth")
+                        } ?: sender.error("${player.name} is not in a managed section")
                     }
                 }
             }
