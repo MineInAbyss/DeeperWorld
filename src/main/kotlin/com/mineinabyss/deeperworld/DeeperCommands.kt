@@ -5,14 +5,8 @@ import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.services.canMoveSections
 import com.mineinabyss.deeperworld.synchronization.sync
-import com.mineinabyss.deeperworld.world.section.correspondingSection
-import com.mineinabyss.deeperworld.world.section.getCorrespondingLocation
-import com.mineinabyss.deeperworld.world.section.section
-import com.mineinabyss.idofront.commands.brigadier.Args
-import com.mineinabyss.idofront.commands.brigadier.commands
-import com.mineinabyss.idofront.commands.brigadier.executes
-import com.mineinabyss.idofront.commands.brigadier.playerExecutes
-import com.mineinabyss.idofront.commands.execution.stopCommand
+import com.mineinabyss.deeperworld.world.section.*
+import com.mineinabyss.idofront.commands.brigadier.*
 import com.mineinabyss.idofront.messaging.error
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
@@ -29,6 +23,7 @@ import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.session.ClipboardHolder
 import com.sk89q.worldedit.world.World
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
+import org.bukkit.entity.Player
 
 object DeeperCommands {
     fun registerCommands() {
@@ -166,7 +161,8 @@ object DeeperCommands {
                                             )
 
                                             block.sync { original, corr ->
-                                                if (original.type != corr.type) corr.blockData = original.blockData.clone()
+                                                if (original.type != corr.type) corr.blockData =
+                                                    original.blockData.clone()
                                             }
                                         }
                                     }
@@ -177,6 +173,25 @@ object DeeperCommands {
 
                             else -> sender.error("Please use a range smaller than 100 blocks, or install FAWE to use a larger range")
                         }
+                    }
+                }
+                "depth" {
+                    val playerArg = ArgumentTypes.player()
+                        .resolve()
+                        .default { listOf(executor as? Player ?: fail("Receiver must be a player or pass a player as argument")) }
+
+                    executes(playerArg) { players ->
+                        val player = players.single()
+
+                        WorldManager.getDepthFor(player.location)?.let{
+                            if (sender is Player){
+                                sender.success("Your depth is $it blocks")
+                            }
+                            else{
+                                sender.success("Depth of player ${player.name} is $it blocks")
+                            }
+
+                        } ?: sender.error("${player.name} is not in a managed section")
                     }
                 }
             }

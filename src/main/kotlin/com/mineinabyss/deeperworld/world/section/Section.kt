@@ -56,5 +56,8 @@ data class Section(
     @Transient
     internal var belowKey: SectionKey = SectionKey.TERMINAL
 
+    @Transient
+    val height: Int = this.region.max.y - this.region.min.y
+
     override fun toString() = key.toString()
 }

@@ -5,8 +5,12 @@ import com.mineinabyss.deeperworld.services.WorldManager
 import com.mineinabyss.deeperworld.world.section.AbstractSectionKey.CustomSectionKey
 import com.mineinabyss.deeperworld.world.section.Section
 import com.mineinabyss.deeperworld.world.section.SectionKey
+import com.mineinabyss.deeperworld.world.section.overlapWith
+import com.mineinabyss.deeperworld.world.section.section
+import com.mineinabyss.idofront.messaging.info
 import org.bukkit.Location
 import org.bukkit.World
+import kotlin.math.floor
 
 class WorldManagerImpl : WorldManager {
     override val sections get() = sectionMap.values.toSet()
@@ -27,6 +31,40 @@ class WorldManagerImpl : WorldManager {
     }
 
     override fun unregisterSection(key: SectionKey) = TODO()
+
+    override fun getDepthFor(location: Location): Int? {
+        val section = WorldManager.getSectionFor(location) ?: return null
+
+        return this.internalGetDepthFor(floor(location.y).toInt(), section)
+    }
+
+    override fun getDepthFor(x: Double, y: Double, z: Double, world: World): Int? {
+        val yFloored = floor(y).toInt()
+        val section = WorldManager.getSectionFor(floor(x).toInt(), yFloored, floor(z).toInt(), world) ?: return null
+
+        return this.internalGetDepthFor(yFloored, section)
+    }
+
+    private fun internalGetDepthFor(y: Int, section: Section): Int {
+        var depth = (section.region.max.y - y)
+
+        var currentSection: Section = section
+        var aboveSection = section.aboveKey.section
+
+        if (aboveSection != null) {
+            depth += 1 // Account for one unit of depth missing when calculating depth with multiple sections
+        }
+
+        while (aboveSection != null) {
+            depth += aboveSection.height
+            depth -= aboveSection.overlapWith(currentSection) ?: 0
+
+            currentSection = aboveSection
+            aboveSection = currentSection.aboveKey.section
+        }
+
+        return depth
+    }
 
     override fun getSectionFor(location: Location): Section? {
         return getSectionFor(location.blockX, location.blockY, location.blockZ, location.world!!)

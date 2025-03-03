@@ -24,6 +24,7 @@ interface WorldManager {
      * Given x,y coords and a world, return the Section it is within
      *
      * @param x     The x coordinate
+     * @param y     The y coordinate
      * @param z     The z coordinate
      * @param world The world
      * @return The section or null if the location is not within a section.
@@ -70,6 +71,24 @@ interface WorldManager {
      * @param key The section key returned when registering this section
      */
     fun unregisterSection(key: SectionKey)
+
+    /**
+     * Gets the depth in blocks of the given location, taking sections into account
+     *
+     * @param location The location
+     * @return The depth of the given location in blocks, or null if location is not in a managed section
+     */
+    fun getDepthFor(location: Location): Int?
+
+    /**
+     * Gets the depth in blocks of the given position, taking sections into account
+     * @param x     The x coordinate
+     * @param y     The y coordinate
+     * @param z     The z coordinate
+     * @param world The world
+     * @return The depth of the given position in blocks, or null if position is not in a managed section
+     */
+    fun getDepthFor(x: Double, y: Double, z: Double, world: World): Int?
 
     /**
      * Gets an immutable copy of the currently loaded sections.
