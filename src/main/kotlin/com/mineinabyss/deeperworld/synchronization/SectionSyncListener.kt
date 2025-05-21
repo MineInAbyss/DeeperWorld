@@ -8,6 +8,7 @@ import com.mineinabyss.deeperworld.world.section.correspondingLocation
 import com.mineinabyss.deeperworld.world.section.inSectionOverlap
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.time.ticks
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -43,8 +44,8 @@ import org.bukkit.inventory.EquipmentSlot
  */
 object SectionSyncListener : Listener {
 
-    private val attachedBlocks = mutableSetOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM).also { it.addAll(Tag.REPLACEABLE.values) }.toSet()
-    private val attachedFaces = setOf(BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)
+    private val attachedBlocks = ObjectOpenHashSet(Tag.REPLACEABLE.values.plus(setOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM)))
+    private val attachedFaces = ObjectOpenHashSet(BlockFace.entries.take(6))
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
