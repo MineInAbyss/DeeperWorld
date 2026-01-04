@@ -25,13 +25,10 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
     }
 
     private val teleportFlags: Array<TeleportFlag> = listOf(
-        TeleportFlag.Relative.YAW,
-        TeleportFlag.Relative.PITCH,
-        TeleportFlag.Relative.X,
-        TeleportFlag.Relative.Y,
-        TeleportFlag.Relative.Z,
-        TeleportFlag.EntityState.RETAIN_PASSENGERS,
-        TeleportFlag.EntityState.RETAIN_VEHICLE
+        TeleportFlag.Relative.VELOCITY_ROTATION,
+        TeleportFlag.Relative.VELOCITY_X,
+        TeleportFlag.Relative.VELOCITY_Y,
+        TeleportFlag.Relative.VELOCITY_Z
     ).toTypedArray()
 
     override fun handleTeleport() {
@@ -100,13 +97,14 @@ class TransitionTeleportHandler(val teleportEntity: Entity, val from: Location, 
         // Max leashed entity range is 10 blocks, therefore these parameter values
         return when (teleportEntity) {
             is Player -> mapOf(
-                teleportEntity to teleportEntity.location
-                    .getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-                    .filter { it.isLeashed && it.leashHolder.uniqueId == teleportEntity.uniqueId }.toSet())
+                teleportEntity to teleportEntity.location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0) {
+                    it.isLeashed && it.leashHolder.uniqueId == teleportEntity.uniqueId
+                }.toSet())
 
             else -> teleportEntity.passengers.filterIsInstance<Player>().associateWith { player ->
-                player.location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0)
-                    .filter { it.isLeashed && it.leashHolder.uniqueId == player.uniqueId }.toSet()
+                player.location.getNearbyEntitiesByType(LivingEntity::class.java, 20.0) {
+                    it.isLeashed && it.leashHolder.uniqueId == player.uniqueId
+                }.toSet()
             }
         }
     }

@@ -88,83 +88,70 @@ object DeeperCommands {
                         }
 
                         when {
-                            Plugins.isEnabled("FastAsyncWorldEdit") -> {
-                                try {
-                                    val pos1 = BlockVector3.at(
-                                        (player.location.x + range),
-                                        (player.location.y + range),
-                                        (player.location.z + range)
-                                    )
-                                    val pos2 = BlockVector3.at(
-                                        (player.location.x - range),
-                                        (player.location.y - range),
-                                        (player.location.z - range)
-                                    )
+                            Plugins.isEnabled("FastAsyncWorldEdit") -> runCatching {
+                                val pos1 = BlockVector3.at(
+                                    (player.location.x + range),
+                                    (player.location.y + range),
+                                    (player.location.z + range)
+                                )
+                                val pos2 = BlockVector3.at(
+                                    (player.location.x - range),
+                                    (player.location.y - range),
+                                    (player.location.z - range)
+                                )
 
-                                    val region = CuboidRegion(pos1, pos2)
-                                    val clipboard = BlockArrayClipboard(region)
-                                    val wep = WorldEditPlugin.getInstance().bukkitImplAdapter
-                                    val weWorld: World = wep.adapt(player.world)
-                                    val editSession: EditSession = WorldEdit.getInstance().newEditSessionBuilder()
-                                        .world(weWorld)
-                                        .limitUnlimited()
-                                        .build()
+                                val region = CuboidRegion(pos1, pos2)
+                                val clipboard = BlockArrayClipboard(region)
+                                val wep = WorldEditPlugin.getInstance().bukkitImplAdapter
+                                val weWorld: World = wep.adapt(player.world)
+                                val editSession: EditSession = WorldEdit.getInstance().newEditSessionBuilder()
+                                    .world(weWorld).limitUnlimited().build()
 
-                                    val loc = player.location
-                                    val linkedSection =
-                                        loc.correspondingSection ?: error("Corresponding Section not found")
+                                val loc = player.location
+                                val linkedSection = loc.correspondingSection ?: error("Corresponding Section not found")
 
-                                    val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
-                                        ?: error("Corresponding Location not found")
+                                val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
+                                    ?: error("Corresponding Location not found")
 
-                                    val offset = if (pos2.y < 0) pos2.y else 0
-                                    TaskManager.taskManager().taskNowAsync {
-                                        player.success("Blocks syncing...")
-                                        editSession.use { editSession ->
-                                            // Copy
-                                            val forwardExtentCopy =
-                                                ForwardExtentCopy(
-                                                    editSession, region, clipboard, region.minimumPoint
+                                val offset = pos2.y().coerceAtLeast(0)
+                                TaskManager.taskManager().taskNowAsync {
+                                    player.success("Blocks syncing...")
+                                    editSession.use { editSession ->
+                                        // Copy
+                                        val forwardExtentCopy = ForwardExtentCopy(editSession, region, clipboard, region.minimumPoint)
+                                        forwardExtentCopy.isCopyingEntities = false
+                                        forwardExtentCopy.isCopyingBiomes = true
+                                        Operations.complete(forwardExtentCopy)
+
+                                        // Paste
+                                        val operation: Operation = ClipboardHolder(clipboard)
+                                            .createPaste(editSession)
+                                            .to(
+                                                BlockVector3.at(
+                                                    linkedBlock.x - range,
+                                                    linkedBlock.y - range - offset,
+                                                    linkedBlock.z - range
                                                 )
-                                            forwardExtentCopy.isCopyingEntities = false
-                                            forwardExtentCopy.isCopyingBiomes = true
-                                            Operations.complete(forwardExtentCopy)
-
-                                            // Paste
-                                            val operation: Operation = ClipboardHolder(clipboard)
-                                                .createPaste(editSession)
-                                                .to(
-                                                    BlockVector3.at(
-                                                        linkedBlock.x - range,
-                                                        linkedBlock.y - range - offset,
-                                                        linkedBlock.z - range
-                                                    )
-                                                ).build()
-                                            Operations.complete(operation)
-                                        }
-                                        player.success("Blocks synced (FAWE)")
+                                            ).build()
+                                        Operations.complete(operation)
                                     }
-                                } catch (e: Exception) {
-                                    player.error("""An error occurred: ${e.message}""")
+                                    player.success("Blocks synced (FAWE)")
                                 }
+                            }.onFailure {
+                                player.error("""An error occurred: ${it.message}""")
                             }
 
                             range <= 100 -> {
                                 // Get blocks in range specified
-                                for (x in -range..range) {
-                                    for (y in -range..range) {
-                                        for (z in -range..range) {
-                                            val block = player.world.getBlockAt(
-                                                (player.location.x + x).toInt(),
-                                                (player.location.y + y).toInt(),
-                                                (player.location.z + z).toInt()
-                                            )
+                                for (x in -range..range) for (y in -range..range) for (z in -range..range) {
+                                    val block = player.world.getBlockAt(
+                                        (player.location.x + x).toInt(),
+                                        (player.location.y + y).toInt(),
+                                        (player.location.z + z).toInt()
+                                    )
 
-                                            block.sync { original, corr ->
-                                                if (original.type != corr.type) corr.blockData =
-                                                    original.blockData.clone()
-                                            }
-                                        }
+                                    block.sync { original, corr ->
+                                        if (original.type != corr.type) corr.blockData = original.blockData.clone()
                                     }
                                 }
 

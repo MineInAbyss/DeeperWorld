@@ -9,7 +9,6 @@ import org.bukkit.GameMode.CREATIVE
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerTeleportEvent
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
 import org.bukkit.event.vehicle.VehicleEnterEvent
 import org.bukkit.event.vehicle.VehicleExitEvent
@@ -18,7 +17,7 @@ object PlayerListener : Listener {
     @EventHandler
     fun PlayerTeleportEvent.onPlayerTeleport() {
         if (player.gameMode == CREATIVE || !player.canMoveSections) return
-        if (cause != ENDER_PEARL && cause != CHORUS_FRUIT) return
+        if (cause != ENDER_PEARL && cause != PlayerTeleportEvent.TeleportCause.CONSUMABLE_EFFECT) return
         if (to.section != null && to.section == player.location.section && !to.inSectionTransition) return
 
         player.error("Teleportation is disabled between Layers and Sections.")

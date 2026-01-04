@@ -20,6 +20,7 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/") //Paper
     maven("https://repo.codemc.org/repository/maven-public/")
     maven("https://maven.enginehub.org/repo/") // WorldGuard
+    mavenLocal()
 }
 
 dependencies {
