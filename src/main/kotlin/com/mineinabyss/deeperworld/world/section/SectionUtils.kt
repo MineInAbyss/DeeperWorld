@@ -22,11 +22,12 @@ val SectionKey.section get() = WorldManager.getSectionFor(this)
 val Location.correspondingSection: Section?
     get() {
         val section = this.section ?: return null
-        val above: Section? = section.aboveKey.section
-        val below: Section? = section.belowKey.section
+        val aboveSection = section.aboveKey.section
+        val belowSection = section.belowKey.section
+
         return when {
-            above != null && sharedBetween(section, above) -> above
-            below != null && sharedBetween(section, below) -> below
+            sharedBetween(section, aboveSection) -> aboveSection
+            sharedBetween(section, belowSection) -> belowSection
             else -> null
         }
     }
@@ -36,7 +37,7 @@ val Location.correspondingSection: Section?
  */
 val Location.correspondingLocation: Location?
     get() {
-        return getCorrespondingLocation(section ?: return null, correspondingSection ?: return null)
+        return correspondingLocation(section ?: return null, correspondingSection ?: return null)
     }
 
 /**
@@ -47,7 +48,7 @@ val Location.correspondingLocation: Location?
  * @param sectionB        the section we are translating the point to
  * @return A new location that corresponds to the original location
  */
-fun Location.getCorrespondingLocation(sectionA: Section, sectionB: Section): Location? {
+fun Location.correspondingLocation(sectionA: Section, sectionB: Section): Location? {
     if (!sectionA.isAdjacentTo(sectionB)) return null
 
     // We decide which two points we are translating between.
@@ -73,13 +74,17 @@ val Location.inSectionTransition: Boolean
     get() {
         // Get overlap of this section and corresponding section
         val shared = section?.overlapWith(correspondingSection ?: return false) ?: return false
-        return blockY >= world.maxHeight - .3 * shared || blockY <= world.minHeight + .3 * shared
+        // Archive Server hardcoding for now
+        val minHeight = if ("2021" in world.name) 0 else world.minHeight
+        return blockY >= world.maxHeight - .3 * shared || blockY <= minHeight + .3 * shared
     }
 
-fun Location.sharedBetween(section: Section, otherSection: Section): Boolean {
-    val overlap = section.overlapWith(otherSection) ?: return false
+fun Location.sharedBetween(section: Section, otherSection: Section?): Boolean {
+    val overlap = section.overlapWith(otherSection ?: return false) ?: return false
+    // Archive Server hardcoding for now
+    val minHeight = if ("2021" in world.name) 0 else world.minHeight
     return when {
-        section.isOnTopOf(otherSection) -> blockY <= world.minHeight + overlap
+        section.isOnTopOf(otherSection) -> blockY <= minHeight + overlap
         otherSection.isOnTopOf(section) -> blockY >= world.maxHeight - overlap
         else -> false
     }
@@ -89,12 +94,11 @@ fun Section.overlapWith(other: Section): Int? {
     if (!isAdjacentTo(other)) return null
     if (min(this.region.max.y, other.region.max.y) <= max(this.region.min.y, other.region.min.y)) return null
     // We decide which two points we are translating between.
-    val (locA, locB) = when (isOnTopOf(other)) {
-        true -> referenceBottom to other.referenceTop
-        false -> referenceTop to other.referenceBottom
+    val (yA, yB) = when {
+        isOnTopOf(other) -> referenceBottom.blockY to other.referenceTop.blockY
+        else -> referenceTop.blockY to other.referenceBottom.blockY
     }
-    val yA = locA.blockY
-    val yB = locB.blockY
+
     return max(this.region.max.y, other.region.max.y) - max(yA, yB) +
             (min(yA, yB) - min(this.region.min.y, other.region.min.y))
 }

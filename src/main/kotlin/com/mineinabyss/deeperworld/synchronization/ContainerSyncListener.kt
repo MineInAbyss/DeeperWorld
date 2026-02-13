@@ -4,13 +4,10 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.world.section.*
 import com.mineinabyss.idofront.messaging.info
-import com.mineinabyss.idofront.plugin.Plugins
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
-import nl.rutgerkok.blocklocker.SearchMode
 import org.bukkit.Chunk
-import org.bukkit.block.Block
 import org.bukkit.block.Container
 import org.bukkit.block.DecoratedPot
 import org.bukkit.block.Lidded
@@ -38,7 +35,7 @@ object ContainerSyncListener : Listener {
 
         val section = block.location.section ?: return
         val linkedSection = block.location.correspondingSection ?: return
-        val linkedBlock = block.location.getCorrespondingLocation(section, linkedSection)?.block ?: return
+        val linkedBlock = block.location.correspondingLocation(section, linkedSection)?.block ?: return
 
         blockLocker?.apply {
             updateProtection(linkedBlock)
@@ -53,7 +50,7 @@ object ContainerSyncListener : Listener {
 
         if (container is Lidded) {
             (linkedBlock.state as Lidded).open()
-            if (!section.isOnTopOf(linkedSection)) (container as Lidded).open()
+            if (!section.isOnTopOf(linkedSection)) container.open()
         }
 
         if (section.isOnTopOf(linkedSection)) return
@@ -91,7 +88,7 @@ object ContainerSyncListener : Listener {
         val section = block.location.section ?: return
         val linkedSection = block.location.correspondingSection ?: return
         val linkedBlock =
-            block.location.getCorrespondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
+            block.location.correspondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
 
         deeperWorld.plugin.launch {
             delay(1.ticks)

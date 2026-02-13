@@ -29,17 +29,17 @@ data class Section(
     val name: String? = null,
     val region: Region = Region(0,0,0,1,1,1),
     val world: @Serializable(WorldSerializer::class) World = Bukkit.getWorlds().first(),
-    @SerialName("refTop") private val _refTop: String,
+    @SerialName("refTop") private val refTop: String,
     @YamlComment("refBottom should connect to the refTop of the next section.")
-    @SerialName("refBottom") private val _refBottom: String
+    @SerialName("refBottom") private val refBottom: String
 ) {
     @Serializable(LocationSerializer::class)
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    val referenceTop = _refTop.toLocation(world)
+    val referenceTop = refTop.toLocation(world)
 
     @Serializable(LocationSerializer::class)
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    val referenceBottom = _refBottom.toLocation(world)
+    val referenceBottom = refBottom.toLocation(world)
 
     fun String.toLocation(world: World): Location {
         val (x,y,z) = this.getCoordinates().map { it.toDouble() }

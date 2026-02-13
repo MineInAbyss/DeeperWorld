@@ -28,7 +28,7 @@ internal inline fun Location.sync(
     if (!inSectionOverlap) return //ensure blocks don't get altered when we are outside of the corresponding region
     val section = section ?: return
     val correspondingSection = correspondingSection ?: return
-    val corresponding = getCorrespondingLocation(section, correspondingSection) ?: return
+    val corresponding = correspondingLocation(section, correspondingSection) ?: return
     updater(block, corresponding.block, section, correspondingSection)
 }
 

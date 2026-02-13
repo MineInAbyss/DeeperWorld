@@ -110,7 +110,7 @@ object DeeperCommands {
                                 val loc = player.location
                                 val linkedSection = loc.correspondingSection ?: error("Corresponding Section not found")
 
-                                val linkedBlock = loc.getCorrespondingLocation(section, linkedSection)?.block
+                                val linkedBlock = loc.correspondingLocation(section, linkedSection)?.block
                                     ?: error("Corresponding Location not found")
 
                                 val offset = pos2.y().coerceAtLeast(0)
