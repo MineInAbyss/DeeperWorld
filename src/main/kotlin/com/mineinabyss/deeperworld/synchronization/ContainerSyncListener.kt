@@ -42,14 +42,14 @@ object ContainerSyncListener : Listener {
             updateProtection(block)
 
             //allow chest protection signs to be placed
-            if (player.inventory.itemInMainHand.type.name.contains("SIGN")
+            if ("SIGN" in player.inventory.itemInMainHand.type.name
                 || !BlockLockerAPIv2.isAllowed(player, block, true)
                 || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
             ) return
         }
 
         if (container is Lidded) {
-            (linkedBlock.state as Lidded).open()
+            (linkedBlock.state as? Lidded)?.open()
             if (!section.isOnTopOf(linkedSection)) container.open()
         }
 

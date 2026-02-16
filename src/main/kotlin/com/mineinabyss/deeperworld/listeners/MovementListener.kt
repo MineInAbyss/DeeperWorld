@@ -1,7 +1,7 @@
 package com.mineinabyss.deeperworld.listeners
 
 import com.mineinabyss.deeperworld.Permissions
-import com.mineinabyss.deeperworld.extensions.getPassengersRecursive
+import com.mineinabyss.deeperworld.extensions.passengersRecursive
 import com.mineinabyss.deeperworld.movement.MovementHandler
 import com.mineinabyss.deeperworld.services.canMoveSections
 import io.papermc.paper.event.entity.EntityMoveEvent
@@ -24,7 +24,7 @@ object MovementListener : Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun VehicleMoveEvent.move() {
-        val players = vehicle.getPassengersRecursive().filterIsInstance<Player>()
+        val players = vehicle.passengersRecursive().filterIsInstance<Player>()
 
         val teleportEntity = players.firstOrNull { it.hasPermission(Permissions.ADMIN_PERMISSION) && it.canMoveSections } ?: vehicle
         MovementHandler.handleMovement(teleportEntity, from, to)
@@ -32,7 +32,6 @@ object MovementListener : Listener {
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
-        if (!hasExplicitlyChangedPosition()) return
-        MovementHandler.handleMovement(entity, from, to)
+        if (hasExplicitlyChangedPosition()) MovementHandler.handleMovement(entity, from, to)
     }
 }

@@ -38,7 +38,7 @@ internal inline fun Location.sync(updater: (original: Block, corresponding: Bloc
 internal fun signUpdater(lines: MutableList<Component>? = null) = { original: Block, corresponding: Block ->
     copyBlockData(original, corresponding)
     val sign = original.state
-    if (sign is Sign) for (side in Side.values()) {
+    if (sign is Sign) for (side in Side.entries) {
         val readLines = lines ?: sign.getSide(side).lines()
         val corrSign = corresponding.state
         if (corrSign is Sign && !corrSign.getSide(side).lines().containsAll(readLines)) {

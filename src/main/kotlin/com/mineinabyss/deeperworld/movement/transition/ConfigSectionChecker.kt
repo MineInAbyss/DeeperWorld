@@ -24,16 +24,10 @@ object ConfigSectionChecker : SectionChecker {
             fromSection != toSection -> to
             else -> null
         } ?: return null
+        val kind = if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND
 
         return corrLoc.section?.let {
-            SectionTransition(
-                from,
-                corrLoc,
-                fromSection,
-                it,
-                if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND,
-                teleportUnnecessary = fromSection != toSection
-            )
+            SectionTransition(from, corrLoc, fromSection, it, kind, fromSection != toSection)
         }
     }
 }
