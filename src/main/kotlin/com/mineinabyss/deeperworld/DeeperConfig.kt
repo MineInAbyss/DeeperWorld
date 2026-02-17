@@ -29,6 +29,7 @@ data class DeeperWorldConfig(
     val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
     val fall: FallDamageConfig = FallDamageConfig(),
     val time: TimeConfig = TimeConfig(),
+    val bedrockBlockingInvalidTeleport: Boolean = true,
 ) {
     val worlds = sections.map { it.world }.toSet()
 

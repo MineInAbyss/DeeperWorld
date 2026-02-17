@@ -62,7 +62,8 @@ object MovementHandler {
             sectionTransition.teleportUnnecessary || entity.uniqueId in teleportCooldown -> EmptyTeleportHandler
             entity is Player && entity.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
                 TransitionKind.ASCEND -> UndoMovementInvalidTeleportHandler(entity, sectionTransition)
-                else -> BedrockBlockingInvalidTeleportHandler(entity, sectionTransition)
+                else if deeperWorld.config.bedrockBlockingInvalidTeleport -> BedrockBlockingInvalidTeleportHandler(entity, sectionTransition)
+                else -> UndoMovementInvalidTeleportHandler(entity, sectionTransition)
             }
             else -> TransitionTeleportHandler(entity.vehicle ?: entity, sectionTransition)
         }
