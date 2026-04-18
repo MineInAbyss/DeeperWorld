@@ -1,41 +1,19 @@
 package com.mineinabyss.deeperworld.synchronization
 
-import com.mineinabyss.deeperworld.world.section.*
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.Sign
-import org.bukkit.block.data.BlockData
 import org.bukkit.block.sign.Side
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
+//TODO remove all/simplify
 internal fun copyBlockData(original: Block, corresponding: Block) {
     corresponding.blockData = original.blockData.clone()
 }
 
-internal fun updateMaterial(material: Material) = { _: Block, corr: Block -> corr.type = material }
-
-internal fun updateBlockData(data: BlockData) = { _: Block, corr: Block -> corr.blockData = data }
-
-internal inline fun Block.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
-    location.sync(updater)
-
-internal inline fun Location.sync(
-    updater: (original: Block, corresponding: Block, section: Section, corrSection: Section) -> Unit
-) {
-    if (!inSectionOverlap) return //ensure blocks don't get altered when we are outside of the corresponding region
-    val section = section ?: return
-    val correspondingSection = correspondingSection ?: return
-    val corresponding = correspondingLocation(section, correspondingSection) ?: return
-    updater(block, corresponding.block, section, correspondingSection)
-}
-
-internal inline fun Location.sync(updater: (original: Block, corresponding: Block) -> Unit = ::copyBlockData) =
-    sync { original, corresponding, _, _ -> updater(original, corresponding) }
-
-internal fun signUpdater(lines: MutableList<Component>? = null) = { original: Block, corresponding: Block ->
+internal fun updateSign(corresponding: Block, original: Block, lines: MutableList<Component>? = null) {
     copyBlockData(original, corresponding)
     val sign = original.state
     if (sign is Sign) for (side in Side.entries) {

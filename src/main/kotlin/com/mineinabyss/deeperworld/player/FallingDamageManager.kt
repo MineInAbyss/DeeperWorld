@@ -7,7 +7,7 @@ import org.bukkit.GameMode.SURVIVAL
 import org.bukkit.Particle
 import org.bukkit.entity.Player
 
-internal object FallingDamageManager {
+internal class FallingDamageManager {
     fun updateFallingDamage(player: Player) {
         val actualFallDistance = player.rootVehicle()?.fallDistance ?: player.fallDistance
 

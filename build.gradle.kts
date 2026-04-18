@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(idofrontLibs.plugins.kotlinx.serialization)
     alias(idofrontLibs.plugins.mia.kotlin.jvm)
@@ -8,18 +7,19 @@ plugins {
     alias(idofrontLibs.plugins.mia.nms)
     alias(idofrontLibs.plugins.mia.publication)
     alias(idofrontLibs.plugins.mia.autoversion)
+    alias(idofrontLibs.plugins.mia.docs)
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
 repositories {
     mavenCentral()
-    maven("https://oss.sonatype.org/content/groups/public/")
-    maven("https://www.rutgerkok.nl/repo")
-    maven("https://repo.dmulloy2.net/nexus/repository/public/")
     maven("https://repo.mineinabyss.com/releases/")
     maven("https://repo.mineinabyss.com/snapshots")
-    maven("https://papermc.io/repo/repository/maven-public/") //Paper
-    maven("https://repo.codemc.org/repository/maven-public/")
-    maven("https://maven.enginehub.org/repo/") // WorldGuard
+    maven("https://repo.mineinabyss.com/mirror")
     mavenLocal()
 }
 
@@ -39,4 +39,5 @@ dependencies {
     // Shaded
     implementation(idofrontLibs.bundles.idofront.core)
     implementation(idofrontLibs.idofront.nms)
+    implementation(idofrontLibs.idofront.features)
 }

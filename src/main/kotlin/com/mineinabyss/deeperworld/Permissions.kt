@@ -1,5 +1,6 @@
 package com.mineinabyss.deeperworld
 
-object Permissions {
-    const val ADMIN_PERMISSION = "deeperworld.admin"
+internal object Permissions {
+    const val ADMIN = "deeperworld.admin"
+    const val CHANGE_SECTION = "deeperworld.changesection"
 }

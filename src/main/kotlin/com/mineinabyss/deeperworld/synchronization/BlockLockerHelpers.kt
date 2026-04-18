@@ -1,5 +1,6 @@
 package com.mineinabyss.deeperworld.synchronization
 
+import com.mineinabyss.deeperworld.sections.SectionRepository
 import com.mineinabyss.idofront.plugin.Plugins
 import nl.rutgerkok.blocklocker.BlockLockerPlugin
 import nl.rutgerkok.blocklocker.SearchMode
@@ -7,7 +8,9 @@ import nl.rutgerkok.blocklocker.impl.BlockLockerPluginImpl
 import org.bukkit.Material
 import org.bukkit.block.Block
 
-internal class BlockLockerHelpers {
+class BlockLockerHelpers(
+    val sections: SectionRepository,
+) {
     val plugin: BlockLockerPlugin? by lazy { Plugins.getOrNull<BlockLockerPluginImpl>() }
 
     fun syncBlockLocker(corr: Block) {
@@ -16,11 +19,15 @@ internal class BlockLockerHelpers {
         }
     }
 
-    fun updateProtection(block: Block) =
+    fun updateProtection(block: Block) {
         plugin?.protectionFinder?.findProtection(block, SearchMode.ALL)?.ifPresent {
-            it.signs.forEach { sign -> sign.location.sync(signUpdater()) }
+            it.signs.forEach { sign ->
+                val block = sign.location.block
+                sections.whenLinked(block) { linked ->
+                    updateSign(linked, block)
+                }
+            }
         }
+    }
 
 }
-
-internal val blockLocker by lazy { if (Plugins.isEnabled("BlockLocker")) BlockLockerHelpers() else null }

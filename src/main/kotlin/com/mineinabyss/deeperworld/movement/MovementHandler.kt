@@ -1,71 +1,53 @@
 package com.mineinabyss.deeperworld.movement
 
-import com.mineinabyss.deeperworld.deeperWorld
-import com.mineinabyss.deeperworld.movement.transition.ConfigSectionChecker
+import com.mineinabyss.deeperworld.movement.teleport.EmptyTeleportHandler
+import com.mineinabyss.deeperworld.movement.teleport.TeleportHandler
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
 import com.mineinabyss.deeperworld.movement.transition.toEvent
-import com.mineinabyss.idofront.events.call
-import com.mineinabyss.idofront.textcomponents.miniMsg
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.title.Title
+import com.mineinabyss.deeperworld.sections.SectionRepository
+import com.mineinabyss.deeperworld.sections.inSection
 import org.bukkit.GameMode
 import org.bukkit.Location
-import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
-import java.util.*
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
-object MovementHandler {
-    private val sectionCheckers = listOf(ConfigSectionChecker)
-
-    val teleportCooldown = mutableSetOf<UUID>()
+class MovementHandler(
+    private val sections: SectionRepository,
+    private val onOutOfSection: OutOfSectionAction,
+    private val teleportHandler: TeleportHandler,
+    private val invalidAscentHandler: TeleportHandler,
+    private val invalidDescentHandler: TeleportHandler,
+) : AutoCloseable {
     fun handleMovement(entity: Entity, from: Location, to: Location) {
-        if (sectionCheckers.any { it.inSection(entity) }) {
-            sectionCheckers.firstNotNullOfOrNull { it.checkForTransition(entity, from, to) }?.let {
-                with(getTeleportHandler(entity, it)) {
-                    if (this.isValidTeleport() && entity is Player) it.toEvent(entity).call { this@with.handleTeleport() }
-                    else this.handleTeleport()
-                }
-            }
-        } else (entity as? Player)?.applyOutOfBoundsDamage()
+        if (!entity.location.inSection) {
+            (entity as? Player)?.let { onOutOfSection.handleOutOfSection(it) }
+            return
+        }
+
+        val inTransition = sections.inTransition(from, to) ?: return
+        val handler = getTeleportHandler(entity, inTransition)
+        var allow = true
+        // Call event to allow other plugins to cancel transition for players
+        if (handler.isValid && entity is Player) allow = inTransition.toEvent(entity).callEvent()
+        if (!allow) return
+        handler.handleTeleport(entity, inTransition)
     }
 
-    //TODO abstract this away. Should instead do out of bounds action if out of bounds.
-    private fun Player.applyOutOfBoundsDamage() {
-        if (deeperWorld.config.damageOutsideSections > 0.0
-            && location.world !in deeperWorld.config.damageExcludedWorlds
-            && (gameMode == GameMode.SURVIVAL || gameMode == GameMode.ADVENTURE)
-            && location.world in deeperWorld.config.worlds
-        ) {
-            damage(0.01) //give a damage effect
-            health = (health - deeperWorld.config.damageOutsideSections / 10)
-                .coerceIn(0.0, getAttribute(Attribute.MAX_HEALTH)?.value) //ignores armor
-            showTitle(
-                Title.title(
-                    "You are not in a managed section".miniMsg().color(NamedTextColor.RED),
-                    "You will take damage upon moving!".miniMsg().color(NamedTextColor.GRAY),
-                    Title.Times.times(
-                        0.seconds.toJavaDuration(),
-                        1.seconds.toJavaDuration(),
-                        0.5.seconds.toJavaDuration()
-                    )
-                )
-            )
+    private fun getTeleportHandler(entity: Entity, sectionTransition: SectionTransition): TeleportHandler = when {
+        sectionTransition.teleportUnnecessary -> EmptyTeleportHandler
+
+        entity is Player && entity.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
+            TransitionKind.ASCEND -> invalidAscentHandler
+            TransitionKind.DESCEND -> invalidDescentHandler
         }
+
+        else -> teleportHandler
     }
 
-    private fun getTeleportHandler(entity: Entity, sectionTransition: SectionTransition): TeleportHandler {
-        return when {
-            sectionTransition.teleportUnnecessary || entity.uniqueId in teleportCooldown -> EmptyTeleportHandler
-            entity is Player && entity.gameMode != GameMode.SPECTATOR && sectionTransition.to.block.isSolid -> when (sectionTransition.kind) {
-                TransitionKind.ASCEND -> UndoMovementInvalidTeleportHandler(entity, sectionTransition)
-                else if deeperWorld.config.bedrockBlockingInvalidTeleport -> BedrockBlockingInvalidTeleportHandler(entity, sectionTransition)
-                else -> UndoMovementInvalidTeleportHandler(entity, sectionTransition)
-            }
-            else -> TransitionTeleportHandler(entity.vehicle ?: entity, sectionTransition)
-        }
+    override fun close() {
+        invalidDescentHandler.close()
+        invalidAscentHandler.close()
+        teleportHandler.close()
     }
 }

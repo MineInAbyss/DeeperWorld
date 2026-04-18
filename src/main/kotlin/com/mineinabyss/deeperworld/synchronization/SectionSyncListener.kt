@@ -4,8 +4,9 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.event.BlockSyncEvent
 import com.mineinabyss.deeperworld.event.SyncType
-import com.mineinabyss.deeperworld.world.section.correspondingLocation
-import com.mineinabyss.deeperworld.world.section.inSectionOverlap
+import com.mineinabyss.deeperworld.sections.SectionRepository
+import com.mineinabyss.deeperworld.sections.correspondingLocation
+import com.mineinabyss.deeperworld.sections.inSectionOverlap
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.time.ticks
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
@@ -42,27 +43,28 @@ import org.bukkit.inventory.EquipmentSlot
 /**
  * Synchronizes the overlap between sections
  */
-object SectionSyncListener : Listener {
-
+class SectionSyncListener(
+    private val blockLocker: BlockLockerHelpers?,
+    private val sections: SectionRepository,
+) : Listener {
     private val attachedBlocks = ObjectOpenHashSet(Tag.REPLACEABLE.values.plus(setOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM)))
     private val attachedFaces = ObjectOpenHashSet(BlockFace.entries.take(6))
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
-        if (!block.location.inSectionOverlap) return
-        BlockSyncEvent(block, SyncType.BREAK).call {
-            block.location.sync { original, corr ->
-                val state = corr.state
+        sections.whenLinked(block) { linked ->
+            BlockSyncEvent(block, SyncType.BREAK).call {
+                val state = linked.state
 
                 //if breaking from bottom container, drop items stored in top container here
-                if (state is Container && original.location.y > corr.location.y) {
+                if (state is Container && block.location.y > linked.location.y) {
                     val corrInv = state.inventory
                     if (state is ShulkerBox) {
                         isDropItems = false
                         //TODO maybe create our own event that gets called from here
-                        corr.drops.dropItems(original.location, noVelocity = false)
+                        linked.drops.dropItems(block.location, noVelocity = false)
                     } else {
-                        corrInv.toList().dropItems(original.location, false)
+                        corrInv.toList().dropItems(block.location, false)
                     }
                     corrInv.clear()
                 }
@@ -71,58 +73,57 @@ object SectionSyncListener : Listener {
 
                 if (blockLocker != null && state is Sign &&
                     (state.getSide(Side.FRONT).lines().first() == Component.text("[Private]")
-                            || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))) {
-                    blockLocker?.syncBlockLocker(corr)
+                            || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))
+                ) {
+                    blockLocker?.syncBlockLocker(linked)
                 }
 
                 // Breaking a block triggering attached block to break
                 attachedFaces.filter { block.getRelative(it).type in attachedBlocks }.forEach {
-                    if (corr.getRelative(it).type == block.getRelative(it).type) {
-                        corr.getRelative(it).type = Material.AIR
+                    if (linked.getRelative(it).type == block.getRelative(it).type) {
+                        linked.getRelative(it).type = Material.AIR
                     }
                 }
 
-                val blockData = block.blockData
-                when {
-                    blockData is Bed -> {
-                        corr.setType(Material.STONE, false)
+                when (val blockData = block.blockData) {
+                    is Bed -> {
+                        linked.setType(Material.STONE, false)
                         when (blockData.part) {
-                            Bed.Part.FOOT -> corr.location.add(blockData.facing.direction)
-                            Bed.Part.HEAD -> corr.location.subtract(blockData.facing.direction)
+                            Bed.Part.FOOT -> linked.location.add(blockData.facing.direction)
+                            Bed.Part.HEAD -> linked.location.subtract(blockData.facing.direction)
                         }.block.type = Material.AIR
                     }
-                    blockData is Bisected
-                            && blockData !is TrapDoor
-                            && blockData !is Stairs -> {
-                        corr.setType(Material.STONE, false)
+
+                    is Bisected if blockData !is TrapDoor && blockData !is Stairs -> {
+                        linked.setType(Material.STONE, false)
                         when (blockData.half) {
-                            Bisected.Half.BOTTOM -> corr.location.add(0.0, 1.0, 0.0)
-                            Bisected.Half.TOP -> corr.location.subtract(0.0, 1.0, 0.0)
+                            Bisected.Half.BOTTOM -> linked.location.add(0.0, 1.0, 0.0)
+                            Bisected.Half.TOP -> linked.location.subtract(0.0, 1.0, 0.0)
                         }.block.type = Material.AIR
                     }
                 }
 
-                corr.type = Material.AIR
-
+                linked.type = Material.AIR
             }
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun BlockPlaceEvent.syncBlockPlace() {
-        if (!block.location.inSectionOverlap) return
-        BlockSyncEvent(block, SyncType.PLACE).call {
-            block.sync(updateBlockData(block.blockData))
+        sections.whenLinked(block) { linked ->
+            BlockSyncEvent(block, SyncType.PLACE).call {
+                linked.blockData = block.blockData
+            }
         }
     }
 
     @EventHandler
     fun BlockGrowEvent.syncBlockGrow() {
-        if (!block.location.inSectionOverlap) return
-        if (!block.location.inSectionOverlap) return
-        deeperWorld.plugin.launch {
-            delay(1.ticks)
-            block.sync(updateBlockData(block.blockData))
+        sections.whenLinked(block) { linked ->
+            deeperWorld.launch {
+                delay(1.ticks)
+                linked.blockData = block.blockData
+            }
         }
     }
 
@@ -130,26 +131,29 @@ object SectionSyncListener : Listener {
     @EventHandler
     fun PlayerInteractEvent.syncBlockGrowFromBoneMeal() {
         val block = clickedBlock ?: return
-        val corrBlock = block.location.correspondingLocation?.block ?: return
 
-        if (!block.location.inSectionOverlap) return
+        // Ensure clicked block is growable
         if (action != Action.RIGHT_CLICK_BLOCK || hand != EquipmentSlot.HAND) return
         if (player.inventory.getItem(EquipmentSlot.HAND).type != Material.BONE_MEAL) return
         if (block.blockData !is Ageable || block is Sapling) return
-        if (!block.location.inSectionOverlap || corrBlock.type != block.type) return
 
-        deeperWorld.plugin.launch {
-            delay(1.ticks)
-            block.sync(updateBlockData(block.blockData))
+        sections.whenLinked(block) { linked ->
+            if (linked.type == block.type) deeperWorld.launch {
+                delay(1.ticks)
+                linked.blockData = block.blockData
+            }
         }
     }
 
     // Copies structure onto another section
     @EventHandler
     fun StructureGrowEvent.syncStructureGrowth() {
+        //TODO verify this actually works
         if (!location.inSectionOverlap) return
         if (blocks.all { (it.block.type == it.block.location.correspondingLocation?.block?.type) })
-            blocks.forEach { it.block.sync(updateBlockData(it.blockData)) }
+            sections.forEachLinked(blocks.map { it.block }) { block, linked ->
+                linked.blockData = block.blockData
+            }
         else isCancelled = true
     }
 
@@ -157,41 +161,39 @@ object SectionSyncListener : Listener {
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
         if (!block.location.inSectionOverlap) return
         val data = block.blockData
-        if (
-            (data is Bisected || data is Bed)
-            && data !is TrapDoor
-            && data !is Stairs
-        ) replacedBlockStates.forEach { it.block.sync() }
+        if ((data is Bisected || data is Bed) && data !is TrapDoor && data !is Stairs)
+            sections.forEachLinked(replacedBlockStates.map { it.block }) { block, linked ->
+                linked.blockData = block.blockData
+            }
     }
 
     @EventHandler
     fun PlayerBucketEmptyEvent.syncWaterEmpty() {
         if (!block.location.inSectionOverlap) return
-        block.sync { orig, corr ->
-            val data = corr.blockData
+        sections.whenLinked(block) { linked ->
+            val data = linked.blockData
             val material = if (bucket === Material.LAVA_BUCKET) Material.LAVA else Material.WATER
             if (data is Waterlogged) {
                 data.isWaterlogged = true
                 // Trigger block update for water
-                if (corr.state !is Container) corr.type = material
-                corr.type = orig.type
-                corr.blockData = data
+                if (linked.state !is Container) linked.type = material
+                linked.type = block.type
+                linked.blockData = data
             } else
-                updateMaterial(material)(orig, corr)
+                linked.type = material
         }
     }
 
 
     @EventHandler
     fun PlayerBucketFillEvent.syncWaterFill() {
-        if (!block.location.inSectionOverlap) return
-        block.sync { orig, corr ->
-            val data = corr.blockData
+        sections.whenLinked(block) { linked ->
+            val data = linked.blockData
             if (data is Waterlogged) {
                 data.isWaterlogged = false
-                corr.blockData = data
-            } else
-                updateMaterial(Material.AIR)(orig, corr)
+                linked.blockData = data
+            } else linked.type = Material.AIR
+            //TODO verify setting to air is correct and that just copying blockdata always doesnt work?
         }
     }
 
@@ -199,47 +201,52 @@ object SectionSyncListener : Listener {
     /** Synchronize explosions */
     @EventHandler(ignoreCancelled = true)
     fun EntityExplodeEvent.syncExplosions() {
-        blockList().forEach { explodedBlock ->
-            explodedBlock.location.sync(updateMaterial(Material.AIR))
+        sections.forEachLinked(blockList()) { _, linked ->
+            linked.type = Material.AIR
         }
     }
 
     /** Synchronize explosions */
     @EventHandler(ignoreCancelled = true)
     fun BlockExplodeEvent.syncExplosions() {
-        blockList().forEach { explodedBlock ->
-            explodedBlock.location.sync(updateMaterial(Material.AIR))
+        sections.forEachLinked(blockList()) { _, linked ->
+            linked.type = Material.AIR
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     fun SignChangeEvent.syncSignText() {
         if (!block.location.inSectionOverlap) return
-        block.sync(signUpdater(lines()))
+        sections.whenLinked(block) { linked ->
+            updateSign(linked, block, lines())
+        }
     }
 
     @EventHandler
     fun EntityChangeBlockEvent.syncBlockChange() {
-        if (!block.location.inSectionOverlap) return
-        block.sync(updateBlockData(blockData))
+        sections.whenLinked(block) { linked ->
+            linked.blockData = block.blockData
+        }
     }
 
     @EventHandler
     fun InventoryBlockStartEvent.onFurnaceStart() {
-        if (!block.location.inSectionOverlap) return
-        deeperWorld.plugin.launch {
-            delay(1.ticks)
-            block.sync(updateBlockData(block.blockData))
+        sections.whenLinked(block) { linked ->
+            deeperWorld.launch {
+                delay(1.ticks)
+                linked.blockData = block.blockData
+            }
         }
     }
 
     /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/
     @EventHandler
     fun EntitySpawnEvent.onEntitySummon() {
-        val corrLocation = entity.location.correspondingLocation ?: return
         if (entityType != EntityType.WITHER && entityType != EntityType.IRON_GOLEM) return
 
-        entity.world.getNearbyEntitiesByType(entityType.entityClass, corrLocation, 1.0).firstOrNull()?.remove()
+        sections.whenLinked(entity.location) { linked, _ ->
+            linked.getNearbyEntitiesByType(entityType.entityClass, 1.0).firstOrNull()?.remove()
+        }
     }
 
     /*
@@ -248,9 +255,9 @@ object SectionSyncListener : Listener {
     fun EntityRemoveFromWorldEvent.onVoidRemoval() {
         val item = (entity as? Item)?.takeIf { it.y < it.world.minHeight } ?: return
         val corrLoc = item.location.apply { y = -240.0 }.correspondingLocation ?: return
-        deeperWorld.plugin.launch {
+        deeperWorld.launch {
             val chunk = corrLoc.world.getChunkAtAsync(corrLoc).await()
-            val addedTicket = chunk.addPluginChunkTicket(deeperWorld.plugin)
+            val addedTicket = chunk.addPluginChunkTicket(deeperWorld)
             corrLoc.spawn<Item> {
                 itemStack = item.itemStack
                 thrower = item.thrower
@@ -259,7 +266,7 @@ object SectionSyncListener : Listener {
             }
             if (addedTicket) {
                 delay(10.seconds)
-                chunk.removePluginChunkTicket(deeperWorld.plugin)
+                chunk.removePluginChunkTicket(deeperWorld)
             }
         }
     }*/

@@ -1,8 +1,8 @@
-package com.mineinabyss.deeperworld.listeners
+package com.mineinabyss.deeperworld.movement
 
-import com.mineinabyss.deeperworld.services.canMoveSections
-import com.mineinabyss.deeperworld.world.section.inSectionTransition
-import com.mineinabyss.deeperworld.world.section.section
+import com.mineinabyss.deeperworld.player.canMoveSections
+import com.mineinabyss.deeperworld.sections.inSectionTransition
+import com.mineinabyss.deeperworld.sections.section
 import com.mineinabyss.idofront.location.up
 import com.mineinabyss.idofront.messaging.error
 import org.bukkit.GameMode.CREATIVE
@@ -13,15 +13,16 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
 import org.bukkit.event.vehicle.VehicleEnterEvent
 import org.bukkit.event.vehicle.VehicleExitEvent
 
-object PlayerListener : Listener {
+class PlayerListener : Listener {
     @EventHandler
     fun PlayerTeleportEvent.onPlayerTeleport() {
         if (player.gameMode == CREATIVE || !player.canMoveSections) return
         if (cause != ENDER_PEARL && cause != PlayerTeleportEvent.TeleportCause.CONSUMABLE_EFFECT) return
-        if (to.section != null && to.section == player.location.section && !to.inSectionTransition) return
 
-        player.error("Teleportation is disabled between Layers and Sections.")
-        isCancelled = true
+        if (to.inSectionTransition) {
+            player.error("Teleportation is disabled between Layers and Sections.")
+            isCancelled = true
+        }
     }
 
     @EventHandler

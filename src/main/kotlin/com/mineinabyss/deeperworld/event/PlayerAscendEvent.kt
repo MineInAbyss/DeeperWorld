@@ -1,6 +1,6 @@
 package com.mineinabyss.deeperworld.event
 
-import com.mineinabyss.deeperworld.world.section.Section
+import com.mineinabyss.deeperworld.datastructures.Section
 import org.bukkit.entity.Player
 import org.bukkit.event.HandlerList
 

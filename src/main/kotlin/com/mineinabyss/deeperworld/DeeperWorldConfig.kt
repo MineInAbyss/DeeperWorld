@@ -3,9 +3,9 @@
 package com.mineinabyss.deeperworld
 
 import com.charleskorn.kaml.YamlComment
-import com.mineinabyss.deeperworld.world.Region
-import com.mineinabyss.deeperworld.world.section.Section
-import com.mineinabyss.idofront.di.DI
+import com.mineinabyss.deeperworld.datastructures.CubePoint
+import com.mineinabyss.deeperworld.datastructures.Region
+import com.mineinabyss.deeperworld.datastructures.Section
 import com.mineinabyss.idofront.serialization.DurationSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
 import com.mineinabyss.idofront.time.ticks
@@ -13,15 +13,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import org.bukkit.Bukkit
 import org.bukkit.World
+import org.joml.Vector3i
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-val deeperWorld by DI.observe<DeeperContext>()
 @Serializable
 data class DeeperWorldConfig(
     val sections: List<Section> = listOf(
-        Section("section1", Region(0,0,0,1000,256,1000), Bukkit.getWorld("world")!!, "0, 0, 0", "0, 16, 0"),
-        Section("section2", Region(1000, 0, 0, 2000 ,256, 1000), Bukkit.getWorld("world")!!, "1000, 240, 0", "2000, 16, 0"),
+        Section("section1", Region(0, 0, 0, 1000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(0, 0, 0), CubePoint(0, 16, 0)),
+        Section("section2", Region(1000, 0, 0, 2000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(1000, 240, 0), CubePoint(2000, 16, 0)),
     ),
     @YamlComment("The damage players will take when outside a managed section.")
     val damageOutsideSections: Double = 1.0,
@@ -35,6 +35,8 @@ data class DeeperWorldConfig(
 
     @Serializable
     data class FallDamageConfig(
+        @YamlComment("Whether to deal damage when falling long distances.")
+        val enabled: Boolean = true,
         @YamlComment("The maximum safe falling distance, after which players will start taking damage. Set to -1 to disable falling damage")
         val maxSafeDist: Float = -1f,
         @YamlComment("The multiplier for damage taken while falling. Set to 0 to deal consistent damage.")
@@ -44,7 +46,7 @@ data class DeeperWorldConfig(
         @YamlComment("How often to damage players in ticks")
         val hitDelay: @Serializable(DurationSerializer::class) Duration = 10.ticks,
         @YamlComment("Whether to spawn cloud particles when the player is being damaged.")
-        val spawnParticles: Boolean = true
+        val spawnParticles: Boolean = true,
     )
 
     @Serializable
@@ -54,6 +56,6 @@ data class DeeperWorldConfig(
         @YamlComment("The main synchronization world. Other worlds will get synchronized based on the time in this world.")
         val mainWorld: @Serializable(WorldSerializer::class) World? = Bukkit.getWorld("world"),
         @YamlComment("The worlds where time should be synchronized with the mainWorld. Optionally specify a time offset (leave 0 if no offset is desired)")
-        val syncedWorlds: Map<@Serializable(WorldSerializer::class) World, Long> = mutableMapOf(Bukkit.getWorld("world")!! to 0L)
+        val syncedWorlds: Map<@Serializable(WorldSerializer::class) World, Long> = mutableMapOf(Bukkit.getWorld("world")!! to 0L),
     )
 }

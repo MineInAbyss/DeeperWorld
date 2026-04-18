@@ -6,14 +6,6 @@ pluginManagement {
         maven("https://repo.papermc.io/repository/maven-public/") //Paper
         mavenLocal()
     }
-
-    val idofrontVersion: String by settings
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id.startsWith("com.mineinabyss.conventions"))
-                useVersion(idofrontVersion)
-        }
-    }
 }
 
 dependencyResolutionManagement {
@@ -25,7 +17,9 @@ dependencyResolutionManagement {
         mavenLocal()
     }
     versionCatalogs{
-        create("idofrontLibs").from("com.mineinabyss:catalog:$idofrontVersion")
+        create("idofrontLibs") {
+            from("com.mineinabyss:catalog:$idofrontVersion")
+        }
     }
 }
 

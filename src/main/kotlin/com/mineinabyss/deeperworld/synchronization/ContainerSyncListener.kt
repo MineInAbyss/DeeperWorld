@@ -2,7 +2,9 @@ package com.mineinabyss.deeperworld.synchronization
 
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
-import com.mineinabyss.deeperworld.world.section.*
+import com.mineinabyss.deeperworld.movement.transition.TransitionKind.ASCEND
+import com.mineinabyss.deeperworld.movement.transition.TransitionKind.DESCEND
+import com.mineinabyss.deeperworld.sections.SectionRepository
 import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
@@ -21,10 +23,11 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
-
-object ContainerSyncListener : Listener {
-
-    /** Tells a chunk what players are accessing inventories on its [Section] border */
+class ContainerSyncListener(
+    private val blockLocker: BlockLockerHelpers?,
+    private val sections: SectionRepository,
+) : Listener {
+    /** Tells a chunk what players are accessing inventories on its [com.mineinabyss.deeperworld.datastructures.Section] border */
     private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
 
     /** Synchronize container interactions between sections */
@@ -33,34 +36,34 @@ object ContainerSyncListener : Listener {
         val (block, container) = (clickedBlock ?: return) to (clickedBlock?.state as? Container ?: return)
         if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
 
-        val section = block.location.section ?: return
-        val linkedSection = block.location.correspondingSection ?: return
-        val linkedBlock = block.location.correspondingLocation(section, linkedSection)?.block ?: return
+        sections.whenLinked(block.location) { linked, transition ->
+            val linkedBlock = linked.block
+            blockLocker?.apply {
+                updateProtection(linkedBlock)
+                updateProtection(block)
 
-        blockLocker?.apply {
-            updateProtection(linkedBlock)
-            updateProtection(block)
+                //allow chest protection signs to be placed
+                if ("SIGN" in player.inventory.itemInMainHand.type.name
+                    || !BlockLockerAPIv2.isAllowed(player, block, true)
+                    || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
+                ) return
+            }
 
-            //allow chest protection signs to be placed
-            if ("SIGN" in player.inventory.itemInMainHand.type.name
-                || !BlockLockerAPIv2.isAllowed(player, block, true)
-                || !BlockLockerAPIv2.isAllowed(player, linkedBlock, true)
-            ) return
-        }
+            // Make sure both containers play an open animation
+            if (container is Lidded) {
+                (linkedBlock.state as? Lidded)?.open()
+                if (transition == ASCEND) container.open()
+            }
 
-        if (container is Lidded) {
-            (linkedBlock.state as? Lidded)?.open()
-            if (!section.isOnTopOf(linkedSection)) container.open()
-        }
+            // Top section accesses directly
+            if (transition == DESCEND) return@whenLinked
 
-        if (section.isOnTopOf(linkedSection)) return
+            isCancelled = true
+            val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
 
-        isCancelled = true
+            //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
+            if (player.openInventory(linkedInventory) == null) return@whenLinked
 
-        val linkedInventory = ((linkedBlock.state as? Container) ?: return).inventory
-
-        //execute only if inventory successfully opened (e.x. not prevented by WorldGuard)
-        if (player.openInventory(linkedInventory) != null) {
             //synchronize chests and drop anything that doesn't fit
             val invItems: List<ItemStack> = container.inventory.toList().filterNotNull()
             if (invItems.isNotEmpty()) {
@@ -73,7 +76,7 @@ object ContainerSyncListener : Listener {
             }
 
             //keep chunk loaded
-            linkedBlock.chunk.addPluginChunkTicket(deeperWorld.plugin)
+            linkedBlock.chunk.addPluginChunkTicket(deeperWorld)
 
             //keep track of players opening inventory in this chunk
             keepLoadedInventories.getOrPut(linkedBlock.chunk) { mutableListOf() } += player
@@ -85,24 +88,23 @@ object ContainerSyncListener : Listener {
         val (block, pot) = (clickedBlock ?: return) to (clickedBlock?.state as? DecoratedPot ?: return)
         if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
 
-        val section = block.location.section ?: return
-        val linkedSection = block.location.correspondingSection ?: return
-        val linkedBlock =
-            block.location.correspondingLocation(section, linkedSection)?.block?.state as? DecoratedPot ?: return
-
-        deeperWorld.plugin.launch {
-            delay(1.ticks)
-            linkedBlock.inventory.contents = pot.inventory.contents
+        sections.whenLinked(block.location) { corresponding, _ ->
+            val corrPot = corresponding.block.state as? DecoratedPot ?: return
+            deeperWorld.launch {
+                delay(1.ticks)
+                corrPot.inventory.contents = pot.inventory.contents
+            }
         }
     }
 
     /** Removes the player from the [keepLoadedInventories] map */
     @EventHandler
     fun InventoryCloseEvent.onCloseInventory() {
-        inventory.location?.block?.sync { original, corr ->
-            if (original.state is Lidded) {
-                (original.state as Lidded).close()
-                (corr.state as Lidded).close()
+        val block = inventory.location?.block ?: return
+        sections.whenLinked(block) { linked ->
+            if (linked.state is Lidded) {
+                (block.state as Lidded).close()
+                (linked.state as Lidded).close()
             }
         }
 
@@ -110,7 +112,7 @@ object ContainerSyncListener : Listener {
         if (keepLoadedInventories[chunk]?.remove(player) != null) {
             if (keepLoadedInventories[chunk]?.isEmpty() == true) {
                 keepLoadedInventories -= chunk
-                chunk.removePluginChunkTicket(deeperWorld.plugin)
+                chunk.removePluginChunkTicket(deeperWorld)
             }
         }
     }
@@ -118,10 +120,11 @@ object ContainerSyncListener : Listener {
     /** Synchronize hopper pickups between sections */
     @EventHandler(ignoreCancelled = true)
     fun InventoryPickupItemEvent.hopperGrabEvent() {
-        inventory.location?.sync { _, corresponding, section, corrSection ->
-            if (corrSection.isOnTopOf(section)) {
+        val location = inventory.location ?: return
+        sections.whenLinked(location) { linked, transition ->
+            if (transition == ASCEND) {
                 //if there are no leftover items, remove the itemstack
-                if ((corresponding.state as? Container)?.inventory?.addItem(item.itemStack)?.isEmpty() != false)
+                if ((linked.block.state as? Container)?.inventory?.addItem(item.itemStack)?.isEmpty() != false)
                     item.remove()
                 isCancelled = true
             }
