@@ -9,6 +9,7 @@ import com.mineinabyss.deeperworld.sections.correspondingLocation
 import com.mineinabyss.deeperworld.sections.inSectionOverlap
 import com.mineinabyss.idofront.events.call
 import com.mineinabyss.idofront.time.ticks
+import io.papermc.paper.event.block.BlockBreakBlockEvent
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
@@ -49,6 +50,11 @@ class SectionSyncListener(
 ) : Listener {
     private val attachedBlocks = ObjectOpenHashSet(Tag.REPLACEABLE.values.plus(setOf(Material.TORCH, Material.WALL_TORCH, Material.SPORE_BLOSSOM)))
     private val attachedFaces = ObjectOpenHashSet(BlockFace.entries.take(6))
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    fun BlockBreakBlockEvent.onDropItem() {
+        println(block.y)
+    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
@@ -225,7 +231,7 @@ class SectionSyncListener(
     @EventHandler
     fun EntityChangeBlockEvent.syncBlockChange() {
         sections.whenLinked(block) { linked ->
-            linked.blockData = block.blockData
+            linked.blockData = this.blockData
         }
     }
 

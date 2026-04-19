@@ -5,7 +5,10 @@ import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.player.PlayerRepository
 import com.mineinabyss.deeperworld.player.PlayerRepositoryImpl
 import com.mineinabyss.deeperworld.player.canMoveSections
-import com.mineinabyss.dependencies.*
+import com.mineinabyss.dependencies.get
+import com.mineinabyss.dependencies.module
+import com.mineinabyss.dependencies.new
+import com.mineinabyss.dependencies.single
 import com.mineinabyss.idofront.commands.brigadier.Args
 import com.mineinabyss.idofront.commands.brigadier.oneOf
 import com.mineinabyss.idofront.features.get
@@ -54,6 +57,12 @@ val SectionFeature = module("sections") {
     }
 
     "section" {
+        "switch" {
+            description = "Switches to corresponding section if player is in bondary"
+            executes.asPlayer {
+                player.teleport(player.location.correspondingLocation ?: fail("No corresponding section"))
+            }
+        }
         "tp" {
             executes.asPlayer().args(
                 "section" to Args.string().oneOf { get<SectionRepository>().sections.map { it.key } }
