@@ -75,7 +75,7 @@ class SectionSyncListener(
                     (state.getSide(Side.FRONT).lines().first() == Component.text("[Private]")
                             || state.getSide(Side.BACK).lines().first() == Component.text("[Private]"))
                 ) {
-                    blockLocker?.syncBlockLocker(linked)
+                    blockLocker.syncBlockLocker(linked)
                 }
 
                 // Breaking a block triggering attached block to break

@@ -10,13 +10,14 @@ class SectionConfigDataSource(
 ) : SectionDataSource {
     override val sections: List<KeyedSection> = config.sections.mapIndexed { index, section ->
         KeyedSection(
-            key = "section-${index}-${section.name}",
+            key = section.name,
             section = section,
             index = index
         )
     }
 
     init {
+        require(sections.distinctBy { it.key }.size == sections.size) { "Section keys must be unique" }
         // Populate above/below fields
         sections.zipWithNext { current, next ->
             current.below = next
@@ -32,8 +33,7 @@ class SectionConfigDataSource(
 
     override fun getDepth(location: Location): Int? {
         val lastSection = get(location) ?: return null
-        var sum: Int = lastSection.section.region.max.y - floor(location.y).toInt() + // Depth within current section
-                lastSection.index // Each section after the first adds height + 1 to sum
+        var sum: Int = lastSection.section.region.max.y - floor(location.y).toInt() // Depth within current section
         for (i in 0..<lastSection.index) {
             val section = sections[i]
             sum += section.section.height - section.overlapWithAbove

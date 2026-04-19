@@ -12,4 +12,3 @@ interface SectionDataSource {
 
     val sections: List<KeyedSection>
 }
-

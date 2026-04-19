@@ -5,6 +5,7 @@ import com.mineinabyss.deeperworld.DeeperWorldConfig
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.sections.SectionFeature
 import com.mineinabyss.dependencies.get
+import com.mineinabyss.dependencies.import
 import com.mineinabyss.dependencies.module
 import com.mineinabyss.dependencies.new
 import com.mineinabyss.dependencies.single
@@ -18,7 +19,7 @@ import org.bukkit.Bukkit
  * Damages players that fall for a long enough distance, preventing really large height skips.
  */
 val FallDamageFeature = module("fall-damage") {
-    singleModule(SectionFeature)
+    import(singleModule(SectionFeature))
     val config = get<DeeperWorldConfig>().fall
     require(config.enabled) { "Fall damage is disabled in config." }
 

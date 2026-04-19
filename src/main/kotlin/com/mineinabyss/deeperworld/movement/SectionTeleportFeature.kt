@@ -8,6 +8,7 @@ import com.mineinabyss.deeperworld.movement.teleport.TransitionTeleportHandler
 import com.mineinabyss.deeperworld.movement.teleport.UndoMovementInvalidTeleportHandler
 import com.mineinabyss.dependencies.addCloseable
 import com.mineinabyss.dependencies.get
+import com.mineinabyss.dependencies.import
 import com.mineinabyss.dependencies.module
 import com.mineinabyss.dependencies.new
 import com.mineinabyss.dependencies.single
@@ -18,7 +19,7 @@ import com.mineinabyss.idofront.features.listeners
  * Handles teleporting players and entities between sections.
  */
 val SectionTeleportFeature = module("teleport") {
-    singleModule(SectionFeature)
+    import(singleModule(SectionFeature))
 
     val config = get<DeeperWorldConfig>()
     single<TeleportHandler> { TransitionTeleportHandler() }

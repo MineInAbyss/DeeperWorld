@@ -6,10 +6,7 @@ import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.sections.SectionFeature
 import com.mineinabyss.deeperworld.sections.correspondingLocation
-import com.mineinabyss.dependencies.module
-import com.mineinabyss.dependencies.new
-import com.mineinabyss.dependencies.single
-import com.mineinabyss.dependencies.singleModule
+import com.mineinabyss.dependencies.*
 import com.mineinabyss.idofront.commands.brigadier.Args
 import com.mineinabyss.idofront.destructure.component1
 import com.mineinabyss.idofront.destructure.component2
@@ -40,12 +37,12 @@ import kotlinx.coroutines.delay
  * The general approach is to copy blocks and access the top section's inventories as a single source of truth.
  */
 val SectionSyncFeature = module("section-sync") {
-    singleModule(SectionFeature) // Depend on sections
-    single<BlockLockerHelpers?> { if (Plugins.isEnabled("BlockLocker")) new(::BlockLockerHelpers) else null }
+    import(singleModule(SectionFeature)) // Depend on sections
+    if (Plugins.isEnabled("BlockLocker")) single<BlockLockerHelpers> { new(::BlockLockerHelpers) }
     listeners(
-        new(::SectionSyncListener),
+        SectionSyncListener(getOrNull(), get()),
+        ContainerSyncListener(getOrNull(), get()),
         new(::ExploitPreventionListener),
-        new(::ContainerSyncListener)
     )
 
     // Initialize time synchronization task

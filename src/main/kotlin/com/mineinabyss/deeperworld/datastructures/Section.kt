@@ -19,18 +19,15 @@ import org.bukkit.World
  */
 @Serializable
 data class Section(
-    val name: String? = null,
+    val name: String,
     val region: Region,
     val world: @Serializable(WorldSerializer::class) World = Bukkit.getWorlds().first(),
     @SerialName("refTop") private val refTop: CubePoint,
     @YamlComment("refBottom should connect to the refTop of the next section.")
     @SerialName("refBottom") private val refBottom: CubePoint,
 ) {
-    @Transient
-    val referenceTop = refTop.toLocation(world)
-
-    @Transient
-    val referenceBottom = refBottom.toLocation(world)
+    val referenceTop get() = refTop.toLocation(world)
+    val referenceBottom get() = refBottom.toLocation(world)
 
     val height: Int get() = region.max.y - region.min.y
 

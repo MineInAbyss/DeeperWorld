@@ -28,8 +28,8 @@ class SectionRepository(
         from: Location,
         to: Location,
     ): SectionTransition? {
-        val fromSection = from.section ?: return null
-        val toSection = to.section ?: return null
+        val fromSection = from.section?.section ?: return null
+        val toSection = to.section?.section ?: return null
         val corrLoc = when {
             to.inSectionTransition -> to.correspondingLocation
             fromSection != toSection -> to
@@ -38,7 +38,7 @@ class SectionRepository(
         val kind = if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND
 
         return corrLoc.section?.let {
-            SectionTransition(from, corrLoc, fromSection.section.section, it.section.section, kind, fromSection != toSection)
+            SectionTransition(from, corrLoc, fromSection.section, it.section.section, kind, fromSection != toSection)
         }
     }
 
