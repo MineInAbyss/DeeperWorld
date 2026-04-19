@@ -4,6 +4,7 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.movement.MovementHandler
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
+import com.mineinabyss.deeperworld.sections.correspondingLocation
 import com.mineinabyss.idofront.time.ticks
 import io.papermc.paper.entity.TeleportFlag
 import kotlinx.coroutines.delay
@@ -52,7 +53,8 @@ class TransitionTeleportHandler: TeleportHandler {
                 teleportEntity.velocity = oldVelocity
                 leashedEntities.forEach { (leashHolder, leashEntities) ->
                     leashEntities.forEach {
-                        it.teleportAsync(leashHolder.location, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
+                        val teleportTo = it.location.correspondingLocation ?: leashHolder.location
+                        it.teleportAsync(teleportTo, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
                         delay(2.ticks)
                         it.setLeashHolder(leashHolder)
                     }

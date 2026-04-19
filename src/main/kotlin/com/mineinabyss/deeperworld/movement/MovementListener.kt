@@ -30,6 +30,8 @@ class MovementListener(
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
-        if (hasExplicitlyChangedPosition()) handler.handleMovement(entity, from, to)
+        if (hasExplicitlyChangedPosition() && !entity.isLeashed) {
+            handler.handleMovement(entity, from, to)
+        }
     }
 }
