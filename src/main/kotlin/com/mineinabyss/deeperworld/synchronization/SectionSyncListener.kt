@@ -52,11 +52,6 @@ class SectionSyncListener(
     private val attachedFaces = ObjectOpenHashSet(BlockFace.entries.take(6))
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    fun BlockBreakBlockEvent.onDropItem() {
-        println(block.y)
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockBreakEvent.syncBlockBreak() {
         sections.whenLinked(block) { linked ->
             BlockSyncEvent(block, SyncType.BREAK).call {
