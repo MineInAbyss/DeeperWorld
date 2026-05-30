@@ -9,7 +9,6 @@ on:
       - 'docs/**'
       - .github/workflows/docs.yml
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -20,21 +19,8 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: MineInAbyss/publish-action@v3
-        with:
-          publish-github-release: false
-          build-tasks: 'docsGenerate'
-
-      - name: Update HTML links for GitHub Pages subdomain
-        run: |
-          find out -name "*.html" -exec sed -i 's#href="/#href="/DeeperWorld/#g; s#src="/#src="/DeeperWorld/#g' {} \;
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: out
+      - uses: actions/checkout@v6
+      - uses: MineInAbyss/publish-action/docs@develop
 
   deploy:
     environment:

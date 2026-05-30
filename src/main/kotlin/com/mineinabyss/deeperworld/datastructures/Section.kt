@@ -28,7 +28,6 @@ data class Section(
 ) {
     val referenceTop get() = refTop.toLocation(world)
     val referenceBottom get() = refBottom.toLocation(world)
-
     val height: Int get() = region.max.y - region.min.y
 
     val center: Location
