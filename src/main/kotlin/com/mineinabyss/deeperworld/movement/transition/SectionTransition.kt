@@ -1,6 +1,5 @@
 package com.mineinabyss.deeperworld.movement.transition
 
-import com.mineinabyss.deeperworld.datastructures.KeyedSection
 import com.mineinabyss.deeperworld.datastructures.Section
 import com.mineinabyss.deeperworld.event.PlayerAscendEvent
 import com.mineinabyss.deeperworld.event.PlayerChangeSectionEvent
@@ -19,11 +18,14 @@ data class SectionTransition(
     val teleportUnnecessary: Boolean,
 )
 
-data class LocationSection(
+/**
+ * A [location] inside of a [section] with helpers for getting adjacent sections.
+ */
+data class SectionLocation(
     val location: Location,
-    val section: KeyedSection,
+    val section: Section,
 ) {
-    val linkedSection: KeyedSection?
+    val linkedSection: Section?
         get() { // Inexpensive calculation, don't cache
             val aboveSection = section.above
             val belowSection = section.below
@@ -43,12 +45,12 @@ data class LocationSection(
     /**
      * Whether a location is in a shared boundary between [section] and [otherSection] sections.
      */
-    private fun sharedBetween(section: KeyedSection, otherSection: KeyedSection?): Boolean {
+    private fun sharedBetween(section: Section, otherSection: Section?): Boolean {
         val otherSection = otherSection ?: return false
         val overlap = section.overlapWith(otherSection) ?: return false
         return when {
-            section.isOnTopOf(otherSection) -> location.blockY <= section.section.region.min.y + overlap
-            otherSection.isOnTopOf(section) -> location.blockY >= otherSection.section.region.max.y - overlap
+            section.isOnTopOf(otherSection) -> location.blockY <= section.region.min.y + overlap
+            otherSection.isOnTopOf(section) -> location.blockY >= otherSection.region.max.y - overlap
             else -> false
         }
     }
@@ -56,8 +58,8 @@ data class LocationSection(
     private fun inTransition(): Boolean {
         val otherSection = linkedSection ?: return false
         val overlap = section.overlapWith(otherSection) ?: return false
-        return if (section.isOnTopOf(otherSection)) location.blockY <= section.section.region.min.y + .3 * overlap
-        else location.blockY >= section.section.region.max.y - .3 * overlap
+        return if (section.isOnTopOf(otherSection)) location.blockY <= section.region.min.y + .3 * overlap
+        else location.blockY >= section.region.max.y - .3 * overlap
     }
 
     private fun correspondingLocation(): Location? {
@@ -65,11 +67,11 @@ data class LocationSection(
 
         // We decide which two points we are translating between.
         val delta = when (section.isOnTopOf(corresponding)) {
-            true -> corresponding.section.referenceTop - section.section.referenceBottom
-            false -> corresponding.section.referenceBottom - section.section.referenceTop
+            true -> corresponding.referenceTop - section.referenceBottom
+            false -> corresponding.referenceBottom - section.referenceTop
         }.toVector()
         val newLoc = location.clone() + delta
-        newLoc.world = corresponding.section.world
+        newLoc.world = corresponding.world
         return newLoc
     }
 }

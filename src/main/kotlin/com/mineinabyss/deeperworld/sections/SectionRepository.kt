@@ -1,7 +1,7 @@
 package com.mineinabyss.deeperworld.sections
 
-import com.mineinabyss.deeperworld.datastructures.KeyedSection
-import com.mineinabyss.deeperworld.movement.transition.LocationSection
+import com.mineinabyss.deeperworld.datastructures.Section
+import com.mineinabyss.deeperworld.movement.transition.SectionLocation
 import com.mineinabyss.deeperworld.movement.transition.SectionTransition
 import com.mineinabyss.deeperworld.movement.transition.TransitionKind
 import org.bukkit.Location
@@ -13,12 +13,12 @@ class SectionRepository(
     val sections get() = sectionsDataSource.sections
 
     /** Gets a section by its [SectionKey], if it exists. */
-    operator fun get(key: SectionKey): KeyedSection? = sectionsDataSource[key]
+    operator fun get(key: SectionKey): Section? = sectionsDataSource[key]
 
     /** Gets the section at the given location, or null if the location is not in a section. */
-    operator fun get(location: Location): LocationSection? {
+    operator fun get(location: Location): SectionLocation? {
         val section = sectionsDataSource[location]
-        return if (section != null) LocationSection(location, section) else null
+        return if (section != null) SectionLocation(location, section) else null
     }
 
     /** Gets the depth in blocks of the given [location], taking sections into account. */
@@ -28,8 +28,8 @@ class SectionRepository(
         from: Location,
         to: Location,
     ): SectionTransition? {
-        val fromSection = from.section?.section ?: return null
-        val toSection = to.section?.section ?: return null
+        val fromSection = from.section ?: return null
+        val toSection = to.section ?: return null
         val corrLoc = when {
             to.inSectionTransition -> to.correspondingLocation
             fromSection != toSection -> to
@@ -38,7 +38,7 @@ class SectionRepository(
         val kind = if (to.y < from.y) TransitionKind.DESCEND else TransitionKind.ASCEND
 
         return corrLoc.section?.let {
-            SectionTransition(from, corrLoc, fromSection.section, it.section.section, kind, fromSection != toSection)
+            SectionTransition(from, corrLoc, fromSection, it, kind, fromSection != toSection)
         }
     }
 

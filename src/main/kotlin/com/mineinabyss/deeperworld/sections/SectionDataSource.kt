@@ -1,14 +1,14 @@
 package com.mineinabyss.deeperworld.sections
 
-import com.mineinabyss.deeperworld.datastructures.KeyedSection
+import com.mineinabyss.deeperworld.datastructures.Section
 import org.bukkit.Location
 
 interface SectionDataSource {
-    operator fun get(key: SectionKey): KeyedSection?
+    operator fun get(key: SectionKey): Section?
 
-    operator fun get(location: Location): KeyedSection?
+    operator fun get(location: Location): Section?
 
     fun getDepth(location: Location): Int?
 
-    val sections: List<KeyedSection>
+    val sections: List<Section>
 }

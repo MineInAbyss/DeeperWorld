@@ -37,7 +37,7 @@ val SectionFeature = module("sections") {
     }
     ("layerinfo" / "linfo" / "info" / "layers" / "layers") {
         executes.asPlayer {
-            val section = player.location.section?.section
+            val section = player.location.section
             if (section == null) sender.info("${player.name} is not in a managed section")
             else sender.info("${player.name} is in section ${section.key}")
         }
@@ -67,7 +67,7 @@ val SectionFeature = module("sections") {
             executes.asPlayer().args(
                 "section" to Args.string().oneOf { get<SectionRepository>().sections.map { it.key } }
             ) { section ->
-                val center = get<SectionRepository>()[section]?.section?.center ?: fail("Section not found")
+                val center = get<SectionRepository>()[section]?.center ?: fail("Section not found")
                 player.teleport(center)
             }
         }

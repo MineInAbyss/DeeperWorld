@@ -1,33 +1,28 @@
 package com.mineinabyss.deeperworld.datastructures
 
-import com.charleskorn.kaml.YamlComment
-import com.mineinabyss.idofront.serialization.WorldSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
-import org.bukkit.Bukkit
+import com.mineinabyss.deeperworld.sections.SectionKey
 import org.bukkit.Location
 import org.bukkit.World
+import kotlin.math.max
+import kotlin.math.min
 
-/**
- * @property region the region within which this section is active
- * @property world the world this section is a part of
- * @property referenceTop the reference location between this section and the one above it.
- * This and the section above's [referenceBottom] represent the same location in physical space.
- * @property referenceBottom the reference location between this section and the one below it.
- * This and the section belows' [referenceTop] represent the same location in physical space.
- */
-@Serializable
+
 data class Section(
+    val key: SectionKey,
     val name: String,
     val region: Region,
-    val world: @Serializable(WorldSerializer::class) World = Bukkit.getWorlds().first(),
-    @SerialName("refTop") private val refTop: CubePoint,
-    @YamlComment("refBottom should connect to the refTop of the next section.")
-    @SerialName("refBottom") private val refBottom: CubePoint,
+    val referenceTop: Location,
+    val referenceBottom: Location,
+    val world: World,
+    val index: Int,
 ) {
-    val referenceTop get() = refTop.toLocation(world)
-    val referenceBottom get() = refBottom.toLocation(world)
+    var above: Section? = null
+        internal set
+    var below: Section? = null
+        internal set
+    var overlapWithAbove: Int = 0
+        internal set
+
     val height: Int get() = region.max.y - region.min.y
 
     val center: Location
@@ -37,4 +32,26 @@ data class Section(
             region.center.y.toDouble(),
             region.center.z.toDouble()
         )
+
+    // TODO simplify by just calculating and storing overlapWithAbove, then returning the calculated value
+    /** Calculates the vertical overlap between two sections. */
+    fun overlapWith(other: Section): Int? {
+        if (!isAdjacentTo(other)) return null
+        if (min(region.max.y, other.region.max.y) <= max(region.min.y, other.region.min.y)) return null
+        // We decide which two points we are translating between.
+        val (yA, yB) = when {
+            isOnTopOf(other) -> referenceBottom.blockY to other.referenceTop.blockY
+            else -> referenceTop.blockY to other.referenceBottom.blockY
+        }
+
+        return max(region.max.y, other.region.max.y) - max(yA, yB) +
+                (min(yA, yB) - min(region.min.y, other.region.min.y))
+    }
+
+    /** @return whether this section is above [other]. */
+    fun isOnTopOf(other: Section) = this == other.above
+
+    /** @return Whether this section is above or below [other] */
+    fun isAdjacentTo(other: Section) = this.isOnTopOf(other) || other.isOnTopOf(this)
+
 }

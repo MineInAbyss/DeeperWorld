@@ -5,7 +5,7 @@ package com.mineinabyss.deeperworld
 import com.charleskorn.kaml.YamlComment
 import com.mineinabyss.deeperworld.datastructures.CubePoint
 import com.mineinabyss.deeperworld.datastructures.Region
-import com.mineinabyss.deeperworld.datastructures.Section
+import com.mineinabyss.deeperworld.datastructures.SectionConfig
 import com.mineinabyss.idofront.serialization.DurationSerializer
 import com.mineinabyss.idofront.serialization.WorldSerializer
 import com.mineinabyss.idofront.time.ticks
@@ -13,15 +13,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import org.bukkit.Bukkit
 import org.bukkit.World
-import org.joml.Vector3i
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 data class DeeperWorldConfig(
-    val sections: List<Section> = listOf(
-        Section("section1", Region(0, 0, 0, 1000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(0, 0, 0), CubePoint(0, 16, 0)),
-        Section("section2", Region(1000, 0, 0, 2000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(1000, 240, 0), CubePoint(2000, 16, 0)),
+    val sections: List<SectionConfig> = listOf(
+        SectionConfig("section1", Region(0, 0, 0, 1000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(0, 0, 0), CubePoint(0, 16, 0)),
+        SectionConfig("section2", Region(1000, 0, 0, 2000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(1000, 240, 0), CubePoint(2000, 16, 0)),
     ),
     @YamlComment("The damage players will take when outside a managed section.")
     val damageOutsideSections: Double = 1.0,
