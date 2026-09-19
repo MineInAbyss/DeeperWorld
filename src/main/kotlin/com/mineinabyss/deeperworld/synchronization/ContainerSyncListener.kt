@@ -21,6 +21,7 @@ import org.bukkit.event.block.Action
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
 
 class ContainerSyncListener(
@@ -102,18 +103,29 @@ class ContainerSyncListener(
     fun InventoryCloseEvent.onCloseInventory() {
         val block = inventory.location?.block ?: return
         sections.whenLinked(block) { linked ->
-            if (linked.state is Lidded) {
-                (block.state as Lidded).close()
-                (linked.state as Lidded).close()
-            }
+            (block.state as? Lidded)?.close()
+            (linked.state as? Lidded)?.close()
         }
 
         val chunk = inventory.location?.chunk ?: return
-        if (keepLoadedInventories[chunk]?.remove(player) != null) {
+        // remove returns whether the player was there, a null-check would pass for any tracked chunk
+        if (keepLoadedInventories[chunk]?.remove(player) == true) {
             if (keepLoadedInventories[chunk]?.isEmpty() == true) {
                 keepLoadedInventories -= chunk
                 chunk.removePluginChunkTicket(deeperWorld)
             }
+        }
+    }
+
+    /** Releases chunk tickets held for a player who disconnects without a close event */
+    @EventHandler
+    fun PlayerQuitEvent.onQuit() {
+        keepLoadedInventories.entries.removeAll { (chunk, players) ->
+            players.remove(player)
+            if (players.isEmpty()) {
+                chunk.removePluginChunkTicket(deeperWorld)
+                true
+            } else false
         }
     }
 

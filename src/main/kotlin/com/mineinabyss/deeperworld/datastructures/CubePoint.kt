@@ -32,7 +32,10 @@ data class CubePoint(val x: Int, val y: Int, val z: Int) {
         override val descriptor = PrimitiveSerialDescriptor("point", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): CubePoint {
-            val (x, y, z) = decoder.decodeString().replace(" ", "").split(",", limit = 3).map { it.toIntOrNull() ?: 0 }
+            val encoded = decoder.decodeString()
+            val parts = encoded.replace(" ", "").split(",", limit = 3)
+            require(parts.size == 3) { "Expected 3 comma-separated coordinates but got \"$encoded\"" }
+            val (x, y, z) = parts.map { requireNotNull(it.toIntOrNull()) { "Invalid coordinate \"$it\" in \"$encoded\"" } }
             return CubePoint(x, y, z)
         }
 

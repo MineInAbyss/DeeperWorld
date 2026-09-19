@@ -12,4 +12,8 @@ class PlayerRepositoryImpl : PlayerRepository {
     override fun setCanTeleport(player: Player, canTeleport: Boolean) {
         playerMap[player.uniqueId] = canTeleport
     }
+
+    override fun removePlayer(player: Player) {
+        playerMap.remove(player.uniqueId)
+    }
 }

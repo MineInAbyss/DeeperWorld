@@ -136,7 +136,7 @@ class SectionSyncListener(
         // Ensure clicked block is growable
         if (action != Action.RIGHT_CLICK_BLOCK || hand != EquipmentSlot.HAND) return
         if (player.inventory.getItem(EquipmentSlot.HAND).type != Material.BONE_MEAL) return
-        if (block.blockData !is Ageable || block is Sapling) return
+        if (block.blockData !is Ageable || block.blockData is Sapling) return
 
         sections.whenLinked(block) { linked ->
             if (linked.type == block.type) deeperWorld.launch {
@@ -250,25 +250,5 @@ class SectionSyncListener(
         }
     }
 
-    /*
-    /** Sync items removed by void to corresponding section */
-    @EventHandler
-    fun EntityRemoveFromWorldEvent.onVoidRemoval() {
-        val item = (entity as? Item)?.takeIf { it.y < it.world.minHeight } ?: return
-        val corrLoc = item.location.apply { y = -240.0 }.correspondingLocation ?: return
-        deeperWorld.launch {
-            val chunk = corrLoc.world.getChunkAtAsync(corrLoc).await()
-            val addedTicket = chunk.addPluginChunkTicket(deeperWorld)
-            corrLoc.spawn<Item> {
-                itemStack = item.itemStack
-                thrower = item.thrower
-                owner = item.owner
-                velocity = item.velocity
-            }
-            if (addedTicket) {
-                delay(10.seconds)
-                chunk.removePluginChunkTicket(deeperWorld)
-            }
-        }
-    }*/
+    //TODO sync items removed by the void to the corresponding section, see git history for a draft
 }

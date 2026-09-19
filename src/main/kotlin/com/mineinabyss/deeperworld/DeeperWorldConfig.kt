@@ -18,11 +18,13 @@ import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 data class DeeperWorldConfig(
-    val sections: List<SectionConfig> = listOf(
-        SectionConfig("section1", Region(0, 0, 0, 1000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(0, 0, 0), CubePoint(0, 16, 0)),
-        SectionConfig("section2", Region(1000, 0, 0, 2000, 256, 1000), Bukkit.getWorld("world")!!, CubePoint(1000, 240, 0), CubePoint(2000, 16, 0)),
-    ),
-    @YamlComment("The damage players will take when outside a managed section.")
+    val sections: List<SectionConfig> = Bukkit.getWorld("world")?.let { world ->
+        listOf(
+            SectionConfig("section1", Region(0, 0, 0, 1000, 256, 1000), world, CubePoint(0, 0, 0), CubePoint(0, 16, 0)),
+            SectionConfig("section2", Region(1000, 0, 0, 2000, 256, 1000), world, CubePoint(1000, 240, 0), CubePoint(2000, 16, 0)),
+        )
+    } ?: emptyList(),
+    @YamlComment("Damage dealt per movement when outside a managed section, applied as a tenth of this value and bypassing armor.")
     val damageOutsideSections: Double = 1.0,
     @YamlComment("Worlds which shouldn't damage players when outside of a section.")
     val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
@@ -55,6 +57,6 @@ data class DeeperWorldConfig(
         @YamlComment("The main synchronization world. Other worlds will get synchronized based on the time in this world.")
         val mainWorld: @Serializable(WorldSerializer::class) World? = Bukkit.getWorld("world"),
         @YamlComment("The worlds where time should be synchronized with the mainWorld. Optionally specify a time offset (leave 0 if no offset is desired)")
-        val syncedWorlds: Map<@Serializable(WorldSerializer::class) World, Long> = mutableMapOf(Bukkit.getWorld("world")!! to 0L),
+        val syncedWorlds: Map<@Serializable(WorldSerializer::class) World, Long> = Bukkit.getWorld("world")?.let { mapOf(it to 0L) } ?: emptyMap(),
     )
 }

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player
 interface PlayerRepository {
     fun canTeleport(player: Player): Boolean
     fun setCanTeleport(player: Player, canTeleport: Boolean)
+    fun removePlayer(player: Player)
 }
 
 var Player.canMoveSections: Boolean

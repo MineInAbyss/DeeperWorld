@@ -3,6 +3,7 @@ package com.mineinabyss.deeperworld.sections
 import com.mineinabyss.deeperworld.DeeperWorldConfig
 import com.mineinabyss.deeperworld.datastructures.Section
 import org.bukkit.Location
+import org.bukkit.World
 import kotlin.math.floor
 
 class SectionConfigDataSource(
@@ -31,10 +32,9 @@ class SectionConfigDataSource(
         }
     }
 
-    // Array for faster iteration
-    private val sectionsArray = config.sections.toTypedArray()
-
     private val byKey: Map<SectionKey, Section> = sections.associateBy { it.key }
+
+    private val byWorld: Map<World, List<Section>> = sections.groupBy { it.world }
 
     override fun getDepth(location: Location): Int? {
         val lastSection = get(location) ?: return null
@@ -48,16 +48,11 @@ class SectionConfigDataSource(
 
     override operator fun get(key: SectionKey) = byKey[key]
 
-    //TODO consider performance, currently just optimizing iteration overhead via array
     override fun get(location: Location): Section? {
+        val sectionsInWorld = byWorld[location.world] ?: return null
         val x = location.blockX
         val y = location.blockY
         val z = location.blockZ
-        val world = location.world
-        for (i in sectionsArray.indices) {
-            val section = sectionsArray[i]
-            if (section.world == world && section.region.contains(x, y, z)) return sections[i]
-        }
-        return null
+        return sectionsInWorld.firstOrNull { it.region.contains(x, y, z) }
     }
 }

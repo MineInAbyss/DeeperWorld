@@ -9,6 +9,7 @@ import com.mineinabyss.idofront.time.ticks
 import io.papermc.paper.entity.TeleportFlag
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
+import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
@@ -29,7 +30,8 @@ class TransitionTeleportHandler: TeleportHandler {
     )
 
     override fun handleTeleport(entity: Entity, transition: SectionTransition) {
-        if(entity.uniqueId in teleportCooldown) return
+        // A vehicle on cooldown means another passenger already moved it across, teleporting again would duplicate the transition
+        if (entity.uniqueId in teleportCooldown || entity.vehicle?.uniqueId in teleportCooldown) return
         //TODO used to pass entity.vehicle ?: entity, check this is valid
         val teleportEntity = entity.vehicle ?: entity
 
@@ -43,42 +45,53 @@ class TransitionTeleportHandler: TeleportHandler {
         spectators.values.flatten().forEach { it.spectatorTarget = null }
         teleportCooldown += leashUuids
         teleportCooldown += specUuids
+        teleportCooldown += entity.uniqueId
+        teleportCooldown += teleportEntity.uniqueId
 
         val to = transition.to
         deeperWorld.launch {
-            val chunk = to.world.getChunkAtAsync(to).await()
-            val addedTicket = chunk.addPluginChunkTicket(deeperWorld)
+            var ticketedChunk: Chunk? = null
+            // Outer finally drops the ticket on any failure or cancellation, it must not suspend to do so
+            try {
+                val chunk = to.world.getChunkAtAsync(to).await()
+                if (chunk.addPluginChunkTicket(deeperWorld)) ticketedChunk = chunk
 
-            if (teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()) {
-                teleportEntity.velocity = oldVelocity
-                leashedEntities.forEach { (leashHolder, leashEntities) ->
-                    leashEntities.forEach {
-                        val teleportTo = it.location.correspondingLocation ?: leashHolder.location
-                        it.teleportAsync(teleportTo, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
-                        delay(2.ticks)
-                        it.setLeashHolder(leashHolder)
+                try {
+                    if (teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()) {
+                        teleportEntity.velocity = oldVelocity
+                        leashedEntities.forEach { (leashHolder, leashEntities) ->
+                            leashEntities.forEach {
+                                val teleportTo = it.location.correspondingLocation ?: leashHolder.location
+                                it.teleportAsync(teleportTo, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()
+                                delay(2.ticks)
+                                it.setLeashHolder(leashHolder)
+                            }
+                        }
+
+                        spectators.forEach { (spectatorTarget, spectators) ->
+                            spectators.forEach {
+                                it.teleportAsync(spectatorTarget.location).await()
+                                delay(2.ticks)
+                                it.spectatorTarget = spectatorTarget
+                                delay(2.ticks)
+                                it.spectatorTarget = null
+                                delay(2.ticks)
+                                it.spectatorTarget = spectatorTarget
+                            }
+                        }
                     }
+                } finally {
+                    // Always clear cooldowns, even if the teleport fails or the coroutine is cancelled
+                    teleportCooldown -= leashUuids
+                    teleportCooldown -= specUuids
+                    teleportCooldown -= entity.uniqueId
+                    teleportCooldown -= teleportEntity.uniqueId
                 }
 
-                spectators.forEach { (spectatorTarget, spectators) ->
-                    spectators.forEach {
-                        it.teleportAsync(spectatorTarget.location).await()
-                        delay(2.ticks)
-                        it.spectatorTarget = spectatorTarget
-                        delay(2.ticks)
-                        it.spectatorTarget = null
-                        delay(2.ticks)
-                        it.spectatorTarget = spectatorTarget
-                    }
-                }
-            }
-
-            teleportCooldown -= leashUuids
-            teleportCooldown -= specUuids
-            teleportCooldown -= teleportEntity.uniqueId
-            if (addedTicket) {
+                // Hold the destination loaded a moment so the entity settles before it can unload
                 delay(10.seconds)
-                to.chunk.removePluginChunkTicket(deeperWorld)
+            } finally {
+                ticketedChunk?.removePluginChunkTicket(deeperWorld)
             }
         }
     }

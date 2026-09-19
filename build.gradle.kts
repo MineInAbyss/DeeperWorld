@@ -1,4 +1,5 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.OP
+import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.TRUE
 import net.minecrell.pluginyml.paper.PaperPluginDescription.RelativeLoadOrder.BEFORE
 
 plugins {
@@ -58,6 +59,10 @@ paper {
         register("deeperworld.admin") {
             description = "Have power to use admin comands"
             default = OP
+        }
+        register("deeperworld.changesection") {
+            description = "Allows moving between sections via automatic teleports"
+            default = TRUE
         }
     }
 

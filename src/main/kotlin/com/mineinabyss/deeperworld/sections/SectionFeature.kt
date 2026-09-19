@@ -10,7 +10,9 @@ import com.mineinabyss.dependencies.module
 import com.mineinabyss.dependencies.new
 import com.mineinabyss.dependencies.single
 import com.mineinabyss.idofront.commands.brigadier.Args
+import com.mineinabyss.idofront.commands.brigadier.ArgsMinecraft
 import com.mineinabyss.idofront.commands.brigadier.oneOf
+import com.mineinabyss.idofront.commands.brigadier.resolve
 import com.mineinabyss.idofront.features.get
 import com.mineinabyss.idofront.features.mainCommand
 import com.mineinabyss.idofront.messaging.error
@@ -35,7 +37,7 @@ val SectionFeature = module("sections") {
             sender.success("Automatic TP handled for $msg")
         }
     }
-    ("layerinfo" / "linfo" / "info" / "layers" / "layers") {
+    ("layerinfo" / "linfo" / "info" / "layers") {
         executes.asPlayer {
             val section = player.location.section
             if (section == null) sender.info("${player.name} is not in a managed section")
@@ -44,15 +46,16 @@ val SectionFeature = module("sections") {
     }
 
     "depth" {
-        executes.args("player" to Args.otherPlayer()) { player ->
-            deeperWorld.sections.getDepth(player.location)?.let {
-                if (sender is Player) {
-                    sender.success("Your depth is $it blocks")
-                } else {
-                    sender.success("Depth of player ${player.name} is $it blocks")
-                }
+        val playerArg = ArgsMinecraft.players().resolve()
+            .default("others") { listOf(sender as? Player ?: fail("Sender needs to be a player")) }
 
-            } ?: sender.error("${player.name} is not in a managed section")
+        executes.args("player" to playerArg) { players ->
+            players.forEach { player ->
+                deeperWorld.sections.getDepth(player.location)?.let {
+                    if (sender == player) sender.success("Your depth is $it blocks")
+                    else sender.success("Depth of player ${player.name} is $it blocks")
+                } ?: sender.error("${player.name} is not in a managed section")
+            }
         }
     }
 

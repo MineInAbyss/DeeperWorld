@@ -103,28 +103,30 @@ val SectionSyncFeature = module("section-sync") {
 
                 val clipboard = BlockArrayClipboard(region)
                 val wep = WorldEditPlugin.getInstance().bukkitImplAdapter
+                // A linked section may live in another world, so reading and writing need their own sessions
                 val weWorld: World = wep.adapt(player.world)
-                val editSession: EditSession = WorldEdit.getInstance().newEditSessionBuilder()
-                    .world(weWorld).limitUnlimited().build()
+                val weLinkedWorld: World = wep.adapt(linkedBlock.world)
+                val newEditSession = { world: World ->
+                    WorldEdit.getInstance().newEditSessionBuilder().world(world).limitUnlimited().build()
+                }
 
-                val offset = pos2.y().coerceAtLeast(0)
                 TaskManager.taskManager().taskNowAsync {
                     player.success("Blocks syncing...")
-                    editSession.use { editSession ->
-                        // Copy
+                    newEditSession(weWorld).use { copySession ->
                         val forwardExtentCopy =
-                            ForwardExtentCopy(editSession, region, clipboard, region.minimumPoint)
+                            ForwardExtentCopy(copySession, region, clipboard, region.minimumPoint)
                         forwardExtentCopy.isCopyingEntities = false
                         forwardExtentCopy.isCopyingBiomes = true
                         Operations.complete(forwardExtentCopy)
+                    }
 
-                        // Paste
+                    newEditSession(weLinkedWorld).use { pasteSession ->
                         val operation: Operation = ClipboardHolder(clipboard)
-                            .createPaste(editSession)
+                            .createPaste(pasteSession)
                             .to(
                                 BlockVector3.at(
                                     linkedBlock.x - range,
-                                    linkedBlock.y - range - offset,
+                                    linkedBlock.y - range,
                                     linkedBlock.z - range
                                 )
                             ).build()

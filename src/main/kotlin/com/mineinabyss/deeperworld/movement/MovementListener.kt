@@ -1,6 +1,7 @@
 package com.mineinabyss.deeperworld.movement
 
 import com.mineinabyss.deeperworld.Permissions
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.extensions.passengersRecursive
 import com.mineinabyss.deeperworld.player.canMoveSections
 import io.papermc.paper.event.entity.EntityMoveEvent
@@ -16,12 +17,15 @@ class MovementListener(
 ) : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun PlayerMoveEvent.move() {
+        if (player.world !in deeperWorld.config.worlds) return
         if (!hasExplicitlyChangedBlock() || !player.hasPermission(Permissions.CHANGE_SECTION) || !player.canMoveSections) return
         handler.handleMovement(player, from, to)
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun VehicleMoveEvent.move() {
+        if (vehicle.world !in deeperWorld.config.worlds) return
+        if (from.blockX == to.blockX && from.blockY == to.blockY && from.blockZ == to.blockZ) return
         val players = vehicle.passengersRecursive().filterIsInstance<Player>()
 
         val teleportEntity = players.firstOrNull { it.hasPermission(Permissions.CHANGE_SECTION) && it.canMoveSections } ?: vehicle
@@ -30,7 +34,8 @@ class MovementListener(
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
-        if (hasExplicitlyChangedPosition() && !entity.isLeashed) {
+        if (entity.world !in deeperWorld.config.worlds) return
+        if (hasExplicitlyChangedBlock() && !entity.isLeashed) {
             handler.handleMovement(entity, from, to)
         }
     }

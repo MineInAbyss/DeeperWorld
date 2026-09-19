@@ -8,26 +8,32 @@ import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.data.BlockData
 import org.bukkit.entity.Entity
 
 class BedrockBlockingInvalidTeleportHandler : TeleportHandler, AutoCloseable {
     override val isValid: Boolean = false
-    private val temporaryBedrock = mutableListOf<Block>()
+
+    /** Blocks temporarily replaced with bedrock, mapped to their original data. */
+    private val temporaryBedrock = mutableMapOf<Block, BlockData>()
 
     override fun handleTeleport(entity: Entity, transition: SectionTransition) {
         val bedrockBlock = transition.from.block
-        if (bedrockBlock.type == Material.AIR) temporaryBedrock += bedrockBlock
-        transition.from.block.type = Material.BEDROCK
+        if (bedrockBlock !in temporaryBedrock) {
+            temporaryBedrock[bedrockBlock] = bedrockBlock.blockData
+            bedrockBlock.type = Material.BEDROCK
 
-        // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
-        // If no players are in this radius, destroy the bedrock.
-        deeperWorld.launch {
-            while (bedrockBlock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()) {
-                delay(5.ticks)
+            // Keep bedrock spawned if there are players within a 1.5 radius (regular jump height).
+            // If no players are in this radius, restore the original block.
+            deeperWorld.launch {
+                while (bedrockBlock.location.up(1).getNearbyPlayers(1.5).isNotEmpty()) {
+                    delay(5.ticks)
+                }
+            }.invokeOnCompletion { //Will also run if plugin is unloaded
+                temporaryBedrock.remove(bedrockBlock)?.let {
+                    if (bedrockBlock.type == Material.BEDROCK) bedrockBlock.blockData = it
+                }
             }
-        }.invokeOnCompletion { //Will also run if plugin is unloaded
-            if (bedrockBlock.type == Material.BEDROCK) bedrockBlock.type = Material.AIR
-            temporaryBedrock -= bedrockBlock
         }
 
         val oldFallDistance = entity.fallDistance
@@ -40,7 +46,9 @@ class BedrockBlockingInvalidTeleportHandler : TeleportHandler, AutoCloseable {
     }
 
     override fun close() {
-        temporaryBedrock.forEach { if (it.type == Material.BEDROCK) it.type = Material.AIR }
+        temporaryBedrock.toMap().forEach { (block, data) ->
+            if (block.type == Material.BEDROCK) block.blockData = data
+        }
         temporaryBedrock.clear()
     }
 }

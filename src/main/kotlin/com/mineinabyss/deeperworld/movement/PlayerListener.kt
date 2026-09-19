@@ -1,5 +1,6 @@
 package com.mineinabyss.deeperworld.movement
 
+import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.player.canMoveSections
 import com.mineinabyss.deeperworld.sections.inSectionTransition
 import com.mineinabyss.deeperworld.sections.section
@@ -10,6 +11,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerTeleportEvent
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.vehicle.VehicleEnterEvent
 import org.bukkit.event.vehicle.VehicleExitEvent
 
@@ -26,7 +28,13 @@ class PlayerListener : Listener {
     }
 
     @EventHandler
+    fun PlayerQuitEvent.onQuit() {
+        deeperWorld.players.removePlayer(player)
+    }
+
+    @EventHandler
     fun VehicleEnterEvent.onEnterVehicle() {
+        if (vehicle.world !in deeperWorld.config.worlds) return
         if (vehicle.location.up(1).section != null) return
         entered.error("The Abyss prevents you from mounting here...")
         isCancelled = true
@@ -34,6 +42,7 @@ class PlayerListener : Listener {
 
     @EventHandler
     fun VehicleExitEvent.onExitVehicle() {
+        if (vehicle.world !in deeperWorld.config.worlds) return
         if (vehicle.location.up(1).section != null) return
         exited.error("The Abyss prevents you from dismounting here...")
         isCancelled = true
