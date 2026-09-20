@@ -50,7 +50,7 @@ data class SectionLocation(
         val overlap = section.overlapWith(otherSection) ?: return false
         return when {
             section.isOnTopOf(otherSection) -> location.blockY <= section.region.min.y + overlap
-            otherSection.isOnTopOf(section) -> location.blockY >= otherSection.region.max.y - overlap
+            otherSection.isOnTopOf(section) -> location.blockY >= section.region.max.y - overlap
             else -> false
         }
     }

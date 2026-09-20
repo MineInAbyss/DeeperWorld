@@ -53,10 +53,10 @@ class TransitionTeleportHandler: TeleportHandler {
             var ticketedChunk: Chunk? = null
             // Outer finally drops the ticket on any failure or cancellation, it must not suspend to do so
             try {
-                val chunk = to.world.getChunkAtAsync(to).await()
-                if (chunk.addPluginChunkTicket(deeperWorld)) ticketedChunk = chunk
-
                 try {
+                    val chunk = to.world.getChunkAtAsync(to).await()
+                    if (chunk.addPluginChunkTicket(deeperWorld)) ticketedChunk = chunk
+
                     if (teleportEntity.teleportAsync(to, PlayerTeleportEvent.TeleportCause.PLUGIN, *teleportFlags).await()) {
                         teleportEntity.velocity = oldVelocity
                         leashedEntities.forEach { (leashHolder, leashEntities) ->
@@ -81,7 +81,8 @@ class TransitionTeleportHandler: TeleportHandler {
                         }
                     }
                 } finally {
-                    // Always clear cooldowns, even if the teleport fails or the coroutine is cancelled
+                    // A leaked cooldown blocks the entity from ever transitioning again, so clear it even if the
+                    // chunk load or teleport failed, or the coroutine was cancelled
                     teleportCooldown -= leashUuids
                     teleportCooldown -= specUuids
                     teleportCooldown -= entity.uniqueId

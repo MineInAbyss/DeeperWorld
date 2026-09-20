@@ -16,7 +16,7 @@ val Location.section: Section? get() = withSection?.section
  * The corresponding section which overlaps with this location's section. Will be null if the section is not in an
  * overlap, even if there is a section above or below, since it's unclear which section becomes the corresponding one.
  */
-val Location.correspondingSection: Section? get() = withSection?.section
+val Location.correspondingSection: Section? get() = withSection?.linkedSection
 
 /**
  * The location as it would be in the [correspondingSection]. Will be null if the section is not in an overlap.
