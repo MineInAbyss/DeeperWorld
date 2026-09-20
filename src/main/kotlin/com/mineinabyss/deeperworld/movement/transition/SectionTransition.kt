@@ -66,10 +66,12 @@ data class SectionLocation(
         val corresponding = linkedSection ?: return null
 
         // We decide which two points we are translating between.
+        // Subtract through fresh vectors, Location.minus subtracts in place and would corrupt the section's
+        // reference points, leaving every later overlap calculation negative
         val delta = when (section.isOnTopOf(corresponding)) {
-            true -> corresponding.referenceTop - section.referenceBottom
-            false -> corresponding.referenceBottom - section.referenceTop
-        }.toVector()
+            true -> corresponding.referenceTop.toVector() - section.referenceBottom.toVector()
+            false -> corresponding.referenceBottom.toVector() - section.referenceTop.toVector()
+        }
         val newLoc = location.clone() + delta
         newLoc.world = corresponding.world
         return newLoc
