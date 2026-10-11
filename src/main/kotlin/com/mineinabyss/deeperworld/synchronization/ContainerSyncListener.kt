@@ -104,7 +104,8 @@ class ContainerSyncListener(
         val block = inventory.location?.block ?: return
         sections.whenLinked(block) { linked ->
             (block.state as? Lidded)?.close()
-            (linked.state as? Lidded)?.close()
+            // Reading state loads the chunk, which Paper forbids while a disconnecting player is removed
+            if (linked.world.isChunkLoaded(linked.x shr 4, linked.z shr 4)) (linked.state as? Lidded)?.close()
         }
 
         val chunk = inventory.location?.chunk ?: return
