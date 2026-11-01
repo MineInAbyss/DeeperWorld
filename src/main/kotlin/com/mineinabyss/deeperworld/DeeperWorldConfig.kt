@@ -14,6 +14,7 @@ import kotlinx.serialization.UseSerializers
 import org.bukkit.Bukkit
 import org.bukkit.World
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Serializable
@@ -30,6 +31,7 @@ data class DeeperWorldConfig(
     val damageExcludedWorlds: Set<@Serializable(with = WorldSerializer::class) World> = emptySet(),
     val fall: FallDamageConfig = FallDamageConfig(),
     val time: TimeConfig = TimeConfig(),
+    val sync: SyncConfig = SyncConfig(),
     val bedrockBlockingInvalidTeleport: Boolean = true,
 ) {
     val worlds = sections.map { it.world }.toSet()
@@ -58,5 +60,18 @@ data class DeeperWorldConfig(
         val mainWorld: @Serializable(WorldSerializer::class) World? = Bukkit.getWorld("world"),
         @YamlComment("The worlds where time should be synchronized with the mainWorld. Optionally specify a time offset (leave 0 if no offset is desired)")
         val syncedWorlds: Map<@Serializable(WorldSerializer::class) World, Long> = Bukkit.getWorld("world")?.let { mapOf(it to 0L) } ?: emptyMap(),
+    )
+
+    @Serializable
+    enum class SyncMode { NATIVE, FAWE }
+
+    @Serializable
+    data class SyncConfig(
+        @YamlComment("Mode used by /dw sync when none is given. NATIVE needs no other plugins, FAWE requires FastAsyncWorldEdit")
+        val defaultMode: SyncMode = SyncMode.NATIVE,
+        @YamlComment("Native syncs copying more blocks than this must be confirmed with /dw sync confirm")
+        val confirmAboveBlocks: Long = 2_000_000,
+        @YamlComment("Main thread time native syncs may spend copying blocks each tick")
+        val nativeTimePerTick: @Serializable(DurationSerializer::class) Duration = 20.milliseconds,
     )
 }

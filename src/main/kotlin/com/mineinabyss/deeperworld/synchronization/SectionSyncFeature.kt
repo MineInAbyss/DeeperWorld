@@ -1,35 +1,29 @@
 package com.mineinabyss.deeperworld.synchronization
 
-import com.fastasyncworldedit.core.util.TaskManager
 import com.github.shynixn.mccoroutine.bukkit.launch
+import com.mineinabyss.deeperworld.DeeperWorldConfig.SyncMode
 import com.mineinabyss.deeperworld.MinecraftConstants.FULL_DAY_TIME
 import com.mineinabyss.deeperworld.deeperWorld
 import com.mineinabyss.deeperworld.sections.SectionFeature
-import com.mineinabyss.deeperworld.sections.correspondingLocation
 import com.mineinabyss.dependencies.*
 import com.mineinabyss.idofront.commands.brigadier.Args
-import com.mineinabyss.idofront.destructure.component1
-import com.mineinabyss.idofront.destructure.component2
-import com.mineinabyss.idofront.destructure.component3
+import com.mineinabyss.idofront.commands.brigadier.default
+import com.mineinabyss.idofront.commands.brigadier.map
+import com.mineinabyss.idofront.commands.brigadier.oneOf
 import com.mineinabyss.idofront.features.listeners
 import com.mineinabyss.idofront.features.mainCommand
 import com.mineinabyss.idofront.messaging.error
+import com.mineinabyss.idofront.messaging.info
 import com.mineinabyss.idofront.messaging.success
+import com.mineinabyss.idofront.messaging.warn
 import com.mineinabyss.idofront.plugin.Plugins
 import com.mineinabyss.idofront.time.ticks
-import com.sk89q.worldedit.EditSession
-import com.sk89q.worldedit.WorldEdit
-import com.sk89q.worldedit.bukkit.WorldEditPlugin
-import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard
-import com.sk89q.worldedit.function.operation.ForwardExtentCopy
-import com.sk89q.worldedit.function.operation.Operation
-import com.sk89q.worldedit.function.operation.Operations
-import com.sk89q.worldedit.math.BlockVector3
-import com.sk89q.worldedit.regions.CuboidRegion
-import com.sk89q.worldedit.session.ClipboardHolder
-import com.sk89q.worldedit.world.World
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import org.bukkit.entity.Player
+import java.util.UUID
 
 /**
  * Synchronizes blocks and inventories on section boundaries.
@@ -90,53 +84,83 @@ val SectionSyncFeature = module("section-sync") {
         }
     }
     "sync" {
-        executes.asPlayer().args("range" to Args.integer(1, 1000)) { range ->
-            if (!Plugins.isEnabled("FastAsyncWorldEdit")) fail("Please install FAWE to sync section overlaps")
-            val loc = player.location
-            val linkedBlock = loc.correspondingLocation?.block ?: fail("Corresponding section not found")
+        executes.asPlayer().args(
+            "range" to Args.integer(1, 1000),
+            "mode" to Args.word()
+                .oneOf(SyncMode.entries.map { it.name.lowercase() })
+                .map { SyncMode.valueOf(it.uppercase()) }
+                .default { deeperWorld.config.sync.defaultMode },
+        ) { range, mode ->
+            val region = SyncRegion.around(player.location, range) ?: fail("Corresponding section not found")
+            if (mode == SyncMode.FAWE && !Plugins.isEnabled("FastAsyncWorldEdit"))
+                fail("FAWE mode requires FastAsyncWorldEdit, use native mode instead")
+            if (mode == SyncMode.NATIVE && region.overlapsItself)
+                fail("Source and target overlap, which native mode cannot copy without overwriting its own input. Use FAWE mode or a smaller range")
 
-            runCatching {
-                val (x, y, z) = player.location
-                val pos1 = BlockVector3.at(x + range, y + range, z + range)
-                val pos2 = BlockVector3.at(x - range, y - range, z - range)
-                val region = CuboidRegion(pos1, pos2)
-
-                val clipboard = BlockArrayClipboard(region)
-                val wep = WorldEditPlugin.getInstance().bukkitImplAdapter
-                // A linked section may live in another world, so reading and writing need their own sessions
-                val weWorld: World = wep.adapt(player.world)
-                val weLinkedWorld: World = wep.adapt(linkedBlock.world)
-                val newEditSession = { world: World ->
-                    WorldEdit.getInstance().newEditSessionBuilder().world(world).limitUnlimited().build()
-                }
-
-                TaskManager.taskManager().taskNowAsync {
-                    player.success("Blocks syncing...")
-                    newEditSession(weWorld).use { copySession ->
-                        val forwardExtentCopy =
-                            ForwardExtentCopy(copySession, region, clipboard, region.minimumPoint)
-                        forwardExtentCopy.isCopyingEntities = false
-                        forwardExtentCopy.isCopyingBiomes = true
-                        Operations.complete(forwardExtentCopy)
-                    }
-
-                    newEditSession(weLinkedWorld).use { pasteSession ->
-                        val operation: Operation = ClipboardHolder(clipboard)
-                            .createPaste(pasteSession)
-                            .to(
-                                BlockVector3.at(
-                                    linkedBlock.x - range,
-                                    linkedBlock.y - range,
-                                    linkedBlock.z - range
-                                )
-                            ).build()
-                        Operations.complete(operation)
-                    }
-                    player.success("Blocks synced (FAWE)")
-                }
-            }.onFailure {
-                player.error("""An error occurred: ${it.message}""")
+            if (mode == SyncMode.NATIVE && region.volume > deeperWorld.config.sync.confirmAboveBlocks) {
+                pendingSyncs.values.removeIf { it.expiresAt <= System.currentTimeMillis() }
+                pendingSyncs[player.uniqueId] = PendingSync(region, System.currentTimeMillis() + CONFIRM_TIMEOUT_MS)
+                player.warn(
+                    "This will copy ${"%,d".format(region.volume)} blocks on the main thread without FAWE and may take a long time. " +
+                        "Run /dw sync confirm within ${CONFIRM_TIMEOUT_MS / 1000}s to proceed"
+                )
+                return@args
+            }
+            startSync(player, region, mode)
+        }
+        "confirm" {
+            executes.withPermission(parentPermission!!).asPlayer {
+                val pending = pendingSyncs.remove(player.uniqueId)
+                    ?.takeIf { it.expiresAt > System.currentTimeMillis() }
+                    ?: fail("No sync is waiting for confirmation")
+                startSync(player, pending.region, SyncMode.NATIVE)
+            }
+        }
+        "cancel" {
+            executes.withPermission(parentPermission!!).asPlayer {
+                runningSyncs.remove(player.uniqueId)?.cancel() ?: fail("You have no native sync running")
+                player.success("Sync cancelled, blocks copied so far are kept")
             }
         }
     }
 }
+
+private const val CONFIRM_TIMEOUT_MS = 30_000L
+
+private class PendingSync(val region: SyncRegion, val expiresAt: Long)
+
+private val pendingSyncs = mutableMapOf<UUID, PendingSync>()
+private val runningSyncs = mutableMapOf<UUID, Job>()
+
+private fun startSync(player: Player, region: SyncRegion, mode: SyncMode) {
+    player.success("Syncing ${"%,d".format(region.volume)} blocks (${mode.name.lowercase()})...")
+    when (mode) {
+        SyncMode.FAWE -> FaweSync.copy(region) { error ->
+            if (error == null) player.success("Blocks synced (FAWE)")
+            else player.error("Sync failed: ${error.message}")
+        }
+
+        SyncMode.NATIVE -> {
+            if (runningSyncs[player.uniqueId]?.isActive == true) {
+                player.error("You already have a sync running, use /dw sync cancel to stop it")
+                return
+            }
+            var lastReport = System.currentTimeMillis()
+            val job = deeperWorld.launch {
+                NativeSync.copy(region) { copied ->
+                    if (System.currentTimeMillis() - lastReport < PROGRESS_INTERVAL_MS) return@copy
+                    lastReport = System.currentTimeMillis()
+                    player.info("Synced ${copied * 100 / region.volume}% (${"%,d".format(copied)} blocks)")
+                }
+                player.success("Blocks synced (native)")
+            }
+            runningSyncs[player.uniqueId] = job
+            job.invokeOnCompletion { error ->
+                runningSyncs.remove(player.uniqueId, job)
+                if (error != null && error !is CancellationException) player.error("Sync failed: ${error.message}")
+            }
+        }
+    }
+}
+
+private const val PROGRESS_INTERVAL_MS = 5_000L
