@@ -93,3 +93,19 @@ paper {
         }
     }
 }
+val schemas by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += output + compileClasspath
+}
+
+dependencies {
+    "schemasImplementation"("com.mineinabyss.jsonschema-kt:writer:0.2.0")
+}
+
+tasks.register<JavaExec>("generateSchemas") {
+    group = "documentation"
+    description = "Writes JSON schemas for configs, pass -PschemaOutput=<server-config> to write into a server config repo"
+    classpath = schemas.runtimeClasspath
+    mainClass = "SchemasKt"
+    args(providers.gradleProperty("schemaOutput").orElse(layout.buildDirectory.dir("schemas").map { it.asFile.path }).get())
+}
