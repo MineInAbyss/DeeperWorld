@@ -12,6 +12,7 @@ import com.mineinabyss.idofront.time.ticks
 import io.papermc.paper.event.block.BlockBreakBlockEvent
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.Tag
@@ -125,11 +126,16 @@ class SectionSyncListener(
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockGrowEvent.syncBlockGrow() {
-        sections.whenLinked(block) { linked ->
-            deeperWorld.launch {
-                delay(1.ticks)
-                linked.blockData = block.blockData
-            }
+        sections.whenLinked(block) { linked -> syncLaterLoadingAsync(block, linked) }
+    }
+
+    // Writing into an unloaded chunk through Bukkit loads it on the main thread, so it is loaded async first
+    private fun syncLaterLoadingAsync(block: Block, linked: Block) {
+        deeperWorld.launch {
+            delay(1.ticks)
+            if (!linked.world.isChunkLoaded(linked.x shr 4, linked.z shr 4))
+                linked.world.getChunkAtAsync(linked.x shr 4, linked.z shr 4).await()
+            linked.blockData = block.blockData
         }
     }
 
@@ -271,12 +277,7 @@ class SectionSyncListener(
 
     @EventHandler
     fun InventoryBlockStartEvent.onFurnaceStart() {
-        sections.whenLinked(block) { linked ->
-            deeperWorld.launch {
-                delay(1.ticks)
-                linked.blockData = block.blockData
-            }
-        }
+        sections.whenLinked(block) { linked -> syncLaterLoadingAsync(block, linked) }
     }
 
     /** Removes Iron Golem and Wither summons in corresponding section location due to duping **/
