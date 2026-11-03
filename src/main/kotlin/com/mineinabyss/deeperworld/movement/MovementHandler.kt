@@ -19,13 +19,14 @@ class MovementHandler(
     private val invalidAscentHandler: TeleportHandler,
     private val invalidDescentHandler: TeleportHandler,
 ) : AutoCloseable {
-    fun handleMovement(entity: Entity, from: Location, to: Location) {
+    fun handleMovement(entity: Entity, from: Location, to: Location, allowed: () -> Boolean = { true }) {
         if (!entity.location.inSection) {
-            (entity as? Player)?.let { onOutOfSection.handleOutOfSection(it) }
+            if (entity is Player && allowed()) onOutOfSection.handleOutOfSection(entity)
             return
         }
 
         val inTransition = sections.inTransition(from, to) ?: return
+        if (!allowed()) return
         val handler = getTeleportHandler(entity, inTransition)
         var allow = true
         // Call event to allow other plugins to cancel transition for players
