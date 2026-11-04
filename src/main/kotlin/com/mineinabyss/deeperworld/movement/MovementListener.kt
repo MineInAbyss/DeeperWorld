@@ -17,8 +17,8 @@ class MovementListener(
 ) : Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     fun PlayerMoveEvent.move() {
-        if (player.world !in deeperWorld.config.worlds) return
-        if (!hasExplicitlyChangedBlock() || !player.canMoveSections) return
+        if (!hasExplicitlyChangedBlock()) return
+        if (player.world !in deeperWorld.config.worlds || !player.canMoveSections) return
         handler.handleMovement(player, from, to) { player.hasPermission(Permissions.CHANGE_SECTION) }
     }
 
@@ -34,8 +34,9 @@ class MovementListener(
 
     @EventHandler
     fun EntityMoveEvent.entityMove() {
+        if (!hasExplicitlyChangedBlock()) return
         if (entity.world !in deeperWorld.config.worlds) return
-        if (hasExplicitlyChangedBlock() && !entity.isLeashed) {
+        if (!entity.isLeashed) {
             handler.handleMovement(entity, from, to)
         }
     }
