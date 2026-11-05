@@ -10,6 +10,7 @@ import com.mineinabyss.idofront.time.ticks
 import kotlinx.coroutines.delay
 import nl.rutgerkok.blocklocker.BlockLockerAPIv2
 import org.bukkit.Chunk
+import org.bukkit.Material
 import org.bukkit.block.Container
 import org.bukkit.block.DecoratedPot
 import org.bukkit.block.Lidded
@@ -34,8 +35,8 @@ class ContainerSyncListener(
     /** Synchronize container interactions between sections */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun PlayerInteractEvent.onInteractWithContainer() {
-        val (block, container) = (clickedBlock ?: return) to (clickedBlock?.state as? Container ?: return)
         if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
+        val (block, container) = (clickedBlock ?: return) to (clickedBlock?.state as? Container ?: return)
 
         sections.whenLinked(block.location) { linked, transition ->
             val linkedBlock = linked.block
@@ -86,8 +87,8 @@ class ContainerSyncListener(
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun PlayerInteractEvent.onDecoratedPotFill() {
+        if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking || clickedBlock?.type != Material.DECORATED_POT) return
         val (block, pot) = (clickedBlock ?: return) to (clickedBlock?.state as? DecoratedPot ?: return)
-        if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
 
         sections.whenLinked(block.location) { corresponding, _ ->
             val corrPot = corresponding.block.state as? DecoratedPot ?: return
