@@ -133,9 +133,11 @@ class SectionSyncListener(
     private fun syncLaterLoadingAsync(block: Block, linked: Block) {
         deeperWorld.launch {
             delay(1.ticks)
+            // Read before the wait, the source chunk could unload while the linked one loads
+            val data = block.blockData
             if (!linked.world.isChunkLoaded(linked.x shr 4, linked.z shr 4))
                 linked.world.getChunkAtAsync(linked.x shr 4, linked.z shr 4).await()
-            linked.blockData = block.blockData
+            linked.blockData = data
         }
     }
 
