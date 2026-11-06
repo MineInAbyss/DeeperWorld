@@ -15,12 +15,16 @@ import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.Tag
+import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.Container
 import org.bukkit.block.ShulkerBox
 import org.bukkit.block.Sign
+import org.bukkit.block.TileState
 import org.bukkit.block.data.Ageable
 import org.bukkit.block.data.Bisected
+import org.bukkit.block.data.Directional
+import org.bukkit.block.data.FaceAttachable
 import org.bukkit.block.data.Waterlogged
 import org.bukkit.block.data.type.Bed
 import org.bukkit.block.data.type.Sapling
@@ -109,16 +113,17 @@ class SectionSyncListener(
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockPlaceEvent.syncBlockPlace() {
         sections.whenLinked(block) { linked ->
             BlockSyncEvent(block, SyncType.PLACE).call {
+                copySupport(block, linked, SUPPORT_DEPTH)
                 linked.blockData = block.blockData
             }
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockGrowEvent.syncBlockGrow() {
         sections.whenLinked(block) { linked ->
             deeperWorld.launch {
@@ -129,7 +134,7 @@ class SectionSyncListener(
     }
 
     // Since [BlockGrowEvent] doesn't get called for bonemeal-growth
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun PlayerInteractEvent.syncBlockGrowFromBoneMeal() {
         val block = clickedBlock ?: return
 
@@ -158,7 +163,7 @@ class SectionSyncListener(
         else isCancelled = true
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockMultiPlaceEvent.syncMultiBlockPlace() {
         if (!block.location.inSectionOverlap) return
         val data = block.blockData
@@ -168,7 +173,7 @@ class SectionSyncListener(
             }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun PlayerBucketEmptyEvent.syncWaterEmpty() {
         if (!block.location.inSectionOverlap) return
         sections.whenLinked(block) { linked ->
@@ -186,7 +191,7 @@ class SectionSyncListener(
     }
 
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun PlayerBucketFillEvent.syncWaterFill() {
         sections.whenLinked(block) { linked ->
             val data = linked.blockData
@@ -200,7 +205,7 @@ class SectionSyncListener(
 
 
     /** Synchronize explosions */
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun EntityExplodeEvent.syncExplosions() {
         sections.forEachLinked(blockList()) { _, linked ->
             linked.type = Material.AIR
@@ -208,14 +213,14 @@ class SectionSyncListener(
     }
 
     /** Synchronize explosions */
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun BlockExplodeEvent.syncExplosions() {
         sections.forEachLinked(blockList()) { _, linked ->
             linked.type = Material.AIR
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun SignChangeEvent.syncSignText() {
         if (!block.location.inSectionOverlap) return
         sections.whenLinked(block) { linked ->
@@ -223,10 +228,44 @@ class SectionSyncListener(
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     fun EntityChangeBlockEvent.syncBlockChange() {
         sections.whenLinked(block) { linked ->
+            // A block starting to fall sets its twin to air rather than dropping a second falling block, so only one ever lands
             linked.blockData = this.blockData
+        }
+    }
+
+    /**
+     * Gives the twin of [block] the support [block] stands or hangs on, when the sections drifted apart there.
+     * Otherwise the twin falls or pops off and that change syncs back, deleting [block].
+     * Only fills replaceable space, and breaking either copy of the support syncs as air, so nothing drops twice
+     */
+    private fun copySupport(block: Block, linked: Block, depth: Int) {
+        if (depth == 0) return
+        val face = supportFace(block, linked) ?: return
+        val support = block.getRelative(face)
+        val linkedSupport = linked.getRelative(face)
+        if (support.isReplaceable || !linkedSupport.isReplaceable || linkedSupport.blockData == support.blockData) return
+        // A container twin would start out empty and unprotected
+        if (support.getState(false) is TileState) return
+        copySupport(support, linkedSupport, depth - 1)
+        linkedSupport.setBlockData(support.blockData, false)
+    }
+
+    /** The side [block] needs support from, null when [linked] already holds it up */
+    private fun supportFace(block: Block, linked: Block): BlockFace? {
+        val data = block.blockData
+        if (block.type.hasGravity()) return BlockFace.DOWN.takeIf { linked.getRelative(it).isReplaceable }
+        if (data.isSupported(linked)) return null
+        return when (data) {
+            is FaceAttachable -> when (data.attachedFace) {
+                FaceAttachable.AttachedFace.CEILING -> BlockFace.UP
+                FaceAttachable.AttachedFace.WALL -> (data as? Directional)?.facing?.oppositeFace ?: BlockFace.DOWN
+                FaceAttachable.AttachedFace.FLOOR -> BlockFace.DOWN
+            }
+            is Directional if data.facing.modY == 0 -> data.facing.oppositeFace
+            else -> BlockFace.DOWN
         }
     }
 
@@ -252,3 +291,6 @@ class SectionSyncListener(
 
     //TODO sync items removed by the void to the corresponding section, see git history for a draft
 }
+
+// Stacked gravity blocks like a sand pillar, deeper gaps are left alone
+private const val SUPPORT_DEPTH = 4

@@ -32,7 +32,7 @@ class ContainerSyncListener(
     private val keepLoadedInventories = mutableMapOf<Chunk, MutableList<Player>>()
 
     /** Synchronize container interactions between sections */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun PlayerInteractEvent.onInteractWithContainer() {
         val (block, container) = (clickedBlock ?: return) to (clickedBlock?.state as? Container ?: return)
         if (action != Action.RIGHT_CLICK_BLOCK || player.isSneaking) return
